@@ -1,0 +1,24 @@
+{
+  "name": "@drawmotive/textgraph.dev",
+  "version": "0.0.0-development",
+  "description": "Documentation and playground for the TextGraph DSL",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "test": "node --test test/*.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drawmotive/textgraph.dev.git"
+  },
+  "license": "SEE LICENSE IN LICENSE-CODE AND LICENSE-DOCS",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "vitepress": "^2.0.0-alpha.16"
+  }
+}

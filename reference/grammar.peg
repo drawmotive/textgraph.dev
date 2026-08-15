@@ -1,0 +1,336 @@
+// TextGraph DSL — Formal PEG Grammar
+// Version: v0.1
+//
+// This grammar is the canonical syntax reference for the TextGraph DSL.
+// It defines what inputs are syntactically valid. Semantic rules (scope
+// resolution, type inference, style inheritance) are defined in the
+// language specification.
+//
+// Notation: Peggy / PEG.js syntax
+//   /       ordered choice (first match wins)
+//   *       zero or more
+//   +       one or more
+//   ?       optional
+//   &       positive lookahead
+//   !       negative lookahead
+//   [...]   character class
+//   "..."   literal string
+//   _       inline whitespace (spaces and tabs, not newlines)
+
+
+// ───────────────────────────────────────────────────────────────
+// Document
+// ───────────────────────────────────────────────────────────────
+
+Document
+  = TextGraphBlock
+  / SlideDocument
+  / DiagramDocument
+
+// A @textgraph-delimited block inside a Markdown file
+TextGraphBlock
+  = TextGraphOpen lines:Line* TextGraphClose?
+  { return { type: "textgraph-block", lines } }
+
+TextGraphOpen
+  = "@textgraph" (_ ":" _ name:RestOfLine)? EOL
+  { return { name: name ?? null } }
+
+TextGraphClose
+  = "@textgraph" EOL
+
+// A document containing at least one slide boundary
+SlideDocument
+  = slides:Slide+
+  { return { type: "slide-document", slides } }
+
+Slide
+  = boundary:SlideBoundary lines:SlideContent*
+  { return { boundary, lines } }
+
+// A document with no slide boundaries — pure diagram content
+DiagramDocument
+  = lines:Line+
+  { return { type: "diagram-document", lines } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Slide Boundary
+// ───────────────────────────────────────────────────────────────
+
+// @slide marks a slide boundary. Unambiguous — no overlap with
+// the "--" undirected connection operator.
+SlideBoundary
+  = "@slide" classes:Classes? label:Label? _ EOL
+  { return { type: "slide-boundary", classes, label } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Slide Content
+// ───────────────────────────────────────────────────────────────
+
+// Inside a slide, bare text is Markdown. Diagram content must be
+// in a scope with a type class (e.g. diagram, mindmap, sequence).
+// This constraint is enforced by the semantic layer, not the grammar.
+SlideContent
+  = !SlideBoundary line:( ScopeBlock / SpeakerNotes / Line )
+  { return line }
+
+
+// ───────────────────────────────────────────────────────────────
+// Lines
+// ───────────────────────────────────────────────────────────────
+
+Line
+  = _ line:(
+      BlankLine
+    / Comment
+    / FencedBlock
+    / ScopeBlock
+    / Connection
+    / MultiNodeDeclaration
+    / ScopeLevelStyle
+    / SpeakerNotes
+    / Declaration
+    / MindmapNode
+    / FreeText
+  ) { return line }
+
+BlankLine
+  = _ EOL
+  { return { type: "blank" } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Comments
+// ───────────────────────────────────────────────────────────────
+
+Comment
+  = "<!--" content:$(!"-->" .)* "-->" _ EOL?
+  { return { type: "comment", content } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Connections
+// ───────────────────────────────────────────────────────────────
+
+// A connection line contains at least one arrow operator.
+// The line type is "connection" — any trailing `: label` is an
+// edge label applied to ALL edges in the chain, not just the last.
+Connection
+  = head:Node rest:ConnectionSegment+ edgeLabel:EdgeLabel? _ EOL
+  { return { type: "connection", head, rest, edgeLabel } }
+
+ConnectionSegment
+  = _ arrow:Arrow _ target:Node
+  { return { arrow, target } }
+
+Arrow
+  = "<->" { return "bidi" }
+  / "->"  { return "forward" }
+  / "<-"  { return "backward" }
+  / "--"  { return "undirected" }
+
+EdgeLabel
+  = _ ":" _ text:RestOfLine
+  { return text }
+
+
+// ───────────────────────────────────────────────────────────────
+// Nodes (inside connections)
+// ───────────────────────────────────────────────────────────────
+
+Node
+  = ref:( QualifiedIdentifier / AnonymousNode ) classes:Classes?
+  { return { ref, classes } }
+
+QualifiedIdentifier
+  = head:Identifier tail:("." Identifier)*
+  { return { type: "reference", path: [head, ...tail.map(t => t[1])] } }
+
+AnonymousNode
+  = "[" _ text:AnonymousNodeText _ "]"
+  { return { type: "anonymous-node", label: text } }
+
+AnonymousNodeText
+  = text:$( [^\]\r\n]+ )
+  { return text }
+
+
+// ───────────────────────────────────────────────────────────────
+// Declarations
+// ───────────────────────────────────────────────────────────────
+
+// A declaration line has no arrow. The colon sets a display label.
+// Classes and label can appear in either order:
+//   a(fill primary): Agent
+//   a: Agent
+//   a(fill primary)
+Declaration
+  = id:Identifier classes:Classes? label:Label? _ EOL
+  { return { type: "declaration", id, classes, label } }
+
+// Multi-node declaration: comma-separated identifiers sharing classes.
+// Only style classes are allowed — labels are not valid here.
+// To label individual nodes, use separate declaration lines.
+//   x, y, z(fill primary)
+MultiNodeDeclaration
+  = head:Identifier _ "," _ rest:(Identifier _ "," _)* last:Identifier classes:Classes _ EOL
+  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last], classes } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Scope-Level Styles
+// ───────────────────────────────────────────────────────────────
+
+// Classes at the start of a line with no preceding identifier
+// apply to the enclosing scope.
+//   (fill primary)
+//   (horizontal)
+//   (vertical justify-between)
+ScopeLevelStyle
+  = &"(" classes:Classes label:Label? _ EOL
+  { return { type: "scope-style", classes, label } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Speaker Notes
+// ───────────────────────────────────────────────────────────────
+
+SpeakerNotes
+  = "(notes)" _ ":" _ text:( FencedBlock / RestOfLine ) _ EOL?
+  { return { type: "notes", text } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Scope Blocks
+// ───────────────────────────────────────────────────────────────
+
+// Named or anonymous scope with curly braces.
+//   group1 {}
+//   group1(fill primary): Label {}
+//   {}
+ScopeBlock
+  = id:Identifier? classes:Classes? label:Label? _ "{" _ EOL?
+    body:ScopeBody
+    _ "}" _ EOL?
+  { return { type: "scope", id, classes, label, body } }
+
+ScopeBody
+  = lines:( !("}" _) Line )*
+  { return lines.map(l => l[1]) }
+
+
+// ───────────────────────────────────────────────────────────────
+// Mindmap Nodes
+// ───────────────────────────────────────────────────────────────
+
+// Inside a mindmap scope, indentation defines hierarchy.
+// A mindmap node is an indented line that is either:
+//   - bare text (label = identifier)
+//   - id: Label
+//   - id(classes): Label
+MindmapNode
+  = indent:Indent content:(
+      id:Identifier classes:Classes? label:Label? { return { id, classes, label } }
+    / text:BareText { return { id: null, classes: null, label: text } }
+    ) _ EOL
+  { return { type: "mindmap-node", indent: indent.length, ...content } }
+
+Indent
+  = spaces:[ \t]+
+  { return spaces }
+
+BareText
+  = text:$( (!EOL !"```" !"{" !"}" !"<!--" .)+ )
+  { return text.trim() }
+
+
+// ───────────────────────────────────────────────────────────────
+// Fenced Markdown Blocks
+// ───────────────────────────────────────────────────────────────
+
+// ```md ... ``` attaches rich Markdown content to the preceding
+// node or declaration.
+FencedBlock
+  = "```md" _ EOL
+    content:$( !([ \t]* "```" EOL) . )*
+    _ "```" _ EOL?
+  { return { type: "fenced-md", content } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Labels
+// ───────────────────────────────────────────────────────────────
+
+Label
+  = _ ":" _ text:LabelText
+  { return text }
+
+LabelText
+  = ResourceLabel
+  / InlineText
+
+// Resource labels: @slug, @(path), @(url), @(data:...)
+ResourceLabel
+  = "@(" uri:$( [^)]+ ) ")"
+    { return { type: "resource-uri", uri } }
+  / "@" slug:$( [a-zA-Z][a-zA-Z0-9_-]* )
+    { return { type: "resource-slug", slug } }
+
+InlineText
+  = text:RestOfLine
+  { return text }
+
+
+// ───────────────────────────────────────────────────────────────
+// Style Classes
+// ───────────────────────────────────────────────────────────────
+
+// Parenthesized, space-separated class tokens.
+// Binds to the immediately preceding token (identifier,
+// anonymous node literal, or arrow),
+// or to the enclosing scope when at the start of a line.
+Classes
+  = "(" _ tokens:ClassToken+ _ ")"
+  { return tokens }
+
+ClassToken
+  = token:$( [a-zA-Z][a-zA-Z0-9_-]* ) _
+  { return token }
+
+
+// ───────────────────────────────────────────────────────────────
+// Identifiers
+// ───────────────────────────────────────────────────────────────
+
+// Must start with a letter or underscore. May contain letters,
+// digits, hyphens, and underscores. Dots are NOT part of an
+// identifier — they are the cross-scope operator.
+Identifier
+  = id:$( [a-zA-Z_] [a-zA-Z0-9_-]* )
+  { return id }
+
+
+// ───────────────────────────────────────────────────────────────
+// Free Text (slides)
+// ───────────────────────────────────────────────────────────────
+
+// Inside slides, non-diagram text is Markdown content.
+FreeText
+  = text:RestOfLine EOL
+  { return { type: "free-text", text } }
+
+
+// ───────────────────────────────────────────────────────────────
+// Primitives
+// ───────────────────────────────────────────────────────────────
+
+RestOfLine
+  = text:$( [^\r\n]+ )
+  { return text.trim() }
+
+_  = [ \t]*                     // inline whitespace (no newlines)
+
+EOL
+  = "\r\n" / "\n" / "\r" / !.   // end of line or end of input
