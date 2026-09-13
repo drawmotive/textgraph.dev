@@ -469,7 +469,7 @@ backend {
 }
 ```
 
-Or combined on one line:
+Or combined in the group header, with the body starting on the next line:
 
 ```
 frontend(fill info): Frontend {

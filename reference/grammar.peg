@@ -221,7 +221,14 @@ SpeakerNotes
 // A standalone group may declare its title in the header. Connection
 // endpoints use the same containment syntax but leave ":" to edge labels.
 ScopeBlock
-  = id:Identifier? _ classes:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ EOL
+  = scope:(LabeledScope / ScopeEndpoint) _ EOL
+  { return scope }
+
+// A labeled declaration header ends at its opening brace. Requiring a
+// newline preserves ordinary labels containing literal brace expressions.
+LabeledScope
+  = id:Identifier? _ classes:Classes? label:ScopeHeaderLabel _ "{" _ Newline
+    body:ScopeBody _ "}"
   { return { type: "scope", id, classes, label, body } }
 
 ScopeEndpoint
@@ -249,8 +256,8 @@ ScopeLine
   / FencedBlock
   / connection:ConnectionExpression edgeLabel:ScopeLabel? _ ScopeEnd
     { return { type: "connection", ...connection, edgeLabel } }
-  / id:Identifier? _ classes:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ ScopeEnd
-    { return { type: "scope", id, classes, label, body } }
+  / scope:(LabeledScope / ScopeEndpoint) _ ScopeEnd
+    { return scope }
   / head:Identifier _ "," _ rest:(Identifier _ "," _)* last:Identifier classes:Classes _ ScopeEnd
     { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last], classes } }
   / &"(" classes:Classes label:ScopeLabel? _ ScopeEnd

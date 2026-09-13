@@ -92,6 +92,19 @@ test('existing named groups, references and anonymous node literals remain valid
   assert.deepEqual(connection.rest[0].target.ref.path, ['team', 'api']);
   assert.equal(connection.rest[1].target.ref.label, 'Label');
   assert.deepEqual(connection.rest[1].target.classes, ['dashed']);
-  const [header] = parse('D(horizontal): Services { B->C }');
+  const [header] = parse('D(horizontal): Services {\nB->C\n}');
   assert.equal(header.label, 'Services');
+  assert.equal(header.body[0].type, 'connection');
+  const [literal] = parse('D: Services { B->C }');
+  assert.equal(literal.type, 'declaration');
+  assert.equal(literal.label, 'Services { B->C }');
+});
+
+test('standalone and nested groups share endpoint postfix style syntax', () => {
+  const [anonymous, named, nested] = parse('{B}(horizontal)\nD{C}(vertical)\n{ {E}(dashed) }');
+  assert.equal(anonymous.type, 'scope');
+  assert.deepEqual(anonymous.classes, ['horizontal']);
+  assert.equal(named.id, 'D');
+  assert.deepEqual(named.classes, ['vertical']);
+  assert.deepEqual(nested.body[0].classes, ['dashed']);
 });

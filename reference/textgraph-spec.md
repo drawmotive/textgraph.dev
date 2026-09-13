@@ -578,6 +578,8 @@ group1 {
 }
 ```
 
+A label may also be placed in the group header, as in `group1(fill primary): Services {`, with the body starting on the next line. For a compact body, use `group1 { m -> n }` and declare `group1: Services` separately.
+
 An anonymous scope omits the identifier: `{ B -> C }`. It has no default visible title, and any generated identity used internally must not appear as a label. Separate anonymous scope occurrences are distinct groups.
 
 ### Groups as Connection Endpoints
