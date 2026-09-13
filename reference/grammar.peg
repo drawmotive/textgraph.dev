@@ -86,8 +86,8 @@ Line
       BlankLine
     / Comment
     / FencedBlock
-    / ScopeBlock
     / Connection
+    / ScopeBlock
     / MultiNodeDeclaration
     / ScopeLevelStyle
     / SpeakerNotes
@@ -97,7 +97,7 @@ Line
   ) { return line }
 
 BlankLine
-  = _ EOL
+  = _ Newline
   { return { type: "blank" } }
 
 
@@ -118,12 +118,18 @@ Comment
 // The line type is "connection" — any trailing `: label` is an
 // edge label applied to ALL edges in the chain, not just the last.
 Connection
-  = head:Node rest:ConnectionSegment+ edgeLabel:EdgeLabel? _ EOL
-  { return { type: "connection", head, rest, edgeLabel } }
+  = connection:ConnectionExpression edgeLabel:EdgeLabel? _ EOL
+  { return { type: "connection", ...connection, edgeLabel } }
+
+// Keep the chain as an ordered sequence of endpoint occurrences. A scope
+// in the middle of the chain is one group shared by both adjacent edges.
+ConnectionExpression
+  = head:Endpoint rest:ConnectionSegment+
+  { return { head, rest } }
 
 ConnectionSegment
-  = _ arrow:Arrow _ target:Node
-  { return { arrow, target } }
+  = _ arrow:Arrow _ classes:Classes? _ target:Endpoint
+  { return { arrow, classes, target } }
 
 Arrow
   = "<->" { return "bidi" }
@@ -140,8 +146,14 @@ EdgeLabel
 // Nodes (inside connections)
 // ───────────────────────────────────────────────────────────────
 
+// Braces create a compound node, never a shorthand for fan-out to children.
+// Scope endpoints must be tried before named references.
+Endpoint
+  = ScopeEndpoint
+  / Node
+
 Node
-  = ref:( QualifiedIdentifier / AnonymousNode ) classes:Classes?
+  = ref:( QualifiedIdentifier / AnonymousNode ) _ classes:Classes?
   { return { ref, classes } }
 
 QualifiedIdentifier
@@ -206,19 +218,63 @@ SpeakerNotes
 // Scope Blocks
 // ───────────────────────────────────────────────────────────────
 
-// Named or anonymous scope with curly braces.
-//   group1 {}
-//   group1(fill primary): Label {}
-//   {}
+// A standalone group may declare its title in the header. Connection
+// endpoints use the same containment syntax but leave ":" to edge labels.
 ScopeBlock
-  = id:Identifier? classes:Classes? label:Label? _ "{" _ EOL?
-    body:ScopeBody
-    _ "}" _ EOL?
+  = id:Identifier? _ classes:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ EOL
   { return { type: "scope", id, classes, label, body } }
 
+ScopeEndpoint
+  = id:Identifier? _ before:Classes? _ body:ScopeContents _ after:Classes?
+  { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label: null, body } }
+
+ScopeContents
+  = "{" body:ScopeBody _ "}"
+  { return body }
+
+ScopeHeaderLabel
+  = _ ":" _ text:$( [^{\r\n]+ )
+  { return text.trim() }
+
+// A closing brace is a statement boundary only within its owning scope.
+// These rules keep root labels such as "A: {{value}}" literal, without
+// mutable nesting state that could leak through PEG backtracking.
 ScopeBody
-  = lines:( !("}" _) Line )*
-  { return lines.map(l => l[1]) }
+  = lines:(_ !"}" line:ScopeLine { return line })*
+  { return lines.filter(line => line.type !== "blank") }
+
+ScopeLine
+  = BlankLine
+  / Comment
+  / FencedBlock
+  / connection:ConnectionExpression edgeLabel:ScopeLabel? _ ScopeEnd
+    { return { type: "connection", ...connection, edgeLabel } }
+  / id:Identifier? _ classes:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ ScopeEnd
+    { return { type: "scope", id, classes, label, body } }
+  / head:Identifier _ "," _ rest:(Identifier _ "," _)* last:Identifier classes:Classes _ ScopeEnd
+    { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last], classes } }
+  / &"(" classes:Classes label:ScopeLabel? _ ScopeEnd
+    { return { type: "scope-style", classes, label } }
+  / SpeakerNotes
+  / id:Identifier classes:Classes? label:ScopeLabel? _ ScopeEnd
+    { return { type: "declaration", id, classes, label } }
+  / MindmapNode
+  / !GraphStatementStart text:$( [^}\r\n]+ ) ScopeEnd
+    { return { type: "free-text", text: text.trim() } }
+
+ScopeLabel
+  = _ ":" _ label:ResourceLabel
+    { return label }
+  / _ ":" _ text:$( (LabelBraces / [^{}\r\n])+ )
+  { return text.trim() }
+
+// Balanced braces in label text are literal content. An unmatched closing
+// brace terminates the statement in the containing scope.
+LabelBraces
+  = "{" (LabelBraces / [^{}\r\n])* "}"
+
+ScopeEnd
+  = Newline / &"}"
 
 
 // ───────────────────────────────────────────────────────────────
@@ -306,9 +362,10 @@ ClassToken
 
 // Must start with a letter or underscore. May contain letters,
 // digits, hyphens, and underscores. Dots are NOT part of an
-// identifier — they are the cross-scope operator.
+// identifier — they are the cross-scope operator. An arrow ends the
+// identifier even without surrounding spaces: B->C is B, ->, C.
 Identifier
-  = id:$( [a-zA-Z_] [a-zA-Z0-9_-]* )
+  = id:$( [a-zA-Z_] (!Arrow [a-zA-Z0-9_-])* )
   { return id }
 
 
@@ -318,8 +375,15 @@ Identifier
 
 // Inside slides, non-diagram text is Markdown content.
 FreeText
-  = text:RestOfLine EOL
+  = !GraphStatementStart text:RestOfLine EOL
   { return { type: "free-text", text } }
+
+// A failed graph statement must not become free text after PEG backtracking.
+// Otherwise a missing child endpoint or closing brace appears to parse.
+GraphStatementStart
+  = (QualifiedIdentifier / AnonymousNode) _ Classes? _ (Arrow / "{")
+  / "{"
+  / Classes _ "{"
 
 
 // ───────────────────────────────────────────────────────────────
@@ -333,4 +397,7 @@ RestOfLine
 _  = [ \t]*                     // inline whitespace (no newlines)
 
 EOL
-  = "\r\n" / "\n" / "\r" / !.   // end of line or end of input
+  = Newline / !.                 // end of line or end of input
+
+Newline
+  = "\r\n" / "\n" / "\r"

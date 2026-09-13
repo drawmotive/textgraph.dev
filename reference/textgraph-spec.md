@@ -20,6 +20,8 @@ The language uses a single unified grammar that covers flowcharts, sequence diag
 
 ## Core Syntax & Grammar
 
+Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a compound node with children. An omitted identifier makes the group anonymous. These rules also apply when a group is a connection endpoint.
+
 ### Connections
 
 There are four connection types:
@@ -37,7 +39,7 @@ An identifier is the internal name for a node or scope. It must start with a let
 
 Dots (`.`) are **not** part of an identifier — they qualify a reference with one or more group names when disambiguation is needed. `group1.m` means "node `m` in group `group1`"; it is a qualified reference, not a single identifier.
 
-Not every connection endpoint has an identifier. `[Label]` creates an **anonymous node** with the visible label `Label` but no reusable name.
+Not every connection endpoint has an identifier. `[Label]` creates an **anonymous node** with the visible label `Label` but no reusable name. `{ ... }` creates an **anonymous group** with no reusable name or default title.
 
 ### Node Labels
 
@@ -204,11 +206,14 @@ Each space-separated token inside the parentheses maps to a CSS class applied to
 
 ### Token Binding Rule
 
-Parentheses always bind to the **immediately preceding token**:
+After a token, parentheses bind to that token. With no preceding token, they style the following anonymous group or the current scope:
 
-- After a node or scope token → styles on that token: `b(dashed)`, `group1(horizontal)`, and `[B](dashed)` inside `A -> [B](dashed)`
+- After a node or scope token → styles on that token: `b(dashed)`, `group1(horizontal)`, `[B](dashed)`, and `{ B -> C }(horizontal)`
 - After an arrow operator → edge styles: `->(bold)`
-- At the start of a line (no preceding token) → scope-level styles: `(fill primary)`
+- Before an anonymous group → styles on that group: `(horizontal) { B -> C } -> A`
+- At the start of a line with no group body → scope-level styles: `(fill primary)`
+
+Parentheses immediately after an arrow belong to the edge, including `A ->(bold) { B -> C }`. To style that target group, use `A -> { B -> C }(horizontal)` or name it: `A -> D(horizontal) { B -> C }`.
 
 In a chained connection like `a -> b(dashed) -> c`, `(dashed)` binds to `b` because `b` is the token right before it — so it is a node style, not an edge style.
 
@@ -407,9 +412,11 @@ A -> [B] -> C
 
 The single `[B]` occurrence is one node reused by both adjacent edges. Two separate `[B]` occurrences create two separate anonymous nodes.
 
+Group endpoints follow the same occurrence rule. `A -> { B -> C } -> D` creates one group reused by both outer edges. Each separate `{ ... }` occurrence creates its own anonymous group. The outer arrows attach to the group boundary; the children remain inside it.
+
 ### Line Types
 
-Every line is one of two types, based on whether it contains an arrow (`->`, `<-`, `<->`, or `--`):
+Declarations and connections are distinguished by arrows (`->`, `<-`, `<->`, or `--`) at the current brace depth. A group body has its own statements; an arrow inside it does not turn the enclosing group declaration into a connection.
 
 **Declaration line** — no arrow. The colon sets a display label:
 
@@ -425,7 +432,7 @@ a -> b : contains
 a -> b -> c : all edges labeled
 ```
 
-Because the line type is determined by the arrow, the colon is never ambiguous. On a declaration line, `:` always means "display label." On a connection line, `:` always means "edge label." This is why labels and connections cannot appear on the same line — they are different line types.
+On a declaration statement, `:` introduces a display label. After a connection at the same brace depth, it introduces an edge label. Declare a named endpoint title separately, for example `D: Services` followed by `A -> D { B -> C }`. Child labels end at their owning closing brace: `A -> { B: Bee } -> C: outer` labels child `B` as `Bee` and both outer edges as `outer`.
 
 ### Comments
 
@@ -532,13 +539,13 @@ Here `group1` lays out its children vertically (default), while `group2` arrange
 
 ### Scopes and Groups
 
-Curly braces define a new layout scope. Nodes inside a scope are arranged independently from the rest of the diagram:
+Curly braces express containment and define a new layout scope. A group is a compound node whose children are arranged independently from the rest of the diagram:
 
 ```
 {}
 ```
 
-A named scope attaches an identifier to the group, making it referenceable. A space before the braces is preferred:
+A named scope attaches an identifier to the group, making it referenceable. The identifier is also its default visible title, just as for an ordinary node. `D { B -> C }` is titled `D`; `D: Services` overrides the title without changing the identifier. A space before the braces is preferred but optional:
 
 ```
 group1 {}
@@ -570,6 +577,24 @@ group1 {
   m -> n
 }
 ```
+
+An anonymous scope omits the identifier: `{ B -> C }`. It has no default visible title, and any generated identity used internally must not appear as a label. Separate anonymous scope occurrences are distinct groups.
+
+### Groups as Connection Endpoints
+
+A scope can be a source, target, or intermediate endpoint in a connection. Empty groups are valid:
+
+```text
+A -> { B -> C }
+A -> {}
+{ B -> C } -> D
+A -> D { B -> C } -> E
+A -> { B -> { C -> D } }
+```
+
+The group is the endpoint: external edges attach to its boundary. The body describes containment and internal connections; it is never expanded into a list of external targets or interpreted as the group’s entry nodes. `A -> { B -> C }` therefore creates the outer edge from `A` to the group and the inner edge from `B` to `C`.
+
+Whitespace around braces and arrows is optional, so `A->{B->C}` is equivalent. A body may span multiple lines. In `A -> { B -> C } -> D`, one anonymous group is reused by both outer edges. `A -> {} -> {}` contains two distinct groups. Use a named group and its identifier to reuse a group across separate statements.
 
 ### Cross-Scope Connections
 

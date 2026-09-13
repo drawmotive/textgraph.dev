@@ -2,9 +2,11 @@
 
 A complete reference for all operators and punctuation in the TextGraph DSL. For the formal, machine-readable syntax definition see the [PEG Grammar](/reference/grammar).
 
+Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a node with children. Omitting its identifier creates an anonymous group.
+
 ## Identifiers
 
-Node and scope names must start with a letter or underscore, and can contain letters, digits, hyphens, and underscores. Dots are not part of a name — they qualify a reference with group names when disambiguation is needed (see [`.` — Cross-Scope Reference](#-cross-scope-reference)). Anonymous nodes use `[]` and do not create names.
+Node and scope names must start with a letter or underscore, and can contain letters, digits, hyphens, and underscores. Dots are not part of a name — they qualify a reference with group names when disambiguation is needed (see [`.` — Cross-Scope Reference](#-cross-scope-reference)). Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
 
 ## Connections
 
@@ -28,6 +30,17 @@ A -> [B]
 C -> [B]
 ```
 
+Groups can also be endpoints, including empty, nested, named, and anonymous groups:
+
+```text
+A -> { B -> C }
+A -> {}
+{ B -> C } -> D
+A -> D { B -> C } -> E
+```
+
+Each outer arrow connects to the **group boundary**. It does not connect to, or fan out across, the children. Spaces are optional: `A->{B->C}` is valid.
+
 ## `:` — Label and Name Declaration
 
 A colon declares a display label for a node, group, or slide:
@@ -47,7 +60,7 @@ a -> b -> c : data
 
 To label edges individually, use separate connection lines.
 
-Labels may **not** appear on the same line as a connection. These are distinct line types — on a declaration line (no arrow), `:` is a display label; on a connection line, `:` is an edge label:
+Declare endpoint labels separately from their connections. At the same brace depth, `:` introduces a display label in a declaration and an edge label after a connection:
 
 ```
 <!-- invalid -->
@@ -59,13 +72,18 @@ a: Agent
 b: Bias
 ```
 
+A group body has its own statements, so `A -> { B: Bee } -> C: outer` is valid: `Bee` labels the child `B`, while `outer` labels both outer edges. The closing brace terminates the child statement. For named group endpoints, use `A -> D { B -> C }` with a separate `D: Services` declaration.
+
 ## `()` — Style Classes
 
-Parentheses apply style classes to a node, edge, scope, or slide boundary. `()` always binds to the **immediately preceding token**:
+Parentheses apply style classes to a node, edge, scope, or slide boundary. After a token, `()` binds to that token. With no preceding token, it styles the following anonymous group or the current scope:
 
-- After a node or scope token → styles on that token: `a(fill primary dashed)`, `group1(horizontal)`, and `[B](dashed)` inside `A -> [B](dashed)`
+- After a node or scope token → styles on that token: `a(fill primary dashed)`, `group1(horizontal)`, `[B](dashed)`, and `{ B -> C }(horizontal)`
 - After an arrow → edge styles: `a ->(bold) b`
-- Start of line → scope-level styles: `(horizontal)`
+- Before an anonymous group → styles on that group: `(horizontal) { B -> C } -> A`
+- Start of line with no group body → scope-level styles: `(horizontal)`
+
+Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B -> C }`. Style the target group after its closing brace, as in `A -> { B -> C }(horizontal)`, or after its name, as in `A -> D(horizontal) { B -> C }`.
 
 ```
 a(fill primary dashed)
@@ -87,9 +105,13 @@ Labels and classes can be combined on the same standalone line:
 a(fill primary): Agent
 ```
 
-## `{}` — Scope
+## `{}` — Containment and Groups
 
-Curly braces define a layout scope. Content inside is arranged independently:
+Curly braces give a node children and an independent layout scope. A named group follows ordinary node labeling: `D { B -> C }` has identifier and default visible title `D`; a separate `D: Services` declaration changes the title without changing the identifier. An anonymous `{ B -> C }` has no default title. Internal generated identifiers are never displayed.
+
+An empty `{}` is still a group, so `A -> {}` is a valid connection to an empty anonymous group. To request a group with no name or default title, omit the identifier.
+
+Content inside a group is arranged independently:
 
 ```
 group1 {
@@ -106,6 +128,14 @@ group1 {
   }
 }
 ```
+
+A group occurrence in a chain is reused by both adjacent arrows:
+
+```text
+A -> { B -> C } -> D
+```
+
+This creates one anonymous group between `A` and `D`, plus the child connection `B -> C`. Separate `{ ... }` occurrences create separate anonymous groups. Use a named group when it needs to be referenced from another statement.
 
 ## `@slide` — Slide Boundary
 

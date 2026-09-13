@@ -421,7 +421,7 @@ If the file contains only one diagram, the closing `@textgraph` is optional.
 
 ## Groups and Scopes
 
-Curly braces define a layout scope. Nodes inside a group are arranged independently from the rest of the diagram.
+Curly braces express containment: a group is a node with children and its own layout scope. Nodes inside a group are arranged independently from the rest of the diagram.
 
 ```
 frontend {
@@ -451,7 +451,7 @@ backend.api -> data.cache
 
 ### Named and Styled Groups
 
-Groups follow the same rules as nodes — styles and labels can be combined.
+Groups follow the same rules as nodes — styles and labels can be combined. A named group uses its identifier as the default title: `D { B -> C }` displays `D`. A separate `D: Services` declaration changes its title to `Services` while keeping the identifier `D`.
 
 ```
 frontend(fill info): Frontend
@@ -481,7 +481,7 @@ frontend(fill info): Frontend {
 
 ### Anonymous Groups
 
-An unnamed `{}` creates a scope without a visible group label.
+An unnamed `{}` creates a scope without a default visible group label. Omit the identifier when a group should be anonymous; generated internal identities are never displayed. Empty anonymous groups are valid too.
 
 ```
 {
@@ -490,6 +490,39 @@ An unnamed `{}` creates a scope without a visible group label.
   b: Service B
 }
 ```
+
+### Groups in Connections
+
+Define a group directly at either end of an arrow, including an empty group:
+
+```text
+A -> { B -> C }
+A -> {}
+{ B -> C } -> D
+```
+
+The outer connection attaches to the **group boundary**. It does not expand into arrows to the children. Spaces are optional: `A->{B->C}` is valid.
+
+Groups can be named or chained:
+
+```text
+A -> D { B -> C } -> E
+D: Services
+
+F -> { G -> H } -> I
+```
+
+The first chain uses the named group `D`, titled `Services`. The second uses one anonymous group between `F` and `I`. Separate brace occurrences create distinct anonymous groups.
+
+Use parentheses for styles as usual:
+
+```text
+(horizontal) { B -> C } -> A
+A -> D(horizontal) { B -> C }
+A ->(bold) { B -> C }(horizontal)
+```
+
+In the last example, `bold` styles the edge because it follows the arrow; `horizontal` styles the group because it follows the closing brace.
 
 ### Nested Scopes
 
