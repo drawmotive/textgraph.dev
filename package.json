@@ -19,6 +19,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "vitepress": "^2.0.0-alpha.16"
+    "vitepress": "2.0.0-alpha.19",
+    "@drawmotive/markdown-it-textgraph": "file:../../integrations/markdown-textgraph"
   }
 }

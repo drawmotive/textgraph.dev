@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress'
 
-export default defineConfig({
+export default defineConfig(withTextGraph({
   title: "TextGraph",
   description: "A natural-language DSL that turns text descriptions into beautiful, professional diagrams and slides — built for the AI era.",
   themeConfig: {
@@ -39,6 +40,7 @@ export default defineConfig({
         text: 'Integrations',
         items: [
           { text: 'Overview', link: '/integrations/overview' },
+          { text: 'Markdown & VitePress', link: '/integrations/markdown' },
           { text: 'VS Code Extension', link: '/integrations/vscode' },
           { text: 'CLI', link: '/integrations/cli' },
           { text: 'JavaScript / Node.js', link: '/integrations/javascript' },
@@ -77,4 +79,4 @@ export default defineConfig({
       level: [2, 3]
     }
   }
-})
+}))
