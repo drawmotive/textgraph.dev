@@ -432,7 +432,7 @@ a -> b : contains
 a -> b -> c : all edges labeled
 ```
 
-On a declaration statement, `:` introduces a display label. After a connection at the same brace depth, it introduces an edge label. Declare a named endpoint title separately, for example `D: Services` followed by `A -> D { B -> C }`. Child labels end at their owning closing brace: `A -> { B: Bee } -> C: outer` labels child `B` as `Bee` and both outer edges as `outer`.
+On a declaration statement, `:` introduces a display label. After a connection at the same brace depth, it introduces an edge label. Declare a named endpoint title separately, for example `D: Services` followed by `A -> D { B -> C }`. Child labels end at their owning closing brace: `A -> { B: Bee }: outer` labels child `B` as `Bee` and the edge from `A` to the group as `outer`.
 
 ### Comments
 

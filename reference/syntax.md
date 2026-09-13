@@ -72,7 +72,7 @@ a: Agent
 b: Bias
 ```
 
-A group body has its own statements, so `A -> { B: Bee } -> C: outer` is valid: `Bee` labels the child `B`, while `outer` labels both outer edges. The closing brace terminates the child statement. For named group endpoints, use `A -> D { B -> C }` with a separate `D: Services` declaration.
+A group body has its own statements, so `A -> { B: Bee }: outer` is valid: `Bee` labels the child `B`, while `outer` labels the edge from `A` to the group. The closing brace terminates the child statement. For named group endpoints, use `A -> D { B -> C }` with a separate `D: Services` declaration.
 
 ## `()` — Style Classes
 
