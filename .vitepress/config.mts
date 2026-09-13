@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress'
+import { textgraphIssuesUrl } from './support.ts'
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
@@ -9,6 +10,7 @@ export default defineConfig(withTextGraph({
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
       { text: 'Playground', link: 'https://textgraph.drawmotive.com/' },
+      { text: 'Report an issue', link: textgraphIssuesUrl },
     ],
 
     sidebar: [
@@ -67,7 +69,7 @@ export default defineConfig(withTextGraph({
     ],
 
     footer: {
-      message: 'the native graph language for AI',
+      message: `All TextGraph issues: <a href="${textgraphIssuesUrl}">report bugs, request features, or give feedback on GitHub</a>.`,
       copyright: 'Copyright © 2023-present drawmotive'
     },
 

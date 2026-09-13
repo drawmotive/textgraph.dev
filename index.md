@@ -12,6 +12,9 @@ hero:
     - theme: alt
       text: Open Playground
       link: https://textgraph.drawmotive.com/
+    - theme: alt
+      text: Report an issue
+      link: https://github.com/drawmotive/textgraph/issues
 
 features:
   - icon: 💬

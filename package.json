@@ -3,6 +3,10 @@
   "version": "0.0.0-development",
   "description": "Documentation and playground for the TextGraph DSL",
   "private": true,
+  "homepage": "https://textgraph.dev",
+  "bugs": {
+    "url": "https://github.com/drawmotive/textgraph/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",

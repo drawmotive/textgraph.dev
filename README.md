@@ -2,6 +2,9 @@
 
 TextGraph DSL 的规范、教程、API 文档、Playground、示例和迁移指南。
 
+> **[所有 TextGraph 问题统一提交到 GitHub Issues →](https://github.com/drawmotive/textgraph/issues)**
+> 包括缺陷、功能建议、文档、Playground、SDK、字体、Markdown 和 VS Code 集成问题。
+
 ## 本地开发
 
 ```console
