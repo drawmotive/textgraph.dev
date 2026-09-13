@@ -1,10 +1,10 @@
 # Changelog
 
-<!--
-  CONTENT TO ADD:
-  - Version history in reverse chronological order
-  - Each release: version number, release date, highlights (new features, breaking changes, bug fixes)
-  - Migration guides for any breaking changes
-  - Link to full GitHub releases page
-  - "Unreleased / upcoming" section for features in development
--->
+## 0.2.0
+
+- TextGraph SDK 0.2.0 renders empty and anonymous group endpoints and reports syntax errors without preventing later renders.
+- The first public Markdown plugin renders diagrams as static PNG images in markdown-it and VitePress.
+- The Markdown extension uses SDK 0.2.0 in VS Code's built-in preview, with installed-host verification on VS Code 1.101 and stable.
+- This documentation site builds its diagrams with the published Markdown plugin and SDK.
+
+Install the [SDK](https://www.npmjs.com/package/@drawmotive/textgraph), [Markdown plugin](https://www.npmjs.com/package/@drawmotive/markdown-it-textgraph), or [VS Code Markdown extension](https://marketplace.visualstudio.com/items?itemName=drawmotive.textgraph-markdown).

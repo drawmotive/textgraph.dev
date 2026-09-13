@@ -14,7 +14,11 @@ A -> B
 ```
 ````
 
-The `@drawmotive/markdown-it-textgraph` plugin is being prepared for its first public release. Its SDK dependency, `@drawmotive/textgraph@0.1.0-alpha.1`, is already available from npm. Until the plugin is published, the example below can be used with its local package tarball.
+Install the Markdown plugin, which uses TextGraph SDK 0.2.0:
+
+```bash
+npm install @drawmotive/markdown-it-textgraph@0.2.0 markdown-it@14
+```
 
 ## VitePress
 

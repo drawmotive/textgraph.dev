@@ -17,6 +17,8 @@ npm run build
 
 - 网站代码和代码示例使用 MIT 许可证，见 `LICENSE-CODE`。
 - 文档内容使用 Creative Commons Attribution 4.0 International（CC BY 4.0），见 `LICENSE-DOCS`。
-# Markdown plugin development
+## Markdown rendering and deployment
 
-The current Markdown integration depends on the sibling `integrations/markdown-textgraph` package in the DrawMotive development checkout until its first npm publication. Run `npm ci` from that checkout root, then `npm run build --workspace=@drawmotive/textgraph.dev`. The plugin renders with the published TextGraph SDK.
+The site installs `@drawmotive/markdown-it-textgraph@0.2.0` from npm, which renders diagrams with the public TextGraph SDK 0.2.0. A standalone checkout needs no sibling repositories.
+
+Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
