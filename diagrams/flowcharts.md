@@ -1,14 +1,20 @@
+---
+aside: false
+---
+
 # Flowcharts
 
 Flowcharts are the default diagram type in TextGraph. Any document containing `->` connections is rendered as a flowchart — no explicit declaration needed. For mixed-type documents, apply the `flowchart` class to a scope to force flowchart rendering.
 
 All examples on this page use cloud architecture as the running context.
 
+Each runnable example pairs its TextGraph source with a rendered diagram. On narrow screens, the diagram appears below the source. Previews use the current TextGraph renderer; examples it cannot render yet display an explanation in the preview panel.
+
 ## Your First Flowchart
 
 Three identifiers and two arrows produce a complete diagram.
 
-```
+```textgraph example
 client -> api -> database
 ```
 
@@ -20,7 +26,7 @@ By default, a node displays its identifier as its label. To assign a human-reada
 
 Build the diagram structure first, then name the nodes. This keeps you focused on relationships before cosmetics.
 
-```
+```textgraph example
 client -> api -> db
 
 client: Browser Client
@@ -32,14 +38,14 @@ Labels can appear before or after the connections that reference them — the re
 
 Labels cannot appear inline on a connection line. This is invalid:
 
-```
+```text
 <!-- invalid -->
 client: Browser Client -> api: API Gateway
 ```
 
 Style and label can be combined on a single standalone line:
 
-```
+```textgraph example
 api(fill primary): API Gateway
 ```
 
@@ -54,7 +60,7 @@ TextGraph supports four connection types.
 | `a <-> b` | Bidirectional |
 | `a -- b` | Undirected (no arrowhead) |
 
-```
+```textgraph example
 <!-- directed: gateway sends requests to auth -->
 gateway -> auth
 
@@ -79,7 +85,7 @@ az2: Availability Zone 2
 
 Append `: label` after a connection to annotate the edge.
 
-```
+```textgraph example
 client -> gateway : HTTPS
 gateway -> auth : JWT
 auth -> db : lookup
@@ -97,7 +103,7 @@ Edge labels describe protocols, data formats, or outcomes. The label text is tri
 
 Chain multiple nodes in a single statement. Each `->` creates one edge.
 
-```
+```textgraph example
 commit -> build -> test -> stage -> prod
 
 commit: Git Commit
@@ -109,7 +115,7 @@ prod: Production
 
 Mixed directions work in chains:
 
-```
+```textgraph example
 a -> b -> c <- d
 ```
 
@@ -117,7 +123,7 @@ This creates three edges: `a -> b`, `b -> c`, and `d -> c`.
 
 Inline styles apply per node in a chain:
 
-```
+```textgraph example
 commit(circle) -> build(fill) -> test(fill) -> deploy(fill success) -> prod(stadium)
 ```
 
@@ -140,7 +146,7 @@ Shapes map to standard flowchart conventions. Apply a shape class in parentheses
 
 Use `rounded` (default) or `no-rounded` to control corner rounding on any shape.
 
-```
+```textgraph example
 start -> check
 check -> build : yes
 check -> fail : no
@@ -163,7 +169,7 @@ fail(circle danger): Abort
 
 The `fill` class fills a node with the default background. Combine with a color class to set a specific fill color.
 
-```
+```textgraph example
 api(fill): Default Fill
 auth(fill primary): Primary
 cache(fill info): Info
@@ -176,7 +182,7 @@ Use `no-fill` to make a node transparent.
 
 Semantic colors — `primary`, `secondary`, `info`, `success`, `warning`, `danger` — carry meaning. Surface colors — `background`, `foreground` — match the current theme.
 
-```
+```textgraph example
 <!-- service health dashboard -->
 web -> api -> queue
 api -> db
@@ -201,7 +207,7 @@ Control borders with `border`, `no-border`, and line style classes.
 | `dashed` | Dashed line |
 | `dotted` | Dotted line |
 
-```
+```textgraph example
 live -> preview : promote
 preview -> legacy : replace
 
@@ -218,7 +224,7 @@ legacy(dotted): Deprecated
 | `bold` | Heavy stroke |
 | `thick` | Heavier than bold |
 
-```
+```textgraph example
 critical -> standard -> minor
 
 critical(bold): Core Service
@@ -230,7 +236,7 @@ minor(normal): Background Job
 
 Apply one style declaration to multiple nodes with a comma-separated list.
 
-```
+```textgraph example
 web -> api -> worker
 
 web, api, worker(fill primary)
@@ -243,7 +249,7 @@ worker: Worker
 
 Style classes without an identifier apply to the current scope.
 
-```
+```textgraph example
 (fill primary)
 a -> b
 a: Service A
@@ -260,7 +266,7 @@ This sets the scope background to filled primary.
 | `hidden` | Render invisibly — useful as a spacing anchor |
 | `title` | Prominent title block with no border |
 
-```
+```textgraph example
 header(title): Cloud Architecture
 
 spacer(hidden)
@@ -274,13 +280,13 @@ db(cylinder): Database
 
 Apply style classes to an edge by placing them in parentheses after the arrow operator.
 
-```
+```textgraph example
 a ->(bold primary) b
 ```
 
 Edge styles follow the same composable rules as node styles. Color, line style, and weight classes all work on edges.
 
-```
+```textgraph example
 <!-- encrypted traffic: bold primary -->
 gateway ->(bold primary) auth : TLS
 
@@ -302,7 +308,7 @@ db(cylinder): Database
 
 Combine edge style and edge label in one statement:
 
-```
+```textgraph example
 a ->(dashed warning) b : retry on failure
 ```
 
@@ -312,7 +318,7 @@ a ->(dashed warning) b : retry on failure
 
 Label text supports inline Markdown formatting.
 
-```
+```textgraph example
 api: **API Gateway** v2.1
 db: _read replica_
 ```
@@ -321,7 +327,7 @@ db: _read replica_
 
 Use heading syntax for a title-style label — larger and bold.
 
-```
+```textgraph example
 platform: # Cloud Platform
 api: ## API Layer
 ```
@@ -330,7 +336,7 @@ api: ## API Layer
 
 For multi-line rich content, use a fenced ` ```md ` block on the lines following the identifier.
 
-````
+````textgraph example
 api:
 ```md
 # API Gateway
@@ -353,7 +359,7 @@ api -> db
 
 Use `\n` for inline line breaks in simple cases.
 
-```
+```textgraph example
 api: API Gateway\nPort 8080
 ```
 
@@ -367,7 +373,7 @@ TextGraph line break rules differ from standard Markdown:
 
 An identifier with a label but no connections or shape renders as plain text with no border.
 
-```
+```textgraph example
 api -> db
 
 note: Deployed to us-east-1
@@ -379,29 +385,31 @@ db(cylinder): Database
 
 A label starting with `@` renders a resource — an icon, image, or embedded diagram.
 
+The static renderer currently displays these resource references as text. The previews below show that current behavior; external files and stock icons are not loaded by this page.
+
 Stock cloud icons by slug:
 
-```
+```textgraph example
 s3: @aws-s3
 batch: @az-batch-ai
 ```
 
 Local, external, or base64 images:
 
-```
+```textgraph example
 logo: @(./icons/company-logo.png)
 ext: @(https://example.com/icon.png)
 ```
 
 An external TextGraph diagram file:
 
-```
+```textgraph example
 arch: @(./architecture.md)
 ```
 
 Reference a named diagram within a multi-diagram file:
 
-```
+```textgraph example
 arch: @(./diagrams.md#architecture)
 ```
 
@@ -409,7 +417,7 @@ arch: @(./diagrams.md#architecture)
 
 Use `@textgraph` delimiters to embed a named TextGraph diagram inside a Markdown file.
 
-```
+```textgraph example
 @textgraph: auth-flow
 client -> gateway -> auth -> db
 @textgraph
@@ -423,7 +431,7 @@ If the file contains only one diagram, the closing `@textgraph` is optional.
 
 Curly braces express containment: a group is a node with children and its own layout scope. Nodes inside a group are arranged independently from the rest of the diagram.
 
-```
+```textgraph example
 frontend {
   browser -> cdn
   browser: Browser
@@ -453,7 +461,7 @@ backend.api -> data.cache
 
 Groups follow the same rules as nodes — styles and labels can be combined. A named group uses its identifier as the default title: `D { B -> C }` displays `D`. A separate `D: Services` declaration changes its title to `Services` while keeping the identifier `D`.
 
-```
+```textgraph example
 frontend(fill info): Frontend
 frontend {
   browser -> cdn
@@ -471,7 +479,7 @@ backend {
 
 Or combined in the group header, with the body starting on the next line:
 
-```
+```textgraph example
 frontend(fill info): Frontend {
   browser -> cdn
   browser: Browser
@@ -483,7 +491,7 @@ frontend(fill info): Frontend {
 
 An unnamed `{}` creates a scope without a default visible group label. Omit the identifier when a group should be anonymous; generated internal identities are never displayed. Empty anonymous groups are valid too.
 
-```
+```textgraph example
 {
   a -> b
   a: Service A
@@ -495,7 +503,7 @@ An unnamed `{}` creates a scope without a default visible group label. Omit the 
 
 Define a group directly at either end of an arrow, including an empty group:
 
-```text
+```textgraph example
 A -> { B -> C }
 A -> {}
 { B -> C } -> D
@@ -505,7 +513,7 @@ The outer connection attaches to the **group boundary**. It does not expand into
 
 Groups can be named or chained:
 
-```text
+```textgraph example
 A -> D { B -> C } -> E
 D: Services
 
@@ -516,9 +524,15 @@ The first chain uses the named group `D`, titled `Services`. The second uses one
 
 Use parentheses for styles as usual:
 
-```text
+```textgraph example
 (horizontal) { B -> C } -> A
+```
+
+```textgraph example
 A -> D(horizontal) { B -> C }
+```
+
+```textgraph example
 A ->(bold) { B -> C }(horizontal)
 ```
 
@@ -528,7 +542,7 @@ In the last example, `bold` styles the edge because it follows the arrow; `horiz
 
 Groups can nest. Each scope has independent layout.
 
-```
+```textgraph example
 platform {
   frontend.app -> backend.api
 
@@ -562,7 +576,7 @@ Layout classes control how children are arranged within a scope.
 
 Layout can be set on the scope identifier or as a scope-level style inside braces — both are equivalent:
 
-```
+```textgraph example
 services(horizontal) {
   api: API
   auth: Auth
@@ -570,7 +584,7 @@ services(horizontal) {
 }
 ```
 
-```
+```textgraph example
 services {
   (horizontal)
   api: API
@@ -595,7 +609,7 @@ Justify controls distribution along the main axis. Align controls the cross axis
 | `align-center` | Center on cross axis |
 | `align-end` | Align to cross-axis end |
 
-```
+```textgraph example
 <!-- services arranged horizontally with equal spacing -->
 services(horizontal justify-between) {
   api: API Gateway
@@ -626,7 +640,7 @@ zones(horizontal justify-evenly) {
 
 Each scope controls its own layout independently of its parent.
 
-```
+```textgraph example
 platform(horizontal) {
   frontend(vertical) {
     browser: Browser
@@ -649,7 +663,7 @@ platform(horizontal) {
 
 Connect nodes across scopes using dot notation: `group.node`.
 
-```
+```textgraph example
 frontend {
   browser: Browser
 }
@@ -670,7 +684,16 @@ backend.auth -> data.db
 
 Dot notation chains for deeply nested targets:
 
-```
+```textgraph example
+platform {
+  backend {
+    gateway: API Gateway
+  }
+  data {
+    db(cylinder): Database
+  }
+}
+
 platform.backend.gateway -> platform.data.db
 ```
 
@@ -678,7 +701,7 @@ platform.backend.gateway -> platform.data.db
 
 Identifiers resolve from the current scope outward. The first match wins. An inner declaration shadows an outer one with the same name.
 
-```
+```textgraph example
 frontend {
   api -> cdn
   api: Frontend API
@@ -718,7 +741,7 @@ When multiple overlays exist in the same scope, later declarations render on top
 
 A small status indicator anchored to a corner of a group.
 
-```
+```textgraph example
 services {
   api -> db
   api: API Server
@@ -732,7 +755,7 @@ services {
 
 A floating note connected to a specific node.
 
-```
+```textgraph example
 main {
   lb -> api -> db
   lb: Load Balancer
@@ -750,7 +773,7 @@ Overlay elements can have connections to flow elements — the renderer routes e
 
 Use `overlay-cover` for a watermark or translucent background layer.
 
-```
+```textgraph example
 services {
   api -> db
   api: API
@@ -764,7 +787,7 @@ services {
 
 A comprehensive example: a multi-tier cloud deployment platform with CI/CD pipeline and monitoring overlay. This exercises every major feature covered on this page.
 
-```
+```textgraph example
 <!-- scope-level style for the root -->
 (fill)
 

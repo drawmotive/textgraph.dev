@@ -1,0 +1,83 @@
+/* Give paired examples the document width and adapt to the available column space. */
+.VPDoc:has(.textgraph-example) .content-container {
+  max-width: 1200px;
+}
+
+.vp-doc .textgraph-example {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 24px 0;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.textgraph-example-source,
+.textgraph-example-preview {
+  min-width: 0;
+  padding: 16px;
+}
+
+.textgraph-example-source {
+  background: var(--vp-code-block-bg);
+}
+
+.textgraph-example-preview {
+  border-left: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc .textgraph-example-label {
+  margin: 0 0 12px;
+  color: var(--vp-c-text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vp-doc .textgraph-example div[class*='language-'] {
+  margin: 0;
+  border-radius: 0;
+}
+
+.vp-doc .textgraph-example pre {
+  padding: 12px 0;
+}
+
+.vp-doc .textgraph-example pre code {
+  padding: 0;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.textgraph-example figure {
+  margin: 0;
+}
+
+.textgraph-example img {
+  margin: 0 auto;
+  border-radius: 4px;
+  background: white;
+}
+
+/* Readers need an availability explanation; SDK internals stay out of the guide. */
+.textgraph-example .textgraph-error,
+.textgraph-example-unavailable {
+  display: none;
+}
+
+.textgraph-error + .textgraph-example-unavailable {
+  display: block;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .vp-doc .textgraph-example {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .textgraph-example-preview {
+    border-left: 0;
+    border-top: 1px solid var(--vp-c-divider);
+  }
+}

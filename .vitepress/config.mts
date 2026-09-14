@@ -1,10 +1,12 @@
 import { defineConfig } from 'vitepress'
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress'
 import { textgraphIssuesUrl } from './support.ts'
+import { textgraphExamples } from './textgraph-examples.mjs'
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
   description: "A natural-language DSL that turns text descriptions into diagrams. Mind maps, sequence diagrams, and slides are not implemented yet.",
+  markdown: { config: textgraphExamples },
   themeConfig: {
     logo: '/logo.svg',
     nav: [
@@ -81,4 +83,7 @@ export default defineConfig(withTextGraph({
       level: [2, 3]
     }
   }
+}, {
+  // This language guide includes valid syntax the current SDK cannot lay out yet.
+  errorMode: 'inline',
 }))
