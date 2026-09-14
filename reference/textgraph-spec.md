@@ -1,5 +1,9 @@
 # TextGraph DSL — Language Specification
 
+::: warning Implementation status
+Only flowcharts and directed graphs are implemented. Mind maps, sequence diagrams, and slides are not implemented yet. This specification includes their planned syntax and behavior; it is not a list of currently available features.
+:::
+
 **Version:** v0.1 — 2026-03-17
 
 **License:** [Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0)](https://creativecommons.org/licenses/by-nd/4.0/)
@@ -15,7 +19,7 @@ Copyright © 2026 mason@drawmotive.com, kelly@drawmotive.com
 2. **Resilient** — partial rendering on error; invalid sections produce visible error nodes, not blank output
 3. **Style-separated** — diagram content is distinct from theme/visual directives
 
-The language uses a single unified grammar that covers flowcharts, sequence diagrams, and mindmaps. It also supports slide decks as a first-class document type. The diagram type is inferred from content or declared explicitly.
+The language design uses a single unified grammar for flowcharts, sequence diagrams, mindmaps, and slide decks. Flowcharts and directed graphs are available today; the other formats describe planned behavior.
 
 
 ## Core Syntax & Grammar
@@ -232,6 +236,10 @@ Tokens are order-independent and additive. Any number of style tokens may be com
 
 ### Diagram Type Inference
 
+::: warning Mind maps and sequence diagrams: not implemented
+Only the `diagram` type is currently implemented. The `mindmap` and `sequence` classes, including the implicit mind map connections below, describe planned behavior.
+:::
+
 The diagram type is a style class applied to a scope. When no type is specified, TextGraph infers the type from the content structure. To declare explicitly, apply the type as a class on the root or any group scope:
 
 ```
@@ -242,13 +250,13 @@ group1(sequence) {
 
 This renders `group1` as a sequence diagram. Any scope can have its own diagram type, enabling mixed diagram types in a single document.
 
-Supported type classes include:
+The language design defines these type classes:
 
-| Class | Diagram type |
-|-------|-------------|
-| `diagram` | Flowchart / directed graph |
-| `sequence` | Sequence diagram |
-| `mindmap` | Mind map |
+| Class | Diagram type | Status |
+|-------|-------------|--------|
+| `diagram` | Flowchart / directed graph | Implemented |
+| `sequence` | Sequence diagram | Not implemented |
+| `mindmap` | Mind map | Not implemented |
 
 **Inside slides**, type inference is disabled. All diagram content must be wrapped in a scope that declares its diagram type via a style class — `(diagram) {}`, `(mindmap) {}`, `(sequence) {}`, etc. — so the parser never has to guess what bare text means. This is the same `ScopeBlock` construct used everywhere; the parser enforces the type-class requirement semantically inside slides. See [Slide Decks](#slide-decks) for details.
 
@@ -711,6 +719,10 @@ When multiple overlays exist within the same scope, later declarations render on
 
 
 ## Slide Decks
+
+::: warning Not implemented
+Slide decks, slide styles, embedded diagrams on slides, and speaker notes are not available yet. This section describes planned behavior.
+:::
 
 ### Slide Boundaries
 

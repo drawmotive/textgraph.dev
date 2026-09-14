@@ -1,5 +1,9 @@
 # Sequence Diagrams
 
+::: warning Not implemented
+Sequence diagrams are not available yet. This page describes planned syntax and behavior; its examples will not render as sequence diagrams. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+:::
+
 Sequence diagrams model interactions between participants over time. Unlike flowcharts, sequence diagrams require an explicit type declaration — add `(sequence)` as a scope-level style at the top of your diagram.
 
 All examples on this page use cloud architecture as the running context.

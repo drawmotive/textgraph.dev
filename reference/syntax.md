@@ -1,5 +1,9 @@
 # Syntax Reference
 
+::: warning Implementation status
+Only flowcharts and directed graphs are implemented. Mind maps, sequence diagrams, and slides are not implemented yet. References to those formats, including `@slide` and `(notes)`, describe planned syntax.
+:::
+
 A complete reference for all operators and punctuation in the TextGraph DSL. For the formal, machine-readable syntax definition see the [PEG Grammar](/reference/grammar).
 
 Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a node with children. Omitting its identifier creates an anonymous group.
@@ -138,6 +142,10 @@ A -> { B -> C } -> D
 This creates one anonymous group between `A` and `D`, plus the child connection `B -> C`. Separate `{ ... }` occurrences create separate anonymous groups. Use a named group when it needs to be referenced from another statement.
 
 ## `@slide` — Slide Boundary
+
+::: warning Not implemented
+Slide boundaries and diagram content on slides are not available yet. This section describes planned syntax.
+:::
 
 `@slide` at the **start of a line** marks a slide boundary. Style classes and a slide name are declared on the same line:
 
@@ -317,6 +325,10 @@ a -> b
 ```
 
 ## `(notes)` — Speaker Notes
+
+::: warning Not implemented
+Speaker notes and presenter mode are not available yet. This section describes planned syntax.
+:::
 
 A scope-level `(notes)` class with a label declares speaker notes on a slide. Notes are not rendered on the slide — they are visible only in presenter mode:
 

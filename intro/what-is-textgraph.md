@@ -1,14 +1,20 @@
 # What is TextGraph?
 
-TextGraph is a natural-language DSL that turns text descriptions into beautiful, professional diagrams and slides — built for the AI era.
+TextGraph is a natural-language DSL that turns text descriptions into diagrams — built for the AI era.
+
+::: warning Current availability: diagrams only
+Flowcharts and directed graphs are implemented. Mind maps, sequence diagrams, and slides are not implemented and are not available yet. Their documentation describes planned features.
+:::
 
 ## Natural Language First
 
-TextGraph is a domain-specific language with a grammar close to plain English. Describe what you want — TextGraph renders it as a polished diagram or slide deck. No wrestling with cryptic symbols or manual layout.
+TextGraph is a domain-specific language with a grammar close to plain English. Describe what you want — TextGraph renders it as a diagram. No wrestling with cryptic symbols or manual layout.
 
-## Embedded Markdown = Slides
+## Slides — Not implemented
 
-TextGraph supports embedded Markdown, so you can go beyond diagrams and author full professional slide presentations from a single text source. Markdown support follows the [CommonMark basic syntax](https://www.markdownguide.org/basic-syntax/), including headings, bold, italic, lists, links, blockquotes, code, and more.
+::: warning Not implemented
+Slide authoring, layouts, speaker notes, and slide export are not available yet. The planned slide format uses embedded Markdown to describe presentations from a single text source. See [Authoring Slides](/slides/authoring) for the planned scope.
+:::
 
 ## Styling & Themes
 

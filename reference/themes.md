@@ -1,5 +1,9 @@
 # Built-in Themes
 
+::: warning Slides: not implemented
+Slide decks and slide theming are not available yet. References to slides and slide examples on this page describe planned behavior.
+:::
+
 A theme defines the color palette, typography baseline, and default border radius used across a diagram or slide deck. Themes are applied via the `dark` / `light` class tokens or by referencing a named theme. Custom themes can override any variable.
 
 ---

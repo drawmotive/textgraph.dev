@@ -1,5 +1,9 @@
 # Layouts & Grids
 
+::: warning Not implemented
+Slide layouts and grids are not available yet. This section is reserved for planned slide features. For working diagram layouts, see [Flowcharts](/diagrams/flowcharts#layout-control).
+:::
+
 <!--
   CONTENT TO ADD:
   - Built-in slide layout presets: title, two-column, full-image, code+diagram, etc.

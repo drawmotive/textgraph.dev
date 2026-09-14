@@ -1,5 +1,9 @@
 # Mind Maps
 
+::: warning Not implemented
+Mind maps are not available yet. This page describes planned syntax and behavior; its examples will not render as mind maps. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+:::
+
 Mind maps use the `mindmap` class on a group scope. Hierarchy comes from indentation — each level of indent defines a parent-child relationship, no `->` arrows needed.
 
 All examples on this page use cloud architecture as the running context.

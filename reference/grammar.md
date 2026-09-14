@@ -1,5 +1,9 @@
 # Formal Grammar
 
+::: warning Grammar coverage is not feature availability
+Only flowcharts and directed graphs are implemented. This grammar also describes planned mind map, sequence diagram, and slide syntax. Parsing that syntax does not mean those features are available in the renderer.
+:::
+
 The TextGraph syntax is defined as a PEG ([Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar)) using [Peggy](https://peggyjs.org/) notation. This grammar is the canonical, unambiguous reference for what inputs are syntactically valid.
 
 Semantic rules — scope resolution, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).

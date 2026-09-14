@@ -134,9 +134,13 @@ See [Flowcharts — Layout](/diagrams/flowcharts#layout-control) for grid layout
 
 ## Beyond Flowcharts
 
-TextGraph uses a single grammar for multiple diagram types. The same `->` syntax adapts to the context.
+The language design includes additional diagram types. Only flowcharts and directed graphs are implemented today; the sections below describe planned features.
 
 ### Mind Maps
+
+::: warning Not implemented
+Mind maps are not available yet. The following is a planned syntax example and will not render as a mind map.
+:::
 
 Apply the `mindmap` class to a scope. Hierarchy comes from indentation — no arrows needed.
 
@@ -160,6 +164,10 @@ Each indented line becomes a child of the line above it at one less indent level
 See [Mind Maps](/diagrams/mindmaps) for identifiers, styling, and explicit cross-tree connections.
 
 ### Sequence Diagrams
+
+::: warning Not implemented
+Sequence diagrams are not available yet. The following is a planned syntax example and will not render as a sequence diagram.
+:::
 
 Add `(sequence)` as a scope-level style. The same `->` syntax now draws messages on a timeline.
 
@@ -189,7 +197,7 @@ The fastest way to try TextGraph — no install required.
 
 [Open the Playground →](https://textgraph.drawmotive.com/)
 
-Paste any example from this page and see the rendered diagram immediately.
+Paste a flowchart or directed-graph example from this page to render it. The mind map and sequence diagram examples are not supported yet.
 
 ### CLI
 
@@ -222,8 +230,8 @@ Search for **TextGraph** in the VS Code extension marketplace, or see the [VS Co
 | Topic | What you'll learn |
 |-------|-------------------|
 | [Flowcharts](/diagrams/flowcharts) | Connection types, shapes, edge styles, groups, layout control |
-| [Mind Maps](/diagrams/mindmaps) | Indentation hierarchy, rich node content, cross-tree edges |
-| [Sequence Diagrams](/diagrams/sequence) | Message types, combined fragments, participant shapes |
-| [Authoring Slides](/slides/authoring) | Slide boundaries, Markdown content, themes |
+| [Mind Maps](/diagrams/mindmaps) — **Not implemented** | Planned indentation hierarchy and cross-tree edges |
+| [Sequence Diagrams](/diagrams/sequence) — **Not implemented** | Planned message types and combined fragments |
+| [Authoring Slides](/slides/authoring) — **Not implemented** | Planned slide boundaries, Markdown content, and themes |
 | [Style Classes](/reference/classes) | Colors, shapes, borders, weights, overlays |
 | [Language Specification](/reference/textgraph-spec) | Full grammar and rendering rules |

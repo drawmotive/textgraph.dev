@@ -1,5 +1,9 @@
 # Authoring Slides
 
+::: warning Not implemented
+Slide authoring is not available yet. Slide decks and `@slide` syntax are planned features. For working diagrams, see [Getting Started](/intro/getting-started).
+:::
+
 <!--
   CONTENT TO ADD:
   - How a TextGraph file becomes a slide deck (the `slides` top-level block or file mode)

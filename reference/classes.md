@@ -1,5 +1,9 @@
 # Style Classes Reference
 
+::: warning Implementation status
+Mind maps, sequence diagrams, and slides are not implemented yet. Slide examples, sequence fragment classes, and the `notes` class on this page describe planned behavior.
+:::
+
 Style classes are space-separated tokens placed in parentheses after a node identifier, edge arrow, scope declaration, or slide boundary. They compose freely — any number of classes can be combined.
 
 ```
@@ -229,6 +233,10 @@ tip -> main.b
 
 ## Sequence Diagram — Combined Fragments
 
+::: warning Not implemented
+Sequence diagrams and their combined fragments are not available yet. The classes and examples below describe planned behavior.
+:::
+
 The following classes are valid only on a named scope (`group(class) { ... }`) that appears inside a `sequence` diagram type. Outside a sequence context they have no visual effect.
 
 | Class | Meaning | Notes |
@@ -268,6 +276,6 @@ The first line of text inside a `loop`, `alt`, `opt`, or `par` scope is rendered
 
 | Class | Valid on | Effect |
 |-------|----------|--------|
-| `notes` | Scope-level (slides) | Declares speaker notes for presenter mode — not rendered on the slide. Usage: `(notes): text` |
+| `notes` | Scope-level (slides) | **Not implemented.** Planned speaker notes for presenter mode. Syntax: `(notes): text` |
 | `hidden` | Node, group | Renders the element invisibly — useful for spacing or layout anchors |
 | `title` | Node, group | Renders the element as a prominent title block with no border |

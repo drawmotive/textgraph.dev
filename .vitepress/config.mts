@@ -4,7 +4,7 @@ import { textgraphIssuesUrl } from './support.ts'
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
-  description: "A natural-language DSL that turns text descriptions into beautiful, professional diagrams and slides — built for the AI era.",
+  description: "A natural-language DSL that turns text descriptions into diagrams. Mind maps, sequence diagrams, and slides are not implemented yet.",
   themeConfig: {
     logo: '/logo.svg',
     nav: [
@@ -25,12 +25,12 @@ export default defineConfig(withTextGraph({
         text: 'Diagram Types',
         items: [
           { text: 'Flowcharts', link: '/diagrams/flowcharts' },
-          { text: 'Sequence Diagrams', link: '/diagrams/sequence' },
-          { text: 'Mind Maps', link: '/diagrams/mindmaps' },
+          { text: 'Sequence Diagrams (Not implemented)', link: '/diagrams/sequence' },
+          { text: 'Mind Maps (Not implemented)', link: '/diagrams/mindmaps' },
         ]
       },
       {
-        text: 'Slides',
+        text: 'Slides (Not implemented)',
         items: [
           { text: 'Authoring Slides', link: '/slides/authoring' },
           { text: 'Layouts & Grids', link: '/slides/layouts' },

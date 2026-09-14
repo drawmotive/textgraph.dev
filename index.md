@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "TextGraph"
-  text: "Diagrams & Slides from Plain Text"
-  tagline: A natural-language DSL built for the AI era. Describe what you want — TextGraph renders it as a polished diagram or slide deck.
+  text: "Diagrams from Plain Text"
+  tagline: A natural-language DSL built for the AI era. Create flowcharts and directed graphs today. Mind maps, sequence diagrams, and slides are not implemented yet.
   actions:
     - theme: brand
       text: Get Started
@@ -21,8 +21,8 @@ features:
     title: Natural Language First
     details: TextGraph's grammar is close to plain English. Describe your diagram in prose — no arcane symbols or boilerplate required.
   - icon: 🖥️
-    title: Beautiful Slides Too
-    details: Embedded Markdown lets you author full professional slide presentations from a single text source, not just diagrams.
+    title: Slides — Not implemented
+    details: Slide authoring, layouts, speaker notes, and export are planned features and are not available yet.
   - icon: 🔌
     title: Zero-Effort Integrations
     details: Drop TextGraph into your existing tools and pipelines — VS Code, CLI, REST API, or directly from an LLM prompt.
