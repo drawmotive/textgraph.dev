@@ -19,7 +19,7 @@ test('example fences retain escaped, copyable DSL alongside the rendered PNG', a
     assert.match(html, /(?:&lt;|&#x3C;)script/);
     assert.doesNotMatch(html, /<script>alert/);
     assert.match(html, /api -(?:&gt;|>) db/);
-    assert.match(html, /<img[^>]+src="data:image\/png;base64,/);
+    assert.match(html, /<img[^>]+src="(?:data:image\/png;base64,|\/assets\/textgraph-[a-f0-9]{20}\.png")/);
     assert.ok(html.indexOf('class="copy"') < html.indexOf('<img'));
 
     const ordinary = await md.renderAsync('~~~text\napi -> db\n~~~', {});
