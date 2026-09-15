@@ -14,10 +14,10 @@ A -> B
 ```
 ````
 
-Install the Markdown plugin, which uses TextGraph SDK 0.2.0:
+Install the Markdown plugin, which uses TextGraph SDK 0.2.1:
 
 ```bash
-npm install @drawmotive/markdown-it-textgraph@0.2.0 markdown-it@14
+npm install @drawmotive/markdown-it-textgraph@0.2.1 markdown-it@14
 ```
 
 ## VitePress
@@ -33,7 +33,7 @@ export default defineConfig(withTextGraph({
 }))
 ```
 
-Development displays syntax errors next to the source. Production builds fail on invalid diagrams. Images are embedded as PNG data URLs and remain visible without JavaScript; a custom content security policy must allow `img-src data:`.
+Development displays syntax errors next to the source. Production builds fail on invalid diagrams. VitePress serves content-addressed PNG assets that remain visible without JavaScript and work with `img-src 'self'`. Plain markdown-it embeds PNG data URLs and requires `img-src data:`. PNG rendering defaults to scale `1`; set `render: { scale: 2 }` in the adapter options for higher raster density at the same logical display size.
 
 ## markdown-it
 

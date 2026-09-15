@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- React, Markdown, and VitePress PNG rendering now defaults to scale 1. Explicit higher scales remain supported.
+- VitePress emits content-addressed PNG assets and preserves logical display dimensions when raster size is limited.
+- The SDK, Markdown plugin, and Markdown VS Code extension use coordinated version 0.2.1.
+
 ## 0.2.0
 
 - TextGraph SDK 0.2.0 renders empty and anonymous group endpoints and reports syntax errors without preventing later renders.
