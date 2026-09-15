@@ -9,10 +9,14 @@
   },
   "type": "module",
   "scripts": {
+    "assets": "textgraph-copy-assets public/textgraph/wasm",
+    "predev": "npm run assets",
     "dev": "vitepress dev",
+    "prebuild": "npm run assets",
     "build": "vitepress build",
     "preview": "vitepress preview",
     "test": "node --test test/*.test.mjs",
+    "test:browser": "playwright test",
     "release:check": "node .release/check.cjs --ready",
     "build:release": "node .release/check.cjs --installed && npm run build"
   },
@@ -26,6 +30,8 @@
   },
   "devDependencies": {
     "@drawmotive/markdown-it-textgraph": "0.2.1",
+    "@drawmotive/textgraph": "0.2.1",
+    "@playwright/test": "1.61.0",
     "peggy": "^5.0.6",
     "vitepress": "2.0.0-alpha.19"
   }

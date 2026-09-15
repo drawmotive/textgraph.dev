@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Local development uses a node_modules directory link.
 node_modules
+
+# Copied public SDK runtime and browser verification output.
+public/textgraph/
+test-results/
+playwright-report/

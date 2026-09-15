@@ -11,7 +11,7 @@ hero:
       link: /intro/what-is-textgraph
     - theme: alt
       text: Open Playground
-      link: https://textgraph.drawmotive.com/
+      link: /playground
     - theme: alt
       text: Report an issue
       link: https://github.com/drawmotive/textgraph/issues

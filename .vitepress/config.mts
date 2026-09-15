@@ -7,11 +7,12 @@ export default defineConfig(withTextGraph({
   title: "TextGraph",
   description: "A natural-language DSL that turns text descriptions into diagrams. Mind maps, sequence diagrams, and slides are not implemented yet.",
   markdown: { config: textgraphExamples },
+  vite: { worker: { format: 'es' } },
   themeConfig: {
     logo: '/logo.svg',
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
-      { text: 'Playground', link: 'https://textgraph.drawmotive.com/' },
+      { text: 'Playground', link: '/playground' },
       { text: 'Report an issue', link: textgraphIssuesUrl },
     ],
 

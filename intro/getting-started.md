@@ -195,7 +195,7 @@ See [Sequence Diagrams](/diagrams/sequence) for message types, combined fragment
 
 The fastest way to try TextGraph — no install required.
 
-[Open the Playground →](https://textgraph.drawmotive.com/)
+[Open the Playground →](/playground)
 
 Paste a flowchart or directed-graph example from this page to render it. The mind map and sequence diagram examples are not supported yet.
 
