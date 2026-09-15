@@ -12,7 +12,7 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const status = page.getByRole('status', { name: 'Render status' });
   await expect(editor).toBeVisible();
   await expect(status).toHaveText('Preview up to date');
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toContainText('No errors or warnings');
+  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   const editorBounds = await editor.boundingBox();
@@ -23,6 +23,7 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   await editor.fill('client -> api -> db\nclient: Browser\napi: Server\ndb(cylinder): Database');
   await expect(status).toHaveText('Preview up to date');
   await expect(preview).not.toHaveAttribute('src', initialImage);
+  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toContainText(/warning/i);
   const validImage = await preview.getAttribute('src');
   await editor.fill('group {\n  A ->\n}');
   await expect(status).toHaveText('Check the errors below');
@@ -33,13 +34,14 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const diagnosticsBounds = await diagnostics.boundingBox();
   expect(diagnosticsBounds.y).toBeGreaterThan(previewBounds.y);
   expect(diagnosticsBounds.y + diagnosticsBounds.height).toBeLessThanOrEqual(1000);
+  expect(diagnosticsBounds.y + diagnosticsBounds.height).toBeLessThanOrEqual((await preview.boundingBox()).y);
   await diagnostics.getByRole('button', { name: 'Line 2, column 7' }).click();
   await expect(editor).toBeFocused();
   expect(await editor.evaluate(element => element.selectionStart)).toBe(14);
 
   await editor.fill('A -> B');
   await expect(status).toHaveText('Preview up to date');
-  await expect(diagnostics).toContainText('No errors or warnings');
+  await expect(diagnostics).toHaveCount(0);
   await editor.fill('');
   await expect(preview).toHaveCount(0);
   await expect(status).toHaveText('Add some TextGraph to begin');
@@ -51,11 +53,76 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const mobileEditor = await editor.boundingBox();
   const mobilePreview = await page.getByRole('region', { name: 'Diagram preview' }).boundingBox();
   expect(mobilePreview.y).toBeGreaterThan(mobileEditor.y + mobileEditor.height);
+  await expect(page.getByRole('separator', { name: 'Resize editor and preview' })).toBeHidden();
   await page.getByRole('link', { name: 'Syntax reference', exact: true }).click();
   await expect(page).toHaveURL(/\/reference\/syntax(?:\.html)?$/);
   await page.goto('/playground');
   await expect(status).toHaveText('Preview up to date');
   expect(failures).toEqual([]);
+});
+
+test('splitter adjusts panes with pointer and keyboard while tall previews stay contained', async ({ page }) => {
+  await page.goto('/playground');
+  const status = page.getByRole('status', { name: 'Render status' });
+  await expect(status).toHaveText('Preview up to date');
+  const splitter = page.getByRole('separator', { name: 'Resize editor and preview' });
+  await expect(splitter).toBeVisible();
+  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+  const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
+  const originalWidth = (await editor.boundingBox()).width;
+  const handle = await splitter.boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + 200, handle.y + 100, { steps: 8 });
+  await page.mouse.up();
+  expect((await editor.boundingBox()).width).toBeGreaterThan(originalWidth + 150);
+  const releasedWidth = (await editor.boundingBox()).width;
+  await page.mouse.move(100, handle.y + 100);
+  expect((await editor.boundingBox()).width).toBe(releasedWidth);
+
+  await splitter.focus();
+  await page.keyboard.press('Home');
+  await expect(splitter).toHaveAttribute('aria-valuenow', '20');
+  await page.keyboard.press('ArrowRight');
+  await expect(splitter).toHaveAttribute('aria-valuenow', '22');
+  await page.keyboard.press('ArrowLeft');
+  await expect(splitter).toHaveAttribute('aria-valuenow', '20');
+  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowRight');
+  await expect(splitter).toHaveAttribute('aria-valuenow', '80');
+
+  const previousImage = await preview.getAttribute('src');
+  await editor.fill('A -> B -> C -> D -> E -> F -> G -> H');
+  await expect(status).toHaveText('Preview up to date');
+  await expect(preview).not.toHaveAttribute('src', previousImage);
+  await preview.evaluate(image => image.decode());
+  const assertFits = async () => {
+    const sizes = await preview.evaluate(image => {
+      const canvas = image.closest('.preview-canvas');
+      const imageBounds = image.getBoundingClientRect();
+      const canvasBounds = canvas.getBoundingClientRect();
+      return {
+        scrollHeight: canvas.scrollHeight, height: canvas.clientHeight,
+        scrollWidth: canvas.scrollWidth, width: canvas.clientWidth,
+        contained: imageBounds.top >= canvasBounds.top && imageBounds.bottom <= canvasBounds.bottom
+          && imageBounds.left >= canvasBounds.left && imageBounds.right <= canvasBounds.right,
+        naturalHeight: image.naturalHeight,
+      };
+    });
+    expect(sizes.naturalHeight).toBeGreaterThan(sizes.height);
+    expect(sizes.scrollHeight).toBeLessThanOrEqual(sizes.height);
+    expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.width);
+    expect(sizes.contained).toBe(true);
+  };
+  await assertFits();
+  await editor.fill('group {\n  A ->\n}');
+  await expect(status).toHaveText('Check the errors below');
+  await assertFits();
+  await page.setViewportSize({ width: 900, height: 750 });
+  await assertFits();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(splitter).toBeHidden();
+  await assertFits();
 });
 
 test('a runtime download failure is visible and can be retried', async ({ page }) => {

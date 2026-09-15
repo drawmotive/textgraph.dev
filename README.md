@@ -27,7 +27,7 @@ Run `npm run build:release` to validate the coordinated version and installed re
 
 ## Playground
 
-`/playground` runs inside this site. The left pane edits TextGraph; the right pane shows a PNG preview with errors and warnings below it. Edits render after a 350 ms pause. Render now (or Ctrl/⌘+Enter) renders immediately. Invalid edits keep the last successful preview visible; diagnostic locations focus the corresponding source.
+`/playground` runs inside this site. The left pane edits TextGraph; the right pane shows a PNG preview. Drag the divider to adjust the pane ratio, or focus it and use the arrow keys (Home/End select the limits). The image fits the available width and height. Errors and warnings appear above the image only when present. Edits render after a 350 ms pause. Render now (or Ctrl/⌘+Enter) renders immediately. Invalid edits keep the last successful preview visible; diagnostic locations focus the corresponding source.
 
 The public `@drawmotive/textgraph@0.2.1` SDK renders in a module Worker, so source stays in the browser and layout work does not block typing. Only one render runs at a time, intermediate edits are coalesced, and stale results are ignored. No rendering API or sibling repository is required.
 
