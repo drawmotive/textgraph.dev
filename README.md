@@ -25,6 +25,13 @@ Use a fenced block with language `textgraph` and metadata `example` to pair copy
 
 Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
 
+## Analytics
+
+Production uses Google Analytics 4 to measure homepage exploration, successful
+diagram creation, and export/share actions. See [analytics setup and metrics](docs/analytics.md)
+for required property settings, event definitions, and verification. Shared DSL
+source, query strings, and error text are excluded from the site's event payloads.
+
 ## Playground
 
 The editor supports shareable links such as `/playground#source=A%20-%3E%20B`. Opening a link restores its source before the first render. Edits update the address bar after a 250 ms pause without adding history entries; **Share** immediately copies a link containing the latest text. Whitespace, Unicode, invalid DSL, and an empty editor are preserved. Source is percent-encoded in the URL fragment and is not sent to the site server. If clipboard access is unavailable, copy the updated address bar instead. Links grow with the source, so very large diagrams may exceed browser or messaging-service limits.

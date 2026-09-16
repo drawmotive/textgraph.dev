@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRouter, withBase } from 'vitepress'
 import { createPlaygroundRenderer } from '../playground/renderer.mjs'
 import { createSourceLink, readSourceLink } from '../playground/source-link.mjs'
+import { getAnalytics } from '../analytics-browser.mjs'
+import { createPlaygroundAnalytics } from '../analytics.mjs'
 import PreviewImage from './PreviewImage.vue'
 
 const source = ref(`client -> api : HTTPS
@@ -14,6 +16,9 @@ db: Database
 `)
 const editor = ref(null)
 const defaultSource = source.value
+const analytics = getAnalytics()
+const diagramAnalytics = createPlaygroundAnalytics(analytics)
+diagramAnalytics.restore(defaultSource)
 const shareFeedback = ref('')
 const copying = ref(false)
 const router = useRouter()
@@ -41,6 +46,7 @@ const statusText = computed(() => ({
 // URLs belong to this view, never to the worker. Retain the last successful
 // image through invalid edits and release its bytes on replacement or navigation.
 function acceptState(next) {
+  diagramAnalytics.render(next)
   if (next.result !== imageResult) {
     const previous = imageUrl.value
     imageUrl.value = next.result ? URL.createObjectURL(new Blob([next.result.png], { type: 'image/png' })) : ''
@@ -56,6 +62,7 @@ function renderNow() {
 
 function edit(event) {
   source.value = event.target.value
+  diagramAnalytics.edit(source.value, { composing: event.isComposing })
   shareFeedback.value = ''
   // Coalesce typing to avoid browser history API rate limits. Sharing flushes
   // this timer so a click always copies the current text, even during rendering.
@@ -97,8 +104,12 @@ async function shareSource() {
   if (!href) return
   copying.value = true
   const sharedSource = source.value
+  // Clipboard completion can arrive after another edit or render. Describe
+  // the source being copied, not whichever preview exists when it resolves.
+  const currentPreview = state.value.status === 'ready' && !state.value.stale
   try {
     await navigator.clipboard.writeText(href)
+    analytics.action('copy_link', currentPreview)
     if (source.value === sharedSource) shareFeedback.value = 'Link copied.'
   } catch {
     if (source.value === sharedSource) shareFeedback.value = 'Could not copy the link. Copy it from the address bar.'
@@ -115,6 +126,7 @@ function restoreSourceLink() {
   if (!isSourcePage()) return
   shareFeedback.value = ''
   const restored = readSourceLink(window.location.href) ?? defaultSource
+  diagramAnalytics.restore(restored)
   if (restored === source.value) return
   source.value = restored
   renderNow()
@@ -168,6 +180,7 @@ function resizeWithKeyboard(event) {
 }
 
 onMounted(() => {
+  analytics.page(window.location.href, document.referrer)
   sourcePath = window.location.pathname.replace(/\.html$/, '')
   previousBeforeRouteChange = router.onBeforeRouteChange
   router.onBeforeRouteChange = beforeRouteChange

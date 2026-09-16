@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { getAnalytics } from '../analytics-browser.mjs'
 
 // This view owns inspection transforms and export actions. Its input is the
 // complete successful PNG; zoom and pan never alter rendering or export bytes.
@@ -86,6 +87,7 @@ function download() {
   link.href = props.imageUrl
   link.download = 'textgraph.png'
   link.click()
+  getAnalytics().action('download_png', props.status === 'ready' && !props.stale)
 }
 
 async function copyImage() {
@@ -95,11 +97,15 @@ async function copyImage() {
     return
   }
   copying.value = true
+  // A render may finish while the clipboard write is pending; classification
+  // belongs to the bytes selected now, not the later replacement preview.
+  const currentPreview = props.status === 'ready' && !props.stale
   try {
     // Start the clipboard write inside the click's user activation. Reading
     // from the rendered bytes avoids an intervening fetch losing that activation.
     const png = new Blob([props.result.png], { type: 'image/png' })
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+    getAnalytics().action('copy_image', currentPreview)
     notify('Image copied')
   } catch {
     notify('Could not copy the image. Download the PNG instead.')
