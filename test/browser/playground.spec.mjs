@@ -30,7 +30,7 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const diagnostics = page.getByRole('region', { name: 'Errors and warnings' });
   await expect(diagnostics.getByRole('listitem').first()).toContainText(/error/i);
   await expect(preview).toHaveAttribute('src', validImage);
-  await expect(page.getByText('Showing the last successful preview')).toBeVisible();
+  await expect(preview).toHaveAttribute('title', 'Preview from the last successful render');
   const diagnosticsBounds = await diagnostics.boundingBox();
   expect(diagnosticsBounds.y).toBeGreaterThan(previewBounds.y);
   expect(diagnosticsBounds.y + diagnosticsBounds.height).toBeLessThanOrEqual(1000);
@@ -135,4 +135,43 @@ test('a runtime download failure is visible and can be retried', async ({ page }
   await page.getByRole('button', { name: 'Render now' }).click();
   await expect(status).toHaveText('Preview up to date');
   await expect(page.getByRole('img', { name: 'Rendered TextGraph diagram' })).toBeVisible();
+});
+
+test('refresh keeps the preview geometry stable, including with warnings and narrow panes', async ({ page }) => {
+  await page.goto('/playground');
+  const status = page.getByRole('status', { name: 'Render status' });
+  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+  const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
+  const diagnostics = page.getByRole('region', { name: 'Errors and warnings' });
+  await expect(status).toHaveText('Preview up to date');
+
+  const checkRefresh = async () => {
+    await preview.evaluate(image => image.decode());
+    const before = await preview.boundingBox();
+    const previousUrl = await preview.getAttribute('src');
+    const previousDiagnostics = await diagnostics.allTextContents();
+    // Hold the debounce so the layout is observed with the existing result and
+    // new source. The renderer has not produced any new geometry at this point.
+    await page.clock.pauseAt(new Date());
+    await editor.fill((await editor.inputValue()) + ' ');
+    await expect(status).toHaveText('Waiting for edits…');
+    expect(await preview.boundingBox()).toEqual(before);
+    await expect(preview).toHaveAttribute('src', previousUrl);
+    expect(await diagnostics.allTextContents()).toEqual(previousDiagnostics);
+    await page.clock.resume();
+    await expect(preview).not.toHaveAttribute('src', previousUrl);
+    await expect(status).toHaveText('Preview up to date');
+    await preview.evaluate(image => image.decode());
+    expect(await preview.boundingBox()).toEqual(before);
+  };
+
+  await checkRefresh();
+  await editor.fill('A -> B\nB(cylinder): Database');
+  await expect(diagnostics).toContainText(/warning/i);
+  await expect(status).toHaveText('Preview up to date');
+  await checkRefresh();
+  await page.setViewportSize({ width: 1080, height: 900 });
+  await page.getByRole('separator', { name: 'Resize editor and preview' }).focus();
+  await page.keyboard.press('End');
+  await checkRefresh();
 });

@@ -142,6 +142,27 @@ test('empty input clears output and discards in-flight results', t => {
   assert.equal(worker.requests.length, 2);
 });
 
+test('refresh retains displayed diagnostics until current results replace them', t => {
+  const app = setup(t);
+  app.renderer.update('A -> B', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  const warnings = [{ severity: 'warning', code: 'FONT', stage: 'font', message: 'Missing glyph' }];
+  finish(worker, { ...png, diagnostics: warnings });
+  const previous = app.state.result;
+  app.renderer.update('A -> C');
+  assert.deepEqual(app.state.diagnostics, warnings);
+  assert.equal(app.state.result, previous);
+  t.mock.timers.tick(350);
+  assert.deepEqual(app.state.diagnostics, warnings);
+  app.renderer.update('A -> D');
+  finish(worker, invalid);
+  assert.deepEqual(app.state.diagnostics, warnings);
+  t.mock.timers.tick(350);
+  finish(worker);
+  assert.deepEqual(app.state.diagnostics, []);
+});
+
 test('startup failures appear as diagnostics and a manual render starts a fresh worker', t => {
   const app = setup(t);
   app.renderer.update('A -> B', { immediate: true });

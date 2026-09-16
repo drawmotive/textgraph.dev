@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
           <ul>
             <li v-for="(diagnostic, index) in state.diagnostics" :key="index" :class="diagnostic.severity">
               <span class="diagnostic-severity">{{ diagnostic.severity }}</span>
-              <button v-if="diagnostic.location" class="diagnostic-location" type="button" @click="goToDiagnostic(diagnostic)">
+              <button v-if="diagnostic.location" class="diagnostic-location" type="button" :disabled="busy" @click="goToDiagnostic(diagnostic)">
                 Line {{ diagnostic.location.line + 1 }}, column {{ diagnostic.location.column + 1 }}
               </button>
               <p>{{ diagnostic.message }}</p>
@@ -183,12 +183,12 @@ onBeforeUnmount(() => {
           </ul>
         </section>
         <div class="preview-canvas" :aria-busy="busy">
-          <p v-if="state.stale" class="stale-notice">Showing the last successful preview</p>
           <div class="preview-image">
             <img
               v-if="imageUrl"
               :src="imageUrl"
               alt="Rendered TextGraph diagram"
+              :title="state.stale ? 'Preview from the last successful render' : undefined"
               :width="state.result.displayWidth ?? state.result.width / 2"
               :height="state.result.displayHeight ?? state.result.height / 2"
             >
@@ -227,6 +227,11 @@ textarea:focus { outline: 2px solid var(--vp-c-brand-1); outline-offset: -2px; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
 .editor-help { padding: 12px 20px; border-top: 1px solid var(--vp-c-divider); font-size: 12px; line-height: 1.6; color: var(--vp-c-text-2); }
 .render-status { color: var(--vp-c-text-2); font-size: 12px; }
+/* Refresh status must not change the canvas height, even in a narrow pane.
+   Stale-image context lives on the image tooltip, outside the document flow. */
+.preview-panel > .panel-heading { flex-wrap: nowrap; }
+.preview-panel > .panel-heading h2 { flex-shrink: 0; }
+.render-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .render-status[data-status='error'] { color: var(--vp-c-danger-1); }
 .render-status[data-status='ready'] { color: var(--vp-c-success-1); }
 .preview-canvas { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; background: var(--vp-c-bg-soft); }
@@ -235,7 +240,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--vp-c-brand-1); 
 .preview-image { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; margin: 28px; }
 .preview-image img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
 .preview-placeholder { color: var(--vp-c-text-2); font-size: 14px; text-align: center; }
-.stale-notice { flex-shrink: 0; padding: 10px 16px 0; font-size: 12px; color: var(--vp-c-text-2); text-align: center; }
 .diagnostics { flex-shrink: 0; min-height: 0; max-height: 35%; overflow-y: auto; padding: 16px 20px; border-bottom: 1px solid var(--vp-c-divider); background: var(--vp-c-bg); overflow-wrap: anywhere; }
 .diagnostics h3 { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
 .diagnostics ul { list-style: none; margin: 0; padding: 0; }
@@ -245,6 +249,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--vp-c-brand-1); 
 .error .diagnostic-severity { color: var(--vp-c-danger-1); }
 .warning .diagnostic-severity { color: var(--vp-c-warning-1); }
 .diagnostic-location { color: var(--vp-c-brand-1); font-size: 12px; text-decoration: underline; cursor: pointer; }
+.diagnostic-location:disabled { cursor: default; opacity: 0.6; }
 .playground-note { margin-top: 14px; color: var(--vp-c-text-2); font-size: 12px; }
 @media (max-width: 767px) {
   .playground { padding: 16px 16px 32px; }

@@ -97,7 +97,9 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
         return;
       }
       pending = { id: revision, source };
-      publish({ status: ready ? 'waiting' : 'loading', diagnostics: [], stale: Boolean(state.result) });
+      // Pending input has no diagnostic result yet. Keep the displayed result
+      // together until its replacement arrives, so warning panels do not flash.
+      publish({ status: ready ? 'waiting' : 'loading', stale: Boolean(state.result) });
       if (!immediate) timer = setTimeout(() => { timer = undefined; dispatch(); }, debounceMs);
       if (!worker) startWorker();
       dispatch();
