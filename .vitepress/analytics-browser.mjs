@@ -46,7 +46,8 @@ export function installAnalytics(router) {
     // The router's window capture listener can push the destination before
     // this document listener runs. Attribution uses the last displayed page.
     if (path === '/playground') {
-      const placement = link.closest('.VPHero') ? 'hero' : link.closest('header') ? 'navigation' : link.closest('footer') ? 'footer' : 'content';
+      const placement = link.closest('[data-analytics-placement]')?.dataset.analyticsPlacement
+        ?? (link.closest('.VPHero') ? 'hero' : link.closest('header') ? 'navigation' : link.closest('footer') ? 'footer' : 'content');
       tracker.openPlayground({ placement, example: link.dataset.analyticsExample });
     }
     tracker.integration(path);

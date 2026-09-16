@@ -5,11 +5,10 @@ import { textgraphExamples } from './textgraph-examples.mjs'
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
-  description: "A natural-language DSL that turns text descriptions into diagrams. Mind maps, sequence diagrams, and slides are not implemented yet.",
+  description: "Turn relationships into diagrams with readable text. Explore flowcharts, automatic layout, and a browser playground, with Markdown and VS Code integrations.",
   markdown: { config: textgraphExamples },
   vite: { worker: { format: 'es' } },
   themeConfig: {
-    logo: '/logo.svg',
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
       { text: 'Playground', link: '/playground' },

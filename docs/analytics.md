@@ -70,9 +70,9 @@ containing homepage_activated with sessions containing a homepage page_view
 key-event rate includes all sessions and has a different denominator.
 
 Break down by device, homepage_version, entry_point, and example_id. The initial
-homepage version is **original**; change it when a new design ships. Future
+homepage version is **diagram-story-v1**; change it when a new design ships. Future
 example links can use the data-analytics-example HTML attribute with an entry
-from the examples allowlist in .vitepress/analytics.mjs. Unknown IDs fall back to
+from the catalog in .vitepress/home/examples.mjs. Unknown IDs fall back to
 default; source is never used to infer an ID.
 
 Compare counts alongside rates. At low traffic, observed usability sessions are

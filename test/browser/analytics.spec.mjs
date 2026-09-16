@@ -22,7 +22,7 @@ test('homepage journey tracks successful edits and actions without leaking sourc
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('https://textgraph.dev/?private=secret');
   await expect.poll(() => events(page, 'homepage_viewed').then(value => value.length)).toBe(1);
-  await page.getByRole('link', { name: 'Open Playground', exact: true }).click();
+  await page.getByRole('link', { name: 'Try this example', exact: true }).click();
   const status = page.getByRole('status', { name: 'Render status' });
   await expect(status).toHaveText('Preview up to date');
   expect((await events(page, 'playground_opened'))[0][2].entry_point).toBe('home_hero');
@@ -71,7 +71,7 @@ test('local previews never load Google Analytics', async ({ page }) => {
   const google = [];
   page.on('request', request => { if (/google|doubleclick/.test(request.url())) google.push(request.url()); });
   await page.goto('/');
-  await expect(page.getByRole('link', { name: 'Open Playground', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Try this example', exact: true })).toBeVisible();
   expect(google).toEqual([]);
   expect(await page.evaluate(() => window.dataLayer)).toBeUndefined();
 });

@@ -4,9 +4,9 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const failures = [];
   page.on('pageerror', error => failures.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('link', { name: 'Open Playground', exact: true })).toHaveAttribute('href', /\/playground(?:\.html)?$/);
-  await page.getByRole('link', { name: 'Open Playground', exact: true }).click();
-  await expect(page).toHaveURL(/\/playground(?:\.html)?$/);
+  await expect(page.getByRole('link', { name: 'Try this example', exact: true })).toHaveAttribute('href', /\/playground#source=/);
+  await page.getByRole('link', { name: 'Try this example', exact: true }).click();
+  await expect(page).toHaveURL(/\/playground(?:\.html)?#source=/);
   const editor = page.getByRole('textbox', { name: 'TextGraph source' });
   const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
   const status = page.getByRole('status', { name: 'Render status' });

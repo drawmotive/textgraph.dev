@@ -25,6 +25,18 @@ Use a fenced block with language `textgraph` and metadata `example` to pair copy
 
 Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
 
+## Homepage
+
+The homepage demonstrates source and real rendered output, then links each example
+into the playground with its exact DSL. The catalog in .vitepress/home/examples.mjs
+owns the code panels, PNGs, links, and analytics IDs.
+
+Development and build commands generate previews with the installed public SDK.
+After changing example source during development, run npm run home:render again.
+Generated images are ignored by Git and bundled as static assets; visiting the
+homepage does not load the WASM renderer. Examples remain visible without JavaScript.
+Homepage events carry version diagram-story-v1.
+
 ## Analytics
 
 Production uses Google Analytics 4 to measure homepage exploration, successful

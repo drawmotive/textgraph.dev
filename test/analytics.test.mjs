@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createAnalytics, createPlaygroundAnalytics, safePageUrl, configureGoogleTag } from '../.vitepress/analytics.mjs';
+import { homeExamples } from '../.vitepress/home/examples.mjs';
 
 function harness() {
   const events = [];
@@ -11,6 +12,17 @@ function harness() {
   return { events, options, analytics: createAnalytics(options), advance: ms => { time += ms; } };
 }
 const ready = { status: 'ready', stale: false, result: { success: true }, diagnostics: [] };
+
+test('all published homepage examples keep their identity without sending DSL', () => {
+  for (const example of homeExamples) {
+    const { analytics, events } = harness();
+    analytics.page('https://textgraph.dev/');
+    analytics.openPlayground({ placement: 'hero', example: example.id });
+    analytics.page('https://textgraph.dev/playground');
+    assert.equal(events.at(-1).properties.example_id, example.id);
+    assert.doesNotMatch(JSON.stringify(events), /source=| -> /);
+  }
+});
 
 test('page reporting removes source fragments and queries and ignores edit history', () => {
   const { analytics, events } = harness();

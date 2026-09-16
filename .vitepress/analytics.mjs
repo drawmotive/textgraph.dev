@@ -1,9 +1,11 @@
+import { homeExamples } from './home/examples.mjs';
+
 export const measurementId = 'G-F3QNCLEDBC';
 const storageKey = 'textgraph.analytics.session';
 const sessionTimeout = 30 * 60 * 1000;
-const homepageVersion = 'original';
+const homepageVersion = 'diagram-story-v1';
 const placements = ['hero', 'navigation', 'content', 'footer'];
-const examples = ['default', 'request-flow'];
+const examples = ['default', ...homeExamples.map(example => example.id)];
 
 // Source links and arbitrary query values are never analytics dimensions.
 export function safePageUrl(href) {
