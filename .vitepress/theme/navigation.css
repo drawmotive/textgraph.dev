@@ -1,0 +1,14 @@
+/* VitePress puts appearance and social links in an extra menu below 1280px.
+   This site's short navigation fits them whenever the desktop menu is visible
+   (768px+), so use the same breakpoint and leave the mobile menu unchanged. */
+@media (min-width: 768px) {
+  .VPNavBar .VPNavBarAppearance,
+  .VPNavBar .VPNavBarSocialLinks {
+    display: flex;
+    align-items: center;
+  }
+
+  .VPNavBar .VPNavBarExtra {
+    display: none;
+  }
+}

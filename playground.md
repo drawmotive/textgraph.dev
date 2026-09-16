@@ -4,7 +4,6 @@ title: Playground
 description: Edit TextGraph source and preview your diagram live in your browser.
 sidebar: false
 footer: false
-playground: true
 ---
 
 <script setup>
