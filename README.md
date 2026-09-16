@@ -31,7 +31,9 @@ Run `npm run build:release` to validate the coordinated version and installed re
 
 The public `@drawmotive/textgraph@0.2.1` SDK renders in a module Worker, so source stays in the browser and layout work does not block typing. Only one render runs at a time, intermediate edits are coalesced, and stale results are ignored. No rendering API or sibling repository is required.
 
-While refreshing, the existing image and diagnostics stay in place until new results arrive. Status updates use the preview header without changing the canvas size; the image tooltip identifies a previous successful render. Diagnostic source links are temporarily disabled while their replacements are being checked.
+The preview toolbar provides zoom in/out, reset to fit, PNG download, and image copy to clipboard. Drag the image to pan; when the canvas is focused, use +/− to zoom, arrow keys to pan, and 0 to reset. Zoom and pan survive render updates. Download and copy always use the full PNG, independent of the current view. Clipboard permission or browser limitations are reported beside the image, with download available as a fallback.
+
+While refreshing, the existing image and diagnostics stay in place until new results arrive. Render status remains accessible to screen readers and on the preview title tooltip; the image tooltip identifies a previous successful render. Diagnostic source links are temporarily disabled while their replacements are being checked. Syntax help lives beside the source title, leaving the main page space for editing and previewing.
 
 `npm run dev` and `npm run build` copy the SDK runtime, fonts, themes, and licenses into `public/textgraph/wasm` automatically. These generated files are ignored by Git and included in the static build. Serve over HTTPS or localhost for Web Crypto. The renderer loads only when the playground opens.
 
