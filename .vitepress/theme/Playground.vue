@@ -1,7 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
-import { withBase } from 'vitepress'
+import { useRouter, withBase } from 'vitepress'
 import { createPlaygroundRenderer } from '../playground/renderer.mjs'
+import { createSourceLink, readSourceLink } from '../playground/source-link.mjs'
 import PreviewImage from './PreviewImage.vue'
 
 const source = ref(`client -> api : HTTPS
@@ -12,6 +13,13 @@ api(fill primary): API Gateway
 db: Database
 `)
 const editor = ref(null)
+const defaultSource = source.value
+const shareFeedback = ref('')
+const copying = ref(false)
+const router = useRouter()
+let sourceLinkTimer
+let sourcePath
+let previousBeforeRouteChange
 const workspace = ref(null)
 const editorPercent = ref(45)
 const dragging = ref(false)
@@ -48,8 +56,68 @@ function renderNow() {
 
 function edit(event) {
   source.value = event.target.value
+  shareFeedback.value = ''
+  // Coalesce typing to avoid browser history API rate limits. Sharing flushes
+  // this timer so a click always copies the current text, even during rendering.
+  clearTimeout(sourceLinkTimer)
+  sourceLinkTimer = setTimeout(updateSourceLink, 250)
   // Composition text is incomplete until the IME commits it.
   if (!event.isComposing) renderer?.update(source.value)
+}
+
+function updateSourceLink() {
+  clearTimeout(sourceLinkTimer)
+  sourceLinkTimer = undefined
+  if (!isSourcePage()) return null
+  try {
+    const href = createSourceLink(window.location.href, source.value)
+    // Preserve the router's scroll state and replace this edit's history entry.
+    if (href !== window.location.href) window.history.replaceState(window.history.state, '', href)
+    return href
+  } catch {
+    shareFeedback.value = 'Could not update the link. Try Share again.'
+    return null
+  }
+}
+
+function isSourcePage() {
+  return window.location.pathname.replace(/\.html$/, '') === sourcePath
+}
+
+// VitePress pushes the destination URL before loading its component. Flush
+// while the editor still owns the current history entry, so Back retains edits.
+function beforeRouteChange(...args) {
+  if (sourceLinkTimer !== undefined) updateSourceLink()
+  return previousBeforeRouteChange?.(...args)
+}
+
+async function shareSource() {
+  if (copying.value) return
+  const href = updateSourceLink()
+  if (!href) return
+  copying.value = true
+  const sharedSource = source.value
+  try {
+    await navigator.clipboard.writeText(href)
+    if (source.value === sharedSource) shareFeedback.value = 'Link copied.'
+  } catch {
+    if (source.value === sharedSource) shareFeedback.value = 'Could not copy the link. Copy it from the address bar.'
+  } finally {
+    copying.value = false
+  }
+}
+
+// Fragment navigation can reuse this component. Read the raw URL because the
+// router's hash is already decoded; decoding it again would corrupt literal % text.
+function restoreSourceLink() {
+  clearTimeout(sourceLinkTimer)
+  sourceLinkTimer = undefined
+  if (!isSourcePage()) return
+  shareFeedback.value = ''
+  const restored = readSourceLink(window.location.href) ?? defaultSource
+  if (restored === source.value) return
+  source.value = restored
+  renderNow()
 }
 
 function goToDiagnostic(diagnostic) {
@@ -100,6 +168,12 @@ function resizeWithKeyboard(event) {
 }
 
 onMounted(() => {
+  sourcePath = window.location.pathname.replace(/\.html$/, '')
+  previousBeforeRouteChange = router.onBeforeRouteChange
+  router.onBeforeRouteChange = beforeRouteChange
+  restoreSourceLink()
+  window.addEventListener('hashchange', restoreSourceLink)
+  window.addEventListener('popstate', restoreSourceLink)
   renderer = createPlaygroundRenderer({
     createWorker: () => new Worker(new URL('../playground/renderer.worker.mjs', import.meta.url), { type: 'module' }),
     onState: acceptState,
@@ -108,6 +182,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  clearTimeout(sourceLinkTimer)
+  if (router.onBeforeRouteChange === beforeRouteChange) router.onBeforeRouteChange = previousBeforeRouteChange
+  window.removeEventListener('hashchange', restoreSourceLink)
+  window.removeEventListener('popstate', restoreSourceLink)
   renderer?.dispose()
   if (imageUrl.value) URL.revokeObjectURL(imageUrl.value)
 })
@@ -122,7 +200,10 @@ onBeforeUnmount(() => {
             <label for="textgraph-source">TextGraph source</label>
             <a :href="withBase('/reference/syntax')" aria-label="Syntax reference" title="Syntax reference">Syntax ↗</a>
           </div>
-          <button type="button" class="render-button" :disabled="['loading', 'rendering'].includes(state.status) || !source.trim()" @click="renderNow">Render now</button>
+          <div class="source-actions">
+            <button type="button" class="share-button" :disabled="copying" title="Copy a link to this source" @click="shareSource">Share</button>
+            <button type="button" class="render-button" :disabled="['loading', 'rendering'].includes(state.status) || !source.trim()" @click="renderNow">Render now</button>
+          </div>
         </header>
         <textarea
           id="textgraph-source"
@@ -139,7 +220,10 @@ onBeforeUnmount(() => {
           @keydown.ctrl.enter.prevent="renderNow"
           @keydown.meta.enter.prevent="renderNow"
         />
-        <p id="editor-help" class="editor-help">Auto-renders after a short pause. Ctrl / ⌘ + Enter to render now.</p>
+        <div class="editor-help">
+          <p id="editor-help">Auto-renders and updates the link after a short pause. Ctrl / ⌘ + Enter to render now.</p>
+          <p role="status" aria-label="Share status">{{ shareFeedback }}</p>
+        </div>
       </section>
 
       <div
@@ -193,9 +277,13 @@ onBeforeUnmount(() => {
 .dragging { cursor: col-resize; user-select: none; }
 .panel-heading { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 62px; padding: 14px 20px; border-bottom: 1px solid var(--vp-c-divider); background: var(--vp-c-bg); }
 .panel-heading label { font-size: 14px; font-weight: 600; }
-.render-button { background: var(--vp-c-brand-3); color: var(--vp-c-white); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.source-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-button, .render-button { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.share-button { background: var(--vp-c-default-3); color: var(--vp-c-text-1); }
+.share-button:hover:enabled { background: var(--vp-c-default-2); }
+.render-button { background: var(--vp-c-brand-3); color: var(--vp-c-white); }
 .render-button:hover:enabled { background: var(--vp-c-brand-2); }
-.render-button:disabled { opacity: 0.5; cursor: default; }
+.share-button:disabled, .render-button:disabled { opacity: 0.5; cursor: default; }
 textarea { display: block; flex: 1; width: 100%; min-height: 300px; resize: none; padding: 24px; border: 0; background: transparent; color: var(--vp-c-text-1); font: 14px/1.8 var(--vp-font-family-mono); tab-size: 2; }
 textarea:focus { outline: 2px solid var(--vp-c-brand-1); outline-offset: -2px; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
