@@ -11,9 +11,7 @@
   "scripts": {
     "assets": "textgraph-copy-assets public/textgraph/wasm",
     "home:render": "node scripts/render-home.mjs",
-    "predev": "npm run assets && npm run home:render",
     "dev": "vitepress dev",
-    "prebuild": "npm run assets && npm run home:render",
     "build": "vitepress build",
     "preview": "vitepress preview",
     "test": "node --test test/*.test.mjs",

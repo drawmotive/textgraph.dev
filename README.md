@@ -25,6 +25,11 @@ Use a fenced block with language `textgraph` and metadata `example` to pair copy
 
 Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
 
+Cloudflare's direct `npx vitepress build` command is also supported. Required
+homepage images and playground runtime assets are prepared by the Vite configuration
+before bundling. Preparation cannot rely on npm `prebuild`/`predev` hooks: direct
+VitePress commands skip them, leaving Git-ignored assets absent in a clean checkout.
+
 ## Homepage
 
 The homepage demonstrates source and real rendered output, then links each example

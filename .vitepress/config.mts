@@ -2,12 +2,13 @@ import { defineConfig } from 'vitepress'
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress'
 import { textgraphIssuesUrl } from './support.ts'
 import { textgraphExamples } from './textgraph-examples.mjs'
+import { siteAssets } from './site-assets.mjs'
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
   description: "Turn relationships into diagrams with readable text. Explore flowcharts, automatic layout, and a browser playground, with Markdown and VS Code integrations.",
   markdown: { config: textgraphExamples },
-  vite: { worker: { format: 'es' } },
+  vite: { plugins: [siteAssets()], worker: { format: 'es' } },
   themeConfig: {
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
