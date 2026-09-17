@@ -21,9 +21,15 @@ const diagramAnalytics = createPlaygroundAnalytics(analytics)
 diagramAnalytics.restore(defaultSource)
 const shareFeedback = ref('')
 const copying = ref(false)
+const restoringSource = ref(true)
 const router = useRouter()
+let sourceLinkRevision = 0
+let sourceLinkPending = false
+let disposed = false
 let sourceLinkTimer
 let sourcePath
+let lastSourceHref
+let previousAfterRouteChange
 let previousBeforeRouteChange
 const workspace = ref(null)
 const editorPercent = ref(45)
@@ -61,6 +67,8 @@ function renderNow() {
 }
 
 function edit(event) {
+  sourceLinkRevision += 1
+  restoringSource.value = false
   source.value = event.target.value
   diagramAnalytics.edit(source.value, { composing: event.isComposing })
   shareFeedback.value = ''
@@ -72,60 +80,100 @@ function edit(event) {
   if (!event.isComposing) renderer?.update(source.value)
 }
 
-function updateSourceLink() {
+async function updateSourceLink() {
   clearTimeout(sourceLinkTimer)
   sourceLinkTimer = undefined
   if (!isSourcePage()) return null
+  const revision = ++sourceLinkRevision
+  const originalHref = window.location.href
+  sourceLinkPending = true
   try {
-    const href = createSourceLink(window.location.href, source.value)
+    const href = await createSourceLink(originalHref, source.value)
+    // Codec startup can finish after an edit, navigation, or unmount. Only the
+    // still-current source may replace the history entry it was captured from.
+    if (revision !== sourceLinkRevision || !isSourcePage() || window.location.href !== originalHref) return null
     // Preserve the router's scroll state and replace this edit's history entry.
     if (href !== window.location.href) window.history.replaceState(window.history.state, '', href)
+    lastSourceHref = href
     return href
   } catch {
-    shareFeedback.value = 'Could not update the link. Try Share again.'
+    if (revision === sourceLinkRevision && !disposed) shareFeedback.value = 'Could not update the link. Try Share again.'
     return null
+  } finally {
+    if (revision === sourceLinkRevision) sourceLinkPending = false
   }
 }
 
 function isSourcePage() {
-  return window.location.pathname.replace(/\.html$/, '') === sourcePath
+  return !disposed && window.location.pathname.replace(/\.html$/, '') === sourcePath
 }
 
 // VitePress pushes the destination URL before loading its component. Flush
 // while the editor still owns the current history entry, so Back retains edits.
-function beforeRouteChange(...args) {
-  if (sourceLinkTimer !== undefined) updateSourceLink()
+async function beforeRouteChange(...args) {
+  // Edits can arrive while codec startup delays departure. Flush again only
+  // when a newer edit invalidated the awaited write, before surrendering history.
+  while (isSourcePage() && (sourceLinkTimer !== undefined || sourceLinkPending)) await updateSourceLink()
   return previousBeforeRouteChange?.(...args)
 }
 
+async function afterRouteChange(...args) {
+  await previousAfterRouteChange?.(...args)
+  await restoreSourceLink()
+}
+
 async function shareSource() {
-  if (copying.value) return
-  const href = updateSourceLink()
-  if (!href) return
+  if (copying.value || restoringSource.value) return
   copying.value = true
   const sharedSource = source.value
   // Clipboard completion can arrive after another edit or render. Describe
   // the source being copied, not whichever preview exists when it resolves.
   const currentPreview = state.value.status === 'ready' && !state.value.stale
+  const link = updateSourceLink()
   try {
-    await navigator.clipboard.writeText(href)
+    if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+      // Start within the click's user activation, before lazy codec loading.
+      // The clipboard consumes the text promise once compression finishes.
+      const text = link.then(href => {
+        if (!href) throw new Error('Source changed before sharing')
+        return new Blob([href], { type: 'text/plain' })
+      })
+      const item = new ClipboardItem({ 'text/plain': text })
+      await Promise.all([navigator.clipboard.write([item]), text])
+    } else {
+      const href = await link
+      if (!href) return
+      await navigator.clipboard.writeText(href)
+    }
     analytics.action('copy_link', currentPreview)
     if (source.value === sharedSource) shareFeedback.value = 'Link copied.'
   } catch {
-    if (source.value === sharedSource) shareFeedback.value = 'Could not copy the link. Copy it from the address bar.'
+    // A denied write may settle before compression; finish updating the address
+    // bar before suggesting it as the fallback.
+    const href = await link
+    if (href && source.value === sharedSource) shareFeedback.value = 'Could not copy the link. Copy it from the address bar.'
   } finally {
     copying.value = false
   }
 }
 
-// Fragment navigation can reuse this component. Read the raw URL because the
+// Query or fragment navigation can reuse this component. Read the raw URL because the
 // router's hash is already decoded; decoding it again would corrupt literal % text.
-function restoreSourceLink() {
+async function restoreSourceLink() {
+  if (!isSourcePage()) return
+  const href = window.location.href
+  // Initial mounting, router hooks, and popstate can report the same URL.
+  if (href === lastSourceHref) return
   clearTimeout(sourceLinkTimer)
   sourceLinkTimer = undefined
-  if (!isSourcePage()) return
   shareFeedback.value = ''
-  const restored = readSourceLink(window.location.href) ?? defaultSource
+  lastSourceHref = href
+  const revision = ++sourceLinkRevision
+  restoringSource.value = true
+  sourceLinkPending = false
+  const restored = await readSourceLink(href) ?? defaultSource
+  if (revision !== sourceLinkRevision || !isSourcePage() || window.location.href !== href) return
+  restoringSource.value = false
   diagramAnalytics.restore(restored)
   if (restored === source.value) return
   source.value = restored
@@ -179,14 +227,17 @@ function resizeWithKeyboard(event) {
   setSplit(values[event.key])
 }
 
-onMounted(() => {
+onMounted(async () => {
   analytics.page(window.location.href, document.referrer)
   sourcePath = window.location.pathname.replace(/\.html$/, '')
   previousBeforeRouteChange = router.onBeforeRouteChange
   router.onBeforeRouteChange = beforeRouteChange
-  restoreSourceLink()
+  previousAfterRouteChange = router.onAfterRouteChange
+  router.onAfterRouteChange = afterRouteChange
   window.addEventListener('hashchange', restoreSourceLink)
   window.addEventListener('popstate', restoreSourceLink)
+  await restoreSourceLink()
+  if (disposed) return
   renderer = createPlaygroundRenderer({
     createWorker: () => new Worker(new URL('../playground/renderer.worker.mjs', import.meta.url), { type: 'module' }),
     onState: acceptState,
@@ -195,8 +246,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
+  sourceLinkRevision += 1
   clearTimeout(sourceLinkTimer)
   if (router.onBeforeRouteChange === beforeRouteChange) router.onBeforeRouteChange = previousBeforeRouteChange
+  if (router.onAfterRouteChange === afterRouteChange) router.onAfterRouteChange = previousAfterRouteChange
   window.removeEventListener('hashchange', restoreSourceLink)
   window.removeEventListener('popstate', restoreSourceLink)
   renderer?.dispose()
@@ -214,7 +268,7 @@ onBeforeUnmount(() => {
             <a :href="withBase('/reference/syntax')" aria-label="Syntax reference" title="Syntax reference">Syntax ↗</a>
           </div>
           <div class="source-actions">
-            <button type="button" class="share-button" :disabled="copying" title="Copy a link to this source" @click="shareSource">Share</button>
+            <button type="button" class="share-button" :disabled="copying || restoringSource" title="Copy a link to this source" @click="shareSource">Share</button>
             <button type="button" class="render-button" :disabled="['loading', 'rendering'].includes(state.status) || !source.trim()" @click="renderNow">Render now</button>
           </div>
         </header>

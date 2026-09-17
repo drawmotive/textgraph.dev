@@ -32,9 +32,9 @@ export const homeExamples = [
 
 export const examplesById = Object.fromEntries(homeExamples.map(example => [example.id, example]));
 
-// The shared fragment encoder preserves exactly what visitors saw, including
+// The shared URL encoder preserves exactly what visitors saw, including
 // line breaks, rather than relying on a separate playground template.
-export function playgroundLink(example) {
-  const url = new URL(createSourceLink('https://textgraph.dev/playground', example.source));
-  return url.pathname + url.hash;
+export async function playgroundLink(example) {
+  const url = new URL(await createSourceLink('https://textgraph.dev/playground', example.source));
+  return url.pathname + url.search;
 }

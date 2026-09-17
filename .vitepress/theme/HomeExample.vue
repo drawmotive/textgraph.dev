@@ -1,6 +1,6 @@
 <script setup>
 import { withBase } from 'vitepress'
-import { playgroundLink } from '../home/examples.mjs'
+import links from '../home/generated/links.json'
 import images from '../home/generated/images.mjs'
 
 // Output and editor destination derive from one catalog item. Native links and
@@ -24,7 +24,7 @@ defineProps({ example: { type: Object, required: true }, compact: Boolean, eager
     </div>
     <figcaption>
       <span>{{ example.title }}</span>
-      <a :href="withBase(playgroundLink(example))" :data-analytics-example="example.id">{{ action }} <span aria-hidden="true">↗</span></a>
+      <a :href="withBase(links[example.id])" :data-analytics-example="example.id">{{ action }} <span aria-hidden="true">↗</span></a>
     </figcaption>
   </figure>
 </template>

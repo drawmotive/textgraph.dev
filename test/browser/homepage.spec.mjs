@@ -46,7 +46,7 @@ test('source, diagrams, and example links are available before JavaScript', asyn
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.locator('.home-hero pre')).toHaveText(homeExamples.find(example => example.id === 'request-flow').source);
     await expect(page.locator('.home-hero img')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Try this example' })).toHaveAttribute('href', /#source=/);
+    await expect(page.getByRole('link', { name: 'Try this example' })).toHaveAttribute('href', /[?]d=[01][.]/);
     await page.getByText('Can I use plain English or AI?').click();
     await expect(page.getByText('TextGraph uses a small, structured syntax.')).toBeVisible();
   } finally { await context.close(); }

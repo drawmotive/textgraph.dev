@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { resolveConfig } from 'vite';
 import { resolveUserConfig } from 'vitepress';
+import { readSourceLink } from '../.vitepress/playground/source-link.mjs';
 import { homeExamples } from '../.vitepress/home/examples.mjs';
 
 const siteRoot = path.resolve(import.meta.dirname, '..');
@@ -29,8 +30,11 @@ test('direct VitePress configuration prepares assets in a clean checkout without
 
     const generated = path.join(root, '.vitepress/home/generated');
     const images = await readFile(path.join(generated, 'images.mjs'), 'utf8');
+    const links = JSON.parse(await readFile(path.join(generated, 'links.json'), 'utf8'));
     for (const example of homeExamples) {
       assert.ok(images.includes('./' + example.id + '.png'), example.id);
+      assert.match(links[example.id], /[?]d=[01][.]/);
+      assert.equal(await readSourceLink('https://textgraph.dev' + links[example.id]), example.source);
       const png = await readFile(path.join(generated, example.id + '.png'));
       assert.deepEqual(Array.from(png.subarray(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
     }

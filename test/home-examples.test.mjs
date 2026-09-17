@@ -10,8 +10,8 @@ test('homepage sources render real PNGs and travel unchanged through playground 
     assert.ok(homeExamples.length >= 6);
     assert.equal(new Set(homeExamples.map(example => example.id)).size, homeExamples.length);
     for (const example of homeExamples) {
-      const href = playgroundLink(example);
-      assert.equal(readSourceLink('https://textgraph.dev' + href), example.source);
+      const href = await playgroundLink(example);
+      assert.equal(await readSourceLink('https://textgraph.dev' + href), example.source);
       assert.equal(new URL(href, 'https://textgraph.dev').pathname, '/playground');
       assert.ok(example.alt.length > 20, example.id + ' needs a useful diagram description');
       const result = await runtime.renderPng(example.source, { scale: 2, padding: 24 });
