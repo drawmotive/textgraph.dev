@@ -6,8 +6,8 @@ import './home.css'
 
 const steps = [
   { id: 'relationships', number: '01', title: 'Start with the relationships.', description: 'Name the pieces and connect them with arrows. TextGraph turns the connections into a diagram and handles the layout.' },
-  { id: 'labels', number: '02', title: 'Add detail where it helps.', description: 'Names already work as labels. Expand api to API Gateway and highlight it, while keeping browser and database as they are.' },
-  { id: 'service-boundary', number: '03', title: 'Keep related things together.', description: 'Put the API and its PostgreSQL database inside a backend group. The boundary becomes part of the picture.' },
+  { id: 'labels', number: '02', title: 'Add detail where it helps.', description: 'Names already work as labels. Expand app to App server and highlight its role between the browser and database.' },
+  { id: 'service-boundary', number: '03', title: 'Keep related things together.', description: 'Put the application server and its PostgreSQL database inside a backend group. The boundary becomes part of the picture.' },
 ]
 const gallery = [
   { id: 'release-process', category: 'Explain a process', description: 'Bring automated tests and code review together before publishing a package.' },
@@ -42,7 +42,7 @@ const gallery = [
       <div class="section-intro">
         <p class="eyebrow">A small language. Room to grow.</p>
         <h2 id="approach-title">From a connection<br>to a shared understanding.</h2>
-        <p>Follow one request from browser to database. Add detail only when it helps tell the story.</p>
+        <p>Start with a familiar three-tier web app: browser, application server, and database. Add detail only when it helps tell the story.</p>
       </div>
       <article v-for="step in steps" :key="step.id" class="story-step">
         <div class="step-copy">
@@ -60,8 +60,8 @@ const gallery = [
         <div class="payoff-copy">
           <p class="eyebrow">The idea changed. Change the text.</p>
           <h2 id="payoff-title">An extra connection.<br>A new picture.</h2>
-          <p>The API now uses a cache. Add one connection to create the new node and update the diagram.</p>
-          <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>api -&gt; cache</code></pre></div>
+          <p>The application server now uses a cache. Add one connection to create the new node and update the diagram.</p>
+          <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>app -&gt; cache</code></pre></div>
           <p class="payoff-note">The source is still text you can keep in a repository, review in a diff, or change again tomorrow.</p>
           <a class="home-button primary" :href="withBase(playgroundLink(examples['cache-flow']))" data-analytics-example="cache-flow">Make it your own <span aria-hidden="true">↗</span></a>
         </div>
