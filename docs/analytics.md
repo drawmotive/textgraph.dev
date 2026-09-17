@@ -94,7 +94,7 @@ while intercepting Google traffic. They exercise the real editor without sending
 test events to the property.
 
 After property setup and deployment, verify a real journey in Realtime/DebugView.
-Confirm one page view per navigation, none for source hash edits, and inspect
+Confirm one page view per navigation, none for source query edits, and inspect
 outgoing payloads for source/query leakage. Property-side collection and reporting
 cannot be verified by local intercepted tests.
 

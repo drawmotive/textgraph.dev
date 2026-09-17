@@ -1,6 +1,6 @@
 let codec;
 
-// Load once on demand: raw/legacy decoding needs no WASM, and the homepage
+// Load once on demand: raw decoding needs no WASM, and the homepage
 // receives precomputed links so compression never blocks its hydration.
 function loadCodec() {
   return codec ??= import('@hpcc-js/wasm-zstd').then(({ Zstd }) => Zstd.load()).catch(error => {
@@ -38,25 +38,19 @@ export async function createSourceLink(href, source) {
   return url.href;
 }
 
-/** Null means no usable source; an empty string means a shared blank editor.
- * New query data wins over legacy fragments. Corrupt links never replace the editor
- * with partial or lossy text, and old percent-encoded links remain readable. */
+/** Read only the versioned query protocol. Null means no usable source; an empty
+ * string means a shared blank editor. Corrupt data never produces lossy text. */
 export async function readSourceLink(href) {
   try {
-    const url = new URL(href);
-    const data = url.searchParams.get('d');
-    if (data !== null) {
-      if (!/^[01][.]/.test(data)) return null;
-      let bytes = fromBase64Url(data.slice(2));
-      if (data[0] === '1') {
-        if (!bytes.length) return null;
-        bytes = (await loadCodec()).decompress(bytes);
-      }
-      // Preserve a literal leading BOM along with all other source characters.
-      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+    const data = new URL(href).searchParams.get('d');
+    if (data === null || !/^[01][.]/.test(data)) return null;
+    let bytes = fromBase64Url(data.slice(2));
+    if (data[0] === '1') {
+      if (!bytes.length) return null;
+      bytes = (await loadCodec()).decompress(bytes);
     }
-    if (!url.hash.startsWith('#source=')) return null;
-    return decodeURIComponent(url.hash.slice('#source='.length));
+    // Preserve a literal leading BOM along with all other source characters.
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
   } catch {
     return null;
   }

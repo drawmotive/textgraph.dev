@@ -157,8 +157,8 @@ async function shareSource() {
   }
 }
 
-// Query or fragment navigation can reuse this component. Read the raw URL because the
-// router's hash is already decoded; decoding it again would corrupt literal % text.
+// Query navigation can reuse this component. Read the current URL so router
+// navigation and browser history restore the same versioned source data.
 async function restoreSourceLink() {
   if (!isSourcePage()) return
   const href = window.location.href
@@ -234,7 +234,6 @@ onMounted(async () => {
   router.onBeforeRouteChange = beforeRouteChange
   previousAfterRouteChange = router.onAfterRouteChange
   router.onAfterRouteChange = afterRouteChange
-  window.addEventListener('hashchange', restoreSourceLink)
   window.addEventListener('popstate', restoreSourceLink)
   await restoreSourceLink()
   if (disposed) return
@@ -251,7 +250,6 @@ onBeforeUnmount(() => {
   clearTimeout(sourceLinkTimer)
   if (router.onBeforeRouteChange === beforeRouteChange) router.onBeforeRouteChange = previousBeforeRouteChange
   if (router.onAfterRouteChange === afterRouteChange) router.onAfterRouteChange = previousAfterRouteChange
-  window.removeEventListener('hashchange', restoreSourceLink)
   window.removeEventListener('popstate', restoreSourceLink)
   renderer?.dispose()
   if (imageUrl.value) URL.revokeObjectURL(imageUrl.value)

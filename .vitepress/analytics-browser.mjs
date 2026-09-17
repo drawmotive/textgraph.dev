@@ -29,7 +29,7 @@ export function getAnalytics() {
 }
 
 // VitePress navigation is client-side. Observe resolved routes, not history
-// writes: editor sharing updates the hash frequently without visiting a page.
+// writes: editor sharing updates the query frequently without visiting a page.
 export function installAnalytics(router) {
   const tracker = getAnalytics();
   const page = () => tracker.page(window.location.href, document.referrer);

@@ -17,7 +17,8 @@ async function delayCodec(page) {
 
 test('a shared link restores the exact source before rendering', async ({ page }) => {
   const source = '  client -> api : HTTPS\n\nclient: Browser + 100% #1 & "quoted"\napi: 服务 café 🚀\n';
-  await page.goto('/playground#source=' + encodeURIComponent(source));
+  const link = new URL(await createSourceLink('https://textgraph.dev/playground', source));
+  await page.goto(link.pathname + link.search);
   await expect(page.getByRole('textbox', { name: 'TextGraph source' })).toHaveValue(source);
   await expect(page.getByRole('status', { name: 'Render status' })).toHaveText('Preview up to date');
   await expect(page.getByRole('img', { name: 'Rendered TextGraph diagram' })).toBeVisible();
@@ -76,16 +77,6 @@ test('clipboard denial leaves a current link available in the address bar', asyn
   await expect(page.getByRole('status', { name: 'Share status' })).toContainText('address bar');
   expect(await readSourceLink(page.url())).toBe(source);
   await expect(editor).toHaveValue(source);
-});
-
-test('hash navigation and browser back restore source while the playground stays mounted', async ({ page }) => {
-  await page.goto('/playground#source=A%20-%3E%20B');
-  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
-  await expect(editor).toHaveValue('A -> B');
-  await page.evaluate(() => { location.hash = 'source=A%20-%3E%20C'; });
-  await expect(editor).toHaveValue('A -> C');
-  await page.goBack();
-  await expect(editor).toHaveValue('A -> B');
 });
 
 test('leaving immediately after editing preserves source for Back without changing the destination link', async ({ page }) => {
