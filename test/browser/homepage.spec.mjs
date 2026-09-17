@@ -44,7 +44,7 @@ test('source, diagrams, and example links are available before JavaScript', asyn
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:4175/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.locator('.home-hero pre')).toContainText('browser -> api -> database');
+    await expect(page.locator('.home-hero pre')).toHaveText(homeExamples.find(example => example.id === 'request-flow').source);
     await expect(page.locator('.home-hero img')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Try this example' })).toHaveAttribute('href', /#source=/);
     await page.getByText('Can I use plain English or AI?').click();
