@@ -2,32 +2,32 @@ import { createSourceLink } from '../playground/source-link.mjs';
 
 // One source owns the visible code, generated output, playground link, and
 // analytics identity. Keep examples runnable with the currently shipped SDK.
-// Web-queue-worker architecture: the application owns data access and job
-// submission; the queue passes background work to a worker.
-const relationships = 'browser -> app -> database';
-const details = 'app(fill primary): App server';
-const labels = relationships + '\n\n' + details;
-const request = relationships + '\napp -> queue -> worker\n\n' + details;
+// Architecture arrows show request direction, with responses omitted. The
+// balancer chooses one replica per request; both replicas access shared storage.
+const relationships = 'browser -> lb\nlb -> app1 -> database\nlb -> app2 -> database';
+const balancer = 'lb(fill primary): Load balancer';
+const replicas = 'app1: App server 1\napp2: App server 2';
+const request = relationships + '\n\n' + balancer + '\n' + replicas;
 
 export const homeExamples = [
-  { id: 'request-flow', title: 'A web app with background jobs', source: request,
-    alt: 'A browser connects to an application server, which accesses a database and sends background jobs through a queue to a worker.' },
+  { id: 'request-flow', title: 'A load-balanced web app', source: request,
+    alt: 'A browser sends requests to a load balancer, which routes each request to one of two application replicas sharing a database. Responses are omitted.' },
   { id: 'relationships', title: 'Connect the pieces', source: relationships,
-    alt: 'Three connected tiers: browser to app to database.' },
-  { id: 'labels', title: 'Add useful detail', source: labels,
-    alt: 'A browser connects to a highlighted application server, which accesses a database.' },
-  { id: 'service-boundary', title: 'Show what belongs together',
-    source: 'browser -> app\n\nbackend {\n  app -> db\n  app(fill primary): App server\n  db: PostgreSQL\n}',
-    alt: 'A browser connects to an application server inside a backend group containing the server and its PostgreSQL database.' },
+    alt: 'A browser connects to lb, which routes requests to app1 or app2; both application replicas access the same database.' },
+  { id: 'labels', title: 'Add useful detail', source: request,
+    alt: 'The load balancer is highlighted and the two application replicas are labeled App server 1 and App server 2. Both access a shared database.' },
+  { id: 'service-boundary', title: 'Group the application tier',
+    source: relationships + '\n\n' + balancer + '\nservers {\n  app1: App server 1\n  app2: App server 2\n}',
+    alt: 'Two application replicas are grouped inside a servers boundary, between an external load balancer and a shared database. Arrows show request direction.' },
   { id: 'cache-flow', title: 'Make room for a cache',
-    source: request + '\napp -> cache',
-    alt: 'The application server now also accesses a cache, alongside its database and queue leading to a background worker.' },
-  { id: 'release-process', title: 'A release process',
+    source: request + '\n\napp1 -> cache\napp2 -> cache',
+    alt: 'A load balancer routes requests to two application replicas. Both replicas access the shared database and a shared cache.' },
+  { id: 'release-process', title: 'From commit to release',
     source: 'commit -> tests -> release\ncommit -> review -> release\n\ntests: Run tests\nreview: Code review\nrelease(fill primary): Publish package',
-    alt: 'A commit branches into Run tests and Code review, which both lead to Publish package.' },
-  { id: 'dependencies', title: 'A dependency map',
-    source: 'web -> core -> storage\nworker -> core\n\nweb: Web app\ncore(fill primary): Shared core',
-    alt: 'A Web app and a worker both depend on Shared core, which depends on storage.' },
+    alt: 'A commit starts automated tests and code review. Publishing the package requires passing tests and an approved review. Arrows show prerequisites.' },
+  { id: 'dependencies', title: 'A shared client library',
+    source: 'web -> client -> transport\ncli -> client\n\nweb: Web app\ncli: Admin CLI\nclient(fill primary): API client\ntransport: HTTP transport',
+    alt: 'A Web app and an Admin CLI both depend on an API client library, which depends on an HTTP transport. Arrows point from each consumer to its dependency.' },
 ];
 
 export const examplesById = Object.fromEntries(homeExamples.map(example => [example.id, example]));

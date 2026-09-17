@@ -5,14 +5,14 @@ import HomeExample from './HomeExample.vue'
 import './home.css'
 
 const steps = [
-  { id: 'relationships', number: '01', title: 'Start with the relationships.', description: 'Name the pieces and connect them with arrows. TextGraph turns the connections into a diagram and handles the layout.' },
-  { id: 'labels', number: '02', title: 'Add detail where it helps.', description: 'Names already work as labels. Expand app to App server and highlight its role between the browser and database.' },
-  { id: 'service-boundary', number: '03', title: 'Keep related things together.', description: 'Put the application server and its PostgreSQL database inside a backend group. The boundary becomes part of the picture.' },
+  { id: 'relationships', number: '01', title: 'Start with the relationships.', description: 'Connect the browser to a load balancer, then each application replica to the shared database. TextGraph handles the layout.' },
+  { id: 'labels', number: '02', title: 'Add detail where it helps.', description: 'Expand lb to Load balancer and label the two app servers. Names such as browser and database already explain themselves.' },
+  { id: 'service-boundary', number: '03', title: 'Keep related things together.', description: 'Group the two replicas into an application tier, with the load balancer and shared database outside it.' },
 ]
 const gallery = [
-  { id: 'release-process', category: 'Explain a process', description: 'Bring automated tests and code review together before publishing a package.' },
-  { id: 'service-boundary', category: 'Describe a system', description: 'Show how services connect and where a boundary belongs.' },
-  { id: 'dependencies', category: 'Map dependencies', description: 'See which parts share a dependency before making a change.' },
+  { id: 'release-process', category: 'Explain a process', description: 'Arrows show prerequisites: tests must pass and code review must be approved before publishing.' },
+  { id: 'service-boundary', category: 'Describe a system', description: 'Show request paths through two application replicas, grouped between routing and storage.' },
+  { id: 'dependencies', category: 'Map dependencies', description: 'A web app and an admin CLI share an API client. Arrows point from each consumer to its dependency.' },
 ]
 </script>
 
@@ -42,7 +42,7 @@ const gallery = [
       <div class="section-intro">
         <p class="eyebrow">A small language. Room to grow.</p>
         <h2 id="approach-title">From a connection<br>to a shared understanding.</h2>
-        <p>Start with a familiar three-tier web app: browser, application server, and database. Add detail only when it helps tell the story.</p>
+        <p>A load balancer routes each request to one of two app servers sharing a database. Arrows show request direction; responses are omitted.</p>
       </div>
       <article v-for="step in steps" :key="step.id" class="story-step">
         <div class="step-copy">
@@ -59,9 +59,10 @@ const gallery = [
       <div class="home-wrap payoff-grid">
         <div class="payoff-copy">
           <p class="eyebrow">The idea changed. Change the text.</p>
-          <h2 id="payoff-title">An extra connection.<br>A new picture.</h2>
-          <p>The application server now uses a cache. Add one connection to create the new node and update the diagram.</p>
-          <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>app -&gt; cache</code></pre></div>
+          <h2 id="payoff-title">A shared cache.<br>Two new connections.</h2>
+          <p>Both application replicas now use the same cache. Connect each one to cache, and TextGraph adds a single shared node.</p>
+          <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>app1 -&gt; cache
+app2 -&gt; cache</code></pre></div>
           <p class="payoff-note">The source is still text you can keep in a repository, review in a diff, or change again tomorrow.</p>
           <a class="home-button primary" :href="withBase(playgroundLink(examples['cache-flow']))" data-analytics-example="cache-flow">Make it your own <span aria-hidden="true">↗</span></a>
         </div>
