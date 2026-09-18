@@ -20,6 +20,7 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   const runtime = '<title>Editor runtime</title>';
   await file('package.json', JSON.stringify({ name: '@drawmotive/editor', version: '0.2.1' }));
   await file('LICENSE', 'MIT');
+  await file('licenses/Runtime-LICENSE.txt', 'Runtime license notice');
   await file('src/index.js', 'export const initializeEditor = () => {};');
   await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script>');
   await file('examples/browser/main.js', "const runtime = new URL('../../generated/editor/', import.meta.url);");
@@ -34,6 +35,7 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   await prepareEditor(root);
   const publicRoot = path.join(root, 'public/examples/editor');
   assert.equal(await readFile(path.join(publicRoot, 'runtime/embed.html'), 'utf8'), runtime);
+  assert.equal(await readFile(path.join(publicRoot, 'licenses/Runtime-LICENSE.txt'), 'utf8'), 'Runtime license notice');
   assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('./sdk/index.js'));
   assert.ok((await readFile(path.join(publicRoot, 'main.js'), 'utf8')).includes('./runtime/'));
   await writeFile(tarball, Buffer.concat([bytes, Buffer.from('changed')]));

@@ -35,7 +35,7 @@ export async function prepareEditor(root = siteRoot) {
       filter(name, entry) {
         if (name.split('/').some(part => part === '..' || part === '.') || !name.startsWith('package/')) throw new Error('Unsafe editor archive path');
         if (!['File', 'Directory'].includes(entry.type)) throw new Error('Editor archive must not contain links');
-        return name === 'package/package.json' || name === 'package/LICENSE' || name.startsWith('package/src/') || name.startsWith('package/generated/') || name.startsWith('package/examples/browser/');
+        return name === 'package/package.json' || name === 'package/LICENSE' || name.startsWith('package/licenses/') || name.startsWith('package/src/') || name.startsWith('package/generated/') || name.startsWith('package/examples/browser/');
       },
     });
     const pkg = path.join(temporary, 'package');
@@ -56,6 +56,7 @@ export async function prepareEditor(root = siteRoot) {
     await cp(path.join(pkg, 'src'), path.join(destination, 'sdk'), { recursive: true });
     await cp(path.join(pkg, 'examples/browser'), destination, { recursive: true });
     await cp(path.join(pkg, 'LICENSE'), path.join(destination, 'LICENSE'));
+    await cp(path.join(pkg, 'licenses'), path.join(destination, 'licenses'), { recursive: true });
     const index = path.join(destination, 'index.html');
     const html = await readFile(index, 'utf8');
     if (!html.includes('../../src/index.js')) throw new Error('Unknown editor sample import map');
