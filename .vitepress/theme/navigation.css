@@ -1,5 +1,5 @@
 /* VitePress puts appearance and social links in an extra menu below 1280px.
-   This site's short navigation fits them whenever the desktop menu is visible
+   Keep them available whenever the desktop menu is visible
    (768px+), so use the same breakpoint and leave the mobile menu unchanged. */
 @media (min-width: 768px) {
   .VPNavBar .VPNavBarAppearance,
@@ -10,5 +10,18 @@
 
   .VPNavBar .VPNavBarExtra {
     display: none;
+  }
+}
+
+/* Tablet navigation has less room than desktop. Remove the optional shortcut
+   hint and reduce menu spacing so the complete set of controls stays visible. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .VPNavBar .VPNavBarSearchButton .keys {
+    display: none;
+  }
+
+  .VPNavBar .VPNavBarMenuLink,
+  .VPNavBar .VPNavBarMenuGroup > .button {
+    padding-inline: 6px;
   }
 }

@@ -1,0 +1,59 @@
+:root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #182941; background: #f5f7fa; line-height: 1.6; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #225a9c; text-underline-offset: 3px; }
+button, textarea { font: inherit; }
+button, a, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid #3e83d6; outline-offset: 4px; }
+[hidden] { display: none !important; }
+.site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1280px; padding: 22px 32px; margin: auto; }
+.brand { font-size: 19px; font-weight: 760; text-decoration: none; color: #182941; }
+.brand span { font-size: 14px; font-weight: 400; color: #68778a; }
+nav { display: flex; gap: 24px; font-size: 13px; }
+main { max-width: 1280px; padding: 0 32px; margin: auto; }
+.intro { padding: 22px 0 26px; }
+.eyebrow { margin: 0 0 10px; font-size: 11px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; color: #42698f; }
+h1 { margin: 0 0 8px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.045em; line-height: 1.15; }
+.intro > p:last-child { margin: 0; color: #52657a; max-width: 700px; font-size: 15px; }
+.workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.panel { min-width: 0; border: 1px solid #dbe3ec; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 18px #243e5a05; }
+.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; padding: 12px 18px; border-bottom: 1px solid #e6ebf1; }
+h2 { margin: 0; font-size: 15px; letter-spacing: -.015em; }
+.panel-heading a { font-size: 12px; font-weight: 600; }
+.source-panel { display: flex; flex-direction: column; }
+textarea { flex: 1; width: 100%; min-height: 275px; padding: 20px; border: 0; resize: vertical; color: #284562; background: #fbfcfe; font: 14px/1.9 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 2; }
+textarea:focus-visible { outline-offset: -3px; }
+.source-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid #e6ebf1; }
+button { border: 0; border-radius: 6px; background: #215d9f; color: white; font-size: 12px; font-weight: 650; padding: 10px 14px; cursor: pointer; }
+button:hover:enabled { background: #174678; }
+button:disabled { cursor: wait; opacity: .55; }
+.source-toolbar p { font-size: 11px; color: #64758a; margin: 0; }
+.output-panel { display: flex; flex-direction: column; }
+#status { margin: 12px 18px 0; font-size: 12px; color: #53677c; }
+#diagnostics { margin: 10px 18px 0; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 100px; overflow: auto; color: #904314; }
+.preview { display: grid; place-items: center; flex: 1; min-height: 276px; padding: 16px; overflow: hidden; background-image: radial-gradient(#d6dfea 1px, transparent 1px); background-size: 16px 16px; }
+.preview p { max-width: 290px; color: #6c7b8e; font-size: 13px; text-align: center; }
+.preview img { display: block; max-width: 100%; max-height: 320px; object-fit: contain; }
+.usage { margin-top: 30px; padding-bottom: 28px; }
+.usage-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 14px; }
+.usage-heading .eyebrow { margin-bottom: 3px; }
+.usage-heading h2 { font-size: 23px; }
+.usage-heading > a { font-size: 12px; }
+.code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.code-grid > div { min-width: 0; }
+h3 { font-size: 12px; color: #53677c; margin: 0 0 8px; font-weight: 650; }
+pre { margin: 0; padding: 18px; border: 1px solid #dbe3ec; border-radius: 9px; background: #eef2f7; overflow-x: auto; font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; color: #284562; }
+.code-grid p { font-size: 12px; color: #64758a; max-width: 490px; }
+footer { max-width: 1280px; padding: 14px 32px 28px; margin: auto; font-size: 11px; color: #64758a; }
+@media (max-width: 700px) {
+  .site-header { padding: 18px 18px 0; flex-wrap: wrap; gap: 10px; }
+  nav { gap: 18px; }
+  main { padding: 0 18px; }
+  .intro { padding: 26px 0 22px; }
+  .workspace, .code-grid { grid-template-columns: minmax(0, 1fr); }
+  textarea { min-height: 235px; font-size: 16px; padding: 16px; }
+  .source-toolbar { flex-wrap: wrap; }
+  .usage-heading { align-items: start; flex-direction: column; gap: 8px; }
+  .preview { min-height: 260px; }
+  footer { padding-inline: 18px; }
+}

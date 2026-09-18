@@ -9,7 +9,7 @@
   },
   "type": "module",
   "scripts": {
-    "assets": "textgraph-copy-assets public/textgraph/wasm",
+    "assets": "textgraph-copy-assets public/textgraph/wasm && node scripts/copy-browser-sdk.mjs",
     "home:render": "node scripts/render-home.mjs",
     "dev": "vitepress dev",
     "build": "vitepress build",

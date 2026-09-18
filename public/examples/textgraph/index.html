@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Try the TextGraph JavaScript SDK in your browser. Edit diagram source, see the rendered PNG, and copy the integration code.">
+  <title>TextGraph browser example · DrawMotive</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../../">TextGraph<span> / browser example</span></a>
+    <nav aria-label="Example navigation">
+      <a href="../../integrations/javascript">JavaScript guide ↗</a>
+      <a href="../../playground">Playground ↗</a>
+    </nav>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="title">
+      <p class="eyebrow">@drawmotive/textgraph · JavaScript SDK</p>
+      <h1 id="title">Text in. Diagram out.</h1>
+      <p>Edit the source, render a diagram, and save the PNG. Everything runs in your browser. No account or setup needed.</p>
+    </section>
+    <div class="workspace">
+      <section class="panel source-panel" aria-labelledby="source-heading">
+        <div class="panel-heading">
+          <h2 id="source-heading"><label for="source">TextGraph source</label></h2>
+          <a href="../../reference/syntax">Syntax ↗</a>
+        </div>
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="source-help">browser -> api -> database
+
+browser: Browser
+api(fill primary): API server
+database: Database</textarea>
+        <div class="source-toolbar">
+          <button id="render" type="button" disabled>Render diagram</button>
+          <p id="source-help">Ctrl / ⌘ + Enter to render</p>
+        </div>
+      </section>
+      <section class="panel output-panel" aria-labelledby="output-heading">
+        <div class="panel-heading">
+          <h2 id="output-heading">Live output</h2>
+          <a id="download" download="textgraph.png" hidden>Download PNG ↓</a>
+        </div>
+        <p id="status" role="status" aria-live="polite">Loading the renderer…</p>
+        <p id="diagnostics" role="alert" hidden></p>
+        <div class="preview">
+          <p id="placeholder">The first render downloads the WebAssembly runtime. Your source stays on this device.</p>
+          <img id="diagram" alt="Rendered TextGraph diagram" hidden>
+        </div>
+      </section>
+    </div>
+    <section class="usage" aria-labelledby="usage-heading">
+      <div class="usage-heading">
+        <div><p class="eyebrow">Use it in your own page</p><h2 id="usage-heading">A small API. A real diagram.</h2></div>
+        <a href="../../integrations/javascript">Complete setup &amp; Node.js guide ↗</a>
+      </div>
+      <div class="code-grid">
+        <div><h3>1. Install and copy browser assets</h3>
+          <pre><code>npm install @drawmotive/textgraph@0.2.1
+npx textgraph-copy-assets public/textgraph/wasm</code></pre>
+          <p>Use a JavaScript bundler such as Vite. Serve the public directory over HTTPS or localhost.</p>
+          <p>This example is plain HTML and JavaScript. <a href="./app.js">View its JavaScript</a> or <a href="https://github.com/drawmotive/textgraph.dev/tree/main/public/examples/textgraph">browse the complete source ↗</a>.</p>
+        </div>
+        <div><h3>2. Render source into an image</h3>
+          <pre><code>import { initializeTextGraph }
+  from "@drawmotive/textgraph/browser";
+
+const graph = await initializeTextGraph({
+  resolveAsset: asset =&gt;
+    new URL(`/textgraph/${asset.path}`, location.origin),
+});
+const result = await graph.renderPng("A -&gt; B", {
+  encoding: "base64",
+});
+if (result.success) {
+  document.querySelector("img").src =
+    `data:image/png;base64,${result.png}`;
+}
+await graph.dispose();</code></pre>
+        </div>
+      </div>
+    </section>
+    <noscript><p>Enable JavaScript to run the example. The setup and usage code above remain available.</p></noscript>
+  </main>
+  <footer>DrawMotive · TextGraph SDK <a href="https://www.npmjs.com/package/@drawmotive/textgraph/v/0.2.1">0.2.1</a> · <a href="https://github.com/drawmotive/textgraph/issues">Report an issue ↗</a></footer>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -64,3 +64,18 @@ While refreshing, the existing image and diagnostics stay in place until new res
 `npm run dev` and `npm run build` copy the SDK runtime, fonts, themes, and licenses into `public/textgraph/wasm` automatically. These generated files are ignored by Git and included in the static build. Serve over HTTPS or localhost for Web Crypto. The renderer loads only when the playground opens.
 
 Run `npm test` for unit tests. For a browser check with the real renderer, run `npx playwright install chromium`, `npm run build`, then `npm run test:browser`. This covers preview updates, diagnostics, error recovery, navigation, and mobile layout. Within the parent DrawMotive workspace, install with `npm ci --workspaces=false` to use the site's locked public dependencies.
+
+## Standalone browser example
+
+`/examples/textgraph/` is a plain HTML and JavaScript page with editable source,
+initial live rendering, PNG download, and visible SDK integration code. The
+JavaScript integration guide and Examples navigation link to it. VitePress links
+to this static page use `target="_self"` to bypass the documentation SPA router.
+
+The existing asset preparation boundary also copies the installed npm SDK
+modules, manifest, and license to `public/textgraph/sdk/`. The example loads those
+modules and the shared local WASM runtime without a CDN or sibling checkout.
+Its source lives in `public/examples/textgraph/`; generated SDK files stay ignored.
+
+The browser suite covers rendering, edits, diagnostics, retry, PNG download,
+mobile layout, and navigation from the documentation.

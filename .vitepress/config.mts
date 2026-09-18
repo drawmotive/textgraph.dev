@@ -13,6 +13,9 @@ export default defineConfig(withTextGraph({
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
       { text: 'Playground', link: '/playground' },
+      { text: 'Examples', items: [
+        { text: 'TextGraph in the browser', link: '/examples/textgraph/', target: '_self' },
+      ] },
       { text: 'Report an issue', link: textgraphIssuesUrl },
     ],
 
@@ -49,6 +52,7 @@ export default defineConfig(withTextGraph({
           { text: 'VS Code Extension', link: '/integrations/vscode' },
           { text: 'CLI', link: '/integrations/cli' },
           { text: 'JavaScript / Node.js', link: '/integrations/javascript' },
+          { text: 'Browser example', link: '/examples/textgraph/', target: '_self' },
           { text: 'REST API', link: '/integrations/rest-api' },
           { text: 'AI Agents & LLMs', link: '/integrations/ai-agents' },
         ]

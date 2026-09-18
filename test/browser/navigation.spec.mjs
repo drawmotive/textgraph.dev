@@ -21,6 +21,7 @@ test('desktop navigation exposes all controls without the extra menu', async ({ 
         nav.getByRole('button', { name: 'Search', exact: true }),
         nav.getByRole('link', { name: 'Docs', exact: true }),
         nav.getByRole('link', { name: 'Playground', exact: true }),
+        nav.getByRole('button', { name: 'Examples', exact: true }),
         nav.getByRole('link', { name: 'Report an issue' }), appearance, github,
       ];
       let previousRight = 0;

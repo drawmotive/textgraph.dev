@@ -44,5 +44,12 @@ test('direct VitePress configuration prepares assets in a clean checkout without
         asset.path,
       );
     }
+    for (const file of ['src/platform/browser.js', 'src/index.js', 'generated/wasm-manifest.js', 'LICENSE']) {
+      assert.deepEqual(
+        await readFile(path.join(root, 'public/textgraph/sdk', file)),
+        await readFile(path.join(siteRoot, 'node_modules/@drawmotive/textgraph', file)),
+        file,
+      );
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });
