@@ -41,7 +41,7 @@ test('homepage journey tracks successful edits and actions without leaking sourc
   expect((await events(page, 'diagram_action'))[0][2].action_type).toBe('copy_link');
   expect(await events(page, 'diagram_created')).toHaveLength(1);
   expect(await events(page, 'page_view')).toHaveLength(2);
-  expect(JSON.stringify(await events(page))).not.toMatch(/secret|source=|A ->/);
+  expect(JSON.stringify(await events(page))).not.toMatch(/secret|[?&]d=|A ->/);
   await page.reload();
   await expect(status).toHaveText('Preview up to date');
   await editor.fill('A -> D');
@@ -54,7 +54,7 @@ test('shared URLs cannot claim homepage attribution and clipboard denial is not 
   await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: {
     writeText: async () => { throw new DOMException('Denied', 'NotAllowedError'); },
   } }));
-  await page.goto('https://textgraph.dev/playground?from=home#source=A%20-%3E%20B');
+  await page.goto('https://textgraph.dev/playground?from=home&d=0.QSAtPiBC');
   await expect(page.getByRole('status', { name: 'Render status' })).toHaveText('Preview up to date');
   const opened = await events(page, 'playground_opened');
   expect(opened[0][2].entry_point).toBe('direct');

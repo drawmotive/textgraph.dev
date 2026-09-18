@@ -20,22 +20,22 @@ test('all published homepage examples keep their identity without sending DSL', 
     analytics.openPlayground({ placement: 'hero', example: example.id });
     analytics.page('https://textgraph.dev/playground');
     assert.equal(events.at(-1).properties.example_id, example.id);
-    assert.doesNotMatch(JSON.stringify(events), /source=| -> /);
+    assert.doesNotMatch(JSON.stringify(events), /[?&]d=| -> /);
   }
 });
 
-test('page reporting removes source fragments and queries and ignores edit history', () => {
+test('page reporting removes queries and fragments and ignores edit history', () => {
   const { analytics, events } = harness();
-  analytics.page('https://textgraph.dev/?secret=private#source=private', 'https://example.com/article?q=private#private');
-  analytics.page('https://textgraph.dev/#source=other');
-  analytics.page('https://textgraph.dev/playground.html?from=home#source=private');
-  analytics.page('https://textgraph.dev/playground#source=edited');
+  analytics.page('https://textgraph.dev/?secret=private#private', 'https://example.com/article?q=private#private');
+  analytics.page('https://textgraph.dev/#other');
+  analytics.page('https://textgraph.dev/playground.html?from=home&d=0.private');
+  analytics.page('https://textgraph.dev/playground?d=0.edited');
   assert.deepEqual(events.map(e => e.name), ['page_view', 'homepage_viewed', 'page_view', 'playground_opened']);
   assert.equal(events[0].properties.page_location, 'https://textgraph.dev/');
   assert.equal(events[0].properties.page_referrer, 'https://example.com/article');
   assert.equal(events[2].properties.page_referrer, 'https://textgraph.dev/');
   assert.equal(events[3].properties.entry_point, 'direct');
-  assert.doesNotMatch(JSON.stringify(events), /private|edited|source=|from=/);
+  assert.doesNotMatch(JSON.stringify(events), /private|edited|[?&]d=|from=/);
   assert.equal(safePageUrl('not a URL'), '');
 });
 
@@ -43,13 +43,13 @@ test('homepage attribution comes from an actual click, never from a shared query
   const { analytics, events, options } = harness();
   analytics.page('https://textgraph.dev/');
   analytics.openPlayground({ placement: 'hero', example: 'request-flow' });
-  createAnalytics(options).page('https://textgraph.dev/playground#source=A');
+  createAnalytics(options).page('https://textgraph.dev/playground?d=0.QQ');
   assert.equal(events.at(-1).properties.entry_point, 'home_hero');
   assert.equal(events.at(-1).properties.example_id, 'request-flow');
-  createAnalytics(options).page('https://textgraph.dev/playground#source=B');
+  createAnalytics(options).page('https://textgraph.dev/playground?d=0.Qg');
   assert.equal(events.at(-1).properties.entry_point, 'home_hero');
   const other = harness();
-  other.analytics.page('https://textgraph.dev/playground?from=home#source=A');
+  other.analytics.page('https://textgraph.dev/playground?from=home&d=0.QQ');
   assert.equal(other.events.at(-1).properties.entry_point, 'direct');
   assert.equal(other.events.at(-1).properties.homepage_seen, false);
 });
@@ -162,11 +162,11 @@ test('event allowlists exclude source text and error details', () => {
 
 test('Google tag sets sanitized defaults before config and disables automatic initial pageviews', () => {
   const commands = [];
-  configureGoogleTag((...args) => commands.push(args), 'https://textgraph.dev/playground?q=private#source=private', 'https://example.com/?q=private');
+  configureGoogleTag((...args) => commands.push(args), 'https://textgraph.dev/playground?d=0.private#private', 'https://example.com/?q=private');
   const config = commands.find(args => args[0] === 'config');
   assert.equal(config[1], 'G-F3QNCLEDBC');
   assert.equal(config[2].send_page_view, false);
   assert.equal(config[2].allow_google_signals, false);
   assert.equal(commands.find(args => args[0] === 'set')[1].page_location, 'https://textgraph.dev/playground');
-  assert.doesNotMatch(JSON.stringify(commands), /private|source=/);
+  assert.doesNotMatch(JSON.stringify(commands), /private|[?&]d=/);
 });

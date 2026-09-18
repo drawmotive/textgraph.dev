@@ -1,6 +1,7 @@
 <script setup>
 import { withBase } from 'vitepress'
-import { examplesById as examples, playgroundLink } from '../home/examples.mjs'
+import { examplesById as examples } from '../home/examples.mjs'
+import links from '../home/generated/links.json'
 import HomeExample from './HomeExample.vue'
 import './home.css'
 
@@ -24,7 +25,7 @@ const gallery = [
         <h1 id="home-title">Turn relationships<br class="desktop-break"> into <span>diagrams.</span></h1>
         <p class="hero-description">A few lines of readable text. A diagram that explains your idea. TextGraph handles the layout so you can focus on what connects.</p>
         <div class="home-actions">
-          <a class="home-button primary" :href="withBase(playgroundLink(examples['request-flow']))" data-analytics-example="request-flow">Try this example <span aria-hidden="true">↗</span></a>
+          <a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Try this example <span aria-hidden="true">↗</span></a>
           <a class="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
         </div>
         <p class="hero-note">No account. No installation. Runs in your browser.</p>
@@ -49,7 +50,7 @@ const gallery = [
           <span class="step-number">{{ step.number }}</span>
           <h3>{{ step.title }}</h3>
           <p>{{ step.description }}</p>
-          <a class="text-link" :href="withBase(playgroundLink(examples[step.id]))" :data-analytics-example="step.id">Try this step <span aria-hidden="true">↗</span></a>
+          <a class="text-link" :href="withBase(links[step.id])" :data-analytics-example="step.id">Try this step <span aria-hidden="true">↗</span></a>
         </div>
         <HomeExample :example="examples[step.id]" />
       </article>
@@ -64,7 +65,7 @@ const gallery = [
           <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>app1 -&gt; cache
 app2 -&gt; cache</code></pre></div>
           <p class="payoff-note">The source is still text you can keep in a repository, review in a diff, or change again tomorrow.</p>
-          <a class="home-button primary" :href="withBase(playgroundLink(examples['cache-flow']))" data-analytics-example="cache-flow">Make it your own <span aria-hidden="true">↗</span></a>
+          <a class="home-button primary" :href="withBase(links['cache-flow'])" data-analytics-example="cache-flow">Make it your own <span aria-hidden="true">↗</span></a>
         </div>
         <HomeExample :example="examples['cache-flow']" action="Edit the updated diagram" />
       </div>
@@ -113,7 +114,7 @@ app2 -&gt; cache</code></pre></div>
       <h2 id="closing-title">Give your idea a shape.</h2>
       <p>Start with a working example. Change one thing. See where it leads.</p>
       <div class="home-actions">
-        <a class="home-button primary" :href="withBase(playgroundLink(examples['request-flow']))" data-analytics-example="request-flow">Create your diagram <span aria-hidden="true">↗</span></a>
+        <a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Create your diagram <span aria-hidden="true">↗</span></a>
         <a class="text-link" :href="withBase('/diagrams/flowcharts')">Read the syntax guide <span aria-hidden="true">→</span></a>
       </div>
     </section>

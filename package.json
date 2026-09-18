@@ -35,5 +35,8 @@
     "peggy": "^5.0.6",
     "tar": "7.5.22",
     "vitepress": "2.0.0-alpha.19"
+  },
+  "dependencies": {
+    "@hpcc-js/wasm-zstd": "1.16.1"
   }
 }
