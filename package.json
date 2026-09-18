@@ -17,7 +17,8 @@
     "test": "node --test test/*.test.mjs",
     "test:browser": "playwright test",
     "release:check": "node .release/check.cjs --ready",
-    "build:release": "node .release/check.cjs --installed && npm run build"
+    "build:release": "node .release/check.cjs --installed && npm run build",
+    "editor:prepare": "node scripts/prepare-editor.mjs"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "@drawmotive/textgraph": "0.2.1",
     "@playwright/test": "1.61.0",
     "peggy": "^5.0.6",
+    "tar": "7.5.22",
     "vitepress": "2.0.0-alpha.19"
   }
 }

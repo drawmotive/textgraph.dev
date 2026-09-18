@@ -79,3 +79,16 @@ Its source lives in `public/examples/textgraph/`; generated SDK files stay ignor
 
 The browser suite covers rendering, edits, diagnostics, retry, PNG download,
 mobile layout, and navigation from the documentation.
+
+## Editor documentation and runnable example
+
+`/editor/` documents `@drawmotive/editor`; `/examples/editor/` is a standalone page with a real visual editor, TextGraph generation, PNG export and document save/open. The page and its runtime are copied from the exact npm release recorded in `.vitepress/editor-release.json`. All browser requests remain on this site’s origin.
+
+`npm run build` prepares the editor automatically. The first build downloads the pinned tarball from npm and verifies its SHA-512; subsequent builds use the verified cache. Deploy only after that package version exists on npm. Before first publication, review the same archive locally:
+
+```bash
+DRAWMOTIVE_EDITOR_TARBALL=/absolute/path/drawmotive-editor-0.2.1.tgz npm run build
+npm run preview -- --host 127.0.0.1
+```
+
+The local override must match the committed archive integrity. When upgrading, publish the tested archive unchanged, update version/URL/integrity together, and run the site unit tests, build and browser tests. Never replace only runtime files or point the frame at an npm CDN: the host is an HTML page and needs correct HTML/WASM serving.

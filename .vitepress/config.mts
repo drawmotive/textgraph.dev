@@ -15,11 +15,19 @@ export default defineConfig(withTextGraph({
       { text: 'Playground', link: '/playground' },
       { text: 'Examples', items: [
         { text: 'TextGraph in the browser', link: '/examples/textgraph/', target: '_self' },
+        { text: 'Visual editor in the browser', link: '/examples/editor/', target: '_self' },
       ] },
       { text: 'Report an issue', link: textgraphIssuesUrl },
     ],
 
     sidebar: [
+      {
+        text: 'DrawMotive editor',
+        items: [
+          { text: 'Embed the editor', link: '/editor/' },
+          { text: 'Runnable browser example', link: '/examples/editor/', target: '_self' },
+        ]
+      },
       {
         text: 'Introduction',
         items: [

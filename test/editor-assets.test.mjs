@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { c as archive } from 'tar';
+import { prepareEditor } from '../scripts/prepare-editor.mjs';
+
+test('site extracts a pinned editor artifact for same-origin execution and rejects changed archives', async t => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'editor-site-'));
+  const old = process.env.DRAWMOTIVE_EDITOR_TARBALL;
+  t.after(async () => {
+    if (old === undefined) delete process.env.DRAWMOTIVE_EDITOR_TARBALL;
+    else process.env.DRAWMOTIVE_EDITOR_TARBALL = old;
+    await rm(root, { recursive: true, force: true });
+  });
+  const pkg = path.join(root, 'fixture/package');
+  const file = async (name, value) => { await mkdir(path.dirname(path.join(pkg, name)), { recursive: true }); await writeFile(path.join(pkg, name), value); };
+  const runtime = '<title>Editor runtime</title>';
+  await file('package.json', JSON.stringify({ name: '@drawmotive/editor', version: '0.2.1' }));
+  await file('LICENSE', 'MIT');
+  await file('src/index.js', 'export const initializeEditor = () => {};');
+  await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script>');
+  await file('examples/browser/main.js', "const runtime = new URL('../../generated/editor/', import.meta.url);");
+  await file('generated/editor/embed.html', runtime);
+  await file('generated/editor-manifest.json', JSON.stringify({ packageVersion: '0.2.1', protocolVersion: 1, assets: [{ path: 'editor/embed.html', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] }));
+  const tarball = path.join(root, 'editor.tgz');
+  await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
+  const bytes = await readFile(tarball);
+  await mkdir(path.join(root, '.vitepress'));
+  await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.2.1', integrity: 'sha512-' + createHash('sha512').update(bytes).digest('base64') }));
+  process.env.DRAWMOTIVE_EDITOR_TARBALL = tarball;
+  await prepareEditor(root);
+  const publicRoot = path.join(root, 'public/examples/editor');
+  assert.equal(await readFile(path.join(publicRoot, 'runtime/embed.html'), 'utf8'), runtime);
+  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('./sdk/index.js'));
+  assert.ok((await readFile(path.join(publicRoot, 'main.js'), 'utf8')).includes('./runtime/'));
+  await writeFile(tarball, Buffer.concat([bytes, Buffer.from('changed')]));
+  await assert.rejects(prepareEditor(root), /integrity mismatch/);
+});

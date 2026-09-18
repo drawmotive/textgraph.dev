@@ -12,7 +12,7 @@ export function siteAssets() {
       // VitePress configures client and SSR bundles separately. They share the
       // same inputs, so render/copy once per site invocation, not per bundle.
       if (prepared) return;
-      for (const script of ['assets', 'home:render']) {
+      for (const script of ['assets', 'editor:prepare', 'home:render']) {
         execFileSync('npm', ['run', script, '--workspaces=false'], {
           cwd,
           stdio: 'inherit',

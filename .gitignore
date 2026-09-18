@@ -153,3 +153,6 @@ public/textgraph/
 .vitepress/home/generated/
 test-results/
 playwright-report/
+
+# Generated from the pinned editor release archive.
+public/examples/editor/
