@@ -201,18 +201,10 @@ Paste a flowchart or directed-graph example from this page to render it. The min
 
 ### CLI
 
-Install the command-line tool with your preferred package manager:
+Install the command-line tool with npm (included with Node.js):
 
 ```bash
 npm install -g textgraph
-```
-
-```bash
-pnpm add -g textgraph
-```
-
-```bash
-yarn global add textgraph
 ```
 
 Render a diagram from a file:

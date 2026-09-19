@@ -9,9 +9,10 @@ TextGraph documentation site — a DSL/tutorial/guide site for TextGraph, a natu
 ## Commands
 
 ```bash
-pnpm dev        # Start dev server
-pnpm build      # Build static site
-pnpm preview    # Preview built site
+npm ci          # Install locked dependencies
+npm run dev     # Start dev server
+npm run build   # Build static site
+npm run preview # Preview built site
 ```
 
 ## Architecture
