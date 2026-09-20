@@ -21,42 +21,38 @@ export default defineConfig(withTextGraph({
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },
       { text: 'Playground', link: '/playground' },
-      { text: 'Examples', items: [
-        { text: 'TextGraph in the browser', link: '/examples/textgraph/', target: '_self' },
-        { text: 'Visual editor in the browser', link: '/examples/editor/', target: '_self' },
+      { text: 'SDK demos', items: [
+        { text: 'TextGraph renderer', link: '/examples/textgraph/', target: '_self' },
+        { text: 'DrawMotive editor', link: '/examples/editor/', target: '_self' },
       ] },
       { text: 'Report an issue', link: textgraphIssuesUrl },
     ],
 
+    // Teach the language, then its workflows, then application APIs. Runnable
+    // SDK samples belong to their guides and the demos menu, not the chapter order.
     sidebar: [
       {
-        text: 'DrawMotive editor',
-        items: [
-          { text: 'Embed the editor', link: '/editor/' },
-          { text: 'Runnable browser example', link: '/examples/editor/', target: '_self' },
-        ]
-      },
-      {
-        text: 'Introduction',
+        text: 'Learn TextGraph',
         items: [
           { text: 'What is TextGraph?', link: '/intro/what-is-textgraph' },
           { text: 'Getting Started', link: '/intro/getting-started' },
-        ]
-      },
-      {
-        text: 'Diagram Types',
-        items: [
           { text: 'Flowcharts', link: '/diagrams/flowcharts' },
         ]
       },
       {
-        text: 'Integrations',
+        text: 'Use TextGraph',
         items: [
-          { text: 'Overview', link: '/integrations/overview' },
+          { text: 'Choose your workflow', link: '/integrations/overview' },
+          { text: 'Playground', link: '/playground' },
           { text: 'Markdown & VitePress', link: '/integrations/markdown' },
           { text: 'VS Code Extension', link: '/integrations/vscode' },
+        ]
+      },
+      {
+        text: 'Build applications',
+        items: [
           { text: 'JavaScript / Node.js', link: '/integrations/javascript' },
-          { text: 'Browser example', link: '/examples/textgraph/', target: '_self' },
+          { text: 'DrawMotive editor', link: '/editor/' },
         ]
       },
       {

@@ -9,9 +9,16 @@ export function textgraphExamples(md) {
       if (token.type !== 'fence' || language !== 'textgraph' || !metadata.includes('example')) {
         return [token];
       }
-      const source = Object.assign(new state.Token('fence', 'code', 0), token, { info: 'text' });
+      // Markdown integration guides show the enclosing fence too, while the
+      // diagram still renders from the same input so the two panels cannot drift.
+      const markdownSource = metadata.includes('markdown');
+      const source = Object.assign(new state.Token('fence', 'code', 0), token, {
+        info: markdownSource ? 'markdown' : 'text',
+        content: markdownSource ? '```textgraph\n' + token.content.trimEnd() + '\n```\n' : token.content,
+      });
+      const label = markdownSource ? 'Markdown source' : 'TextGraph source';
       return [
-        html('<div class="textgraph-example">\n<div class="textgraph-example-source">\n<p class="textgraph-example-label">TextGraph source</p>\n'),
+        html('<div class="textgraph-example">\n<div class="textgraph-example-source">\n<p class="textgraph-example-label">' + label + '</p>\n'),
         source,
         html('</div>\n<div class="textgraph-example-preview">\n<p class="textgraph-example-label">Rendered diagram</p>\n'),
         token,

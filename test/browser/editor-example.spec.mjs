@@ -6,7 +6,7 @@ test('editor documentation opens a working standalone visual editor', async ({ p
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (!request.url().startsWith(baseURL) && !request.url().startsWith('data:') && !request.url().startsWith('blob:')) external.push(request.url()); });
   await page.goto('/editor/');
-  await page.getByRole('link', { name: 'Open the runnable editor example' }).click();
+  await page.getByRole('link', { name: 'Run the visual editor SDK demo' }).click();
   await expect(page).toHaveURL(/examples[/]editor[/]$/);
   await expect(page.locator('#status')).toHaveText('Ready to edit');
   await expect(page.frameLocator('iframe').locator('[data-testid="dcanvas"]')).toBeVisible();

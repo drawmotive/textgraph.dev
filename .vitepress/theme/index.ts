@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme'
 import './navigation.css'
 import './textgraph-examples.css'
+import './guide-figures.css'
 import { installAnalytics } from '../analytics-browser.mjs'
 
 export default {

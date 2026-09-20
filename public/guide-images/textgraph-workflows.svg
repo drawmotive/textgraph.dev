@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="640" viewBox="0 0 720 640" role="img" aria-labelledby="title description">
+  <title id="title">Choose a TextGraph workflow</title>
+  <desc id="description">TextGraph source can be tried in the Playground, used in Markdown and VS Code, or embedded in applications with the renderer SDK or DrawMotive editor.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#718598"/></marker>
+  </defs>
+  <rect width="720" height="640" rx="16" fill="#f5f8fb"/>
+  <g font-family="system-ui, sans-serif" fill="#203449">
+    <rect x="24" y="24" width="672" height="102" rx="12" fill="#203449"/>
+    <text x="48" y="62" font-size="24" font-weight="650" fill="white">Start with TextGraph source</text>
+    <text x="48" y="100" font-size="23" font-family="monospace" fill="#b5e9dc">client -&gt; api -&gt; database</text>
+    <g fill="none" stroke="#718598" stroke-width="2">
+      <path d="M 50 126 V 542"/>
+      <path d="M 50 230 H 88" marker-end="url(#arrow)"/>
+      <path d="M 50 386 H 88" marker-end="url(#arrow)"/>
+      <path d="M 50 542 H 88" marker-end="url(#arrow)"/>
+    </g>
+    <rect x="96" y="162" width="600" height="136" rx="12" fill="#e3f2ec" stroke="#b3daca"/>
+    <text x="120" y="196" font-size="19" font-weight="650" fill="#276b53">TRY AND SHARE</text>
+    <text x="120" y="235" font-size="27" font-weight="650">Playground</text>
+    <text x="120" y="272" font-size="23">Edit text · Preview · Share a link</text>
+    <rect x="96" y="318" width="600" height="136" rx="12" fill="#e6effb" stroke="#b8cce7"/>
+    <text x="120" y="352" font-size="19" font-weight="650" fill="#365e91">WRITE DOCUMENTATION</text>
+    <text x="120" y="391" font-size="27" font-weight="650">Markdown + VS Code</text>
+    <text x="120" y="428" font-size="23">Preview while writing · Publish images</text>
+    <rect x="96" y="474" width="600" height="142" rx="12" fill="#f0ebfa" stroke="#d3c4ec"/>
+    <text x="120" y="508" font-size="19" font-weight="650" fill="#70509a">BUILD APPLICATIONS</text>
+    <text x="120" y="547" font-size="24" font-weight="650">Renderer SDK → PNG images</text>
+    <text x="120" y="586" font-size="24" font-weight="650">DrawMotive → Editable documents</text>
+  </g>
+</svg>

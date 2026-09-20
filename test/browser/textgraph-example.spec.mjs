@@ -74,12 +74,12 @@ test('standalone browser example reports missing assets and retries', async ({ p
 
 test('JavaScript documentation and site navigation open the runnable example', async ({ page }) => {
   await page.goto('/integrations/javascript');
-  await page.getByRole('link', { name: 'Open the runnable browser example' }).click();
+  await page.getByRole('link', { name: 'Run the renderer SDK demo' }).click();
   await expect(page).toHaveURL(/\/examples\/textgraph\/$/);
   await expect(page.getByRole('status')).toContainText('Diagram ready');
   await page.goto('/');
-  await page.locator('.VPNavBar').getByRole('button', { name: 'Examples' }).hover();
-  await page.getByRole('link', { name: 'TextGraph in the browser', exact: true }).click();
+  await page.locator('.VPNavBar').getByRole('button', { name: 'SDK demos' }).hover();
+  await page.getByRole('link', { name: 'TextGraph renderer', exact: true }).click();
   await expect(page).toHaveURL(/\/examples\/textgraph\/$/);
   await expect(page.getByRole('status')).toContainText('Diagram ready');
 });

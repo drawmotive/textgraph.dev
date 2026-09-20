@@ -1,15 +1,35 @@
 # What is TextGraph?
 
-TextGraph turns readable text into flowcharts and directed graphs. Describe nodes and their relationships, then render a diagram with automatic layout.
+TextGraph turns readable text into flowcharts and directed graphs. Describe nodes and their relationships; TextGraph draws the connections and arranges the diagram for you.
 
-## Describe Relationships
+## From relationships to a diagram
 
-Write `client -> api -> database` to connect three nodes. Add labels, style classes, and groups as the diagram grows. Try the [Getting Started guide](/intro/getting-started) or the [Playground](/playground).
+Three names and two arrows describe a request moving from a client to an API and on to a database. The image beside the source is rendered by TextGraph.
 
-## Style Your Diagram
+```textgraph example
+client -> api -> database
+```
 
-Use [style classes](/reference/classes) to choose shapes, colors, and line styles. Groups organize related nodes and control their layout.
+The source describes **what connects to what**. Automatic layout decides where the nodes go. Change the text when the relationships change, and render again.
 
-## Use Your Existing Tools
+## Add detail as you need it
 
-Embed diagrams in Markdown with a fenced block whose language is `textgraph`. Render them with the [Markdown and VitePress plugin](/integrations/markdown), preview them in [VS Code](/integrations/vscode), or use the [JavaScript SDK](/integrations/javascript).
+Give nodes readable labels and use style classes to highlight their roles. The connections stay the same:
+
+```textgraph example
+client -> api -> database
+
+client: Browser
+api(fill primary): API server
+database: Database
+```
+
+Groups organize related nodes, while layout classes control direction and columns. The [Getting Started guide](/intro/getting-started) builds these ideas one at a time; [Flowcharts](/diagrams/flowcharts) explores them in depth.
+
+## Take the diagram into your workflow
+
+Start in the [Playground](/playground) to edit source and see the result without installing anything. Use the same text in [Markdown documentation](/integrations/markdown) or a [VS Code preview](/integrations/vscode).
+
+When building an application, the [JavaScript SDK](/integrations/javascript) turns source into PNG images. To let people move shapes and edit labels on a canvas, use the [DrawMotive editor](/editor/). It starts from TextGraph and saves a separate editable document; visual edits do not rewrite the source.
+
+Follow the sidebar from **Learn TextGraph**, through **Use TextGraph**, to **Build applications**. [Choose your workflow](/integrations/overview) compares the tools, and **Reference** holds the detailed language rules.

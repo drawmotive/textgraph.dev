@@ -2,9 +2,20 @@
 
 Use **`@drawmotive/textgraph`** to turn TextGraph source into PNG images or validate diagrams. It runs locally in modern browsers, module workers, and Node.js 22+. TypeScript declarations are included.
 
-<a href="/examples/textgraph/" target="_self"><strong>Open the runnable browser example →</strong></a>
+<a href="/examples/textgraph/" target="_self"><strong>Run the renderer SDK demo →</strong></a>
 
-The example shows editable source, real output, PNG download, and the integration code on one page. It renders immediately; no checkout, account, or rendering server is needed. For a larger editor with sharing and zoom, use the [playground](/playground).
+The demo is a minimal integration you can inspect and reuse: source goes into the SDK, and a PNG comes out. For writing and sharing diagrams, use the [Playground](/playground). For moving shapes and editing labels on a canvas, continue to the [DrawMotive editor](/editor/).
+
+## From source to PNG
+
+This is the source used by the browser quick start below, with its actual output:
+
+```textgraph example
+browser -> api -> database
+api(fill primary): API server
+```
+
+Your application supplies the text, calls `renderPng()`, and displays or saves the returned image. The image itself is not an editable canvas.
 
 ## Install
 

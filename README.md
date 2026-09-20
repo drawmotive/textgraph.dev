@@ -23,6 +23,8 @@ The site installs `@drawmotive/markdown-it-textgraph@0.2.1` from npm, which rend
 
 Use a fenced block with language `textgraph` and metadata `example` to pair copyable source with its static diagram. The site expands the single source block into both panels; ordinary `textgraph` fences still show only the diagram. Examples stack on narrow screens. Published examples must render successfully; rendering failures stop the site build.
 
+Add `markdown` after `example` to show the enclosing Markdown fence in the source panel. Both panels still come from one diagram source.
+
 Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
 
 Cloudflare's direct `npx vitepress build` command is also supported. Required
@@ -35,6 +37,10 @@ VitePress commands skip them, leaving Git-ignored assets absent in a clean check
 The navigation and `srcExclude` list in `.vitepress/config.mts` define the public documentation. Pages for unfinished features and internal design documents stay in the repository but are excluded from generated routes and local search. Add them back only when their features work and their examples have been verified with the published SDK. Earlier design material from mixed reference pages remains in Git history.
 
 Markdown integrations use fenced `textgraph` code blocks. The unpublished PEG grammar is historical design material, not the current renderer contract; the public syntax and language references describe current usage.
+
+The sidebar follows **Learn TextGraph → Use TextGraph → Build applications → Reference**. The editor extends the language into visual editing after the renderer SDK. Runnable demos belong to their integration guides and the **SDK demos** menu, rather than independent sidebar chapters; the Playground is the everyday text authoring tool. This keeps learning topics, authoring tools and implementation samples from competing at the same level. Existing routes remain stable.
+
+Every published guide outside Reference includes real rendered examples or a relevant static illustration. Home, Playground and the SDK demos already show rendered diagrams. `public/guide-images/textgraph-workflows.svg` is the editable workflow illustration. `drawmotive-editor.png` is a screenshot of the pinned editor 0.2.1 demo, captured at 1440 × 1100 after “Ready to edit”, cropped to `.workspace`. Refresh it against the pinned release when the editor changes. Images link to their full-size assets where detail benefits from enlargement. Browser checks verify guide images without JavaScript and at mobile widths.
 
 ## Homepage
 
@@ -77,7 +83,7 @@ Run `npm test` for unit tests. For a browser check with the real renderer, run `
 
 `/examples/textgraph/` is a plain HTML and JavaScript page with editable source,
 initial live rendering, PNG download, and visible SDK integration code. The
-JavaScript integration guide and Examples navigation link to it. VitePress links
+JavaScript integration guide and SDK demos navigation link to it. VitePress links
 to this static page use `target="_self"` to bypass the documentation SPA router.
 
 The existing asset preparation boundary also copies the installed npm SDK

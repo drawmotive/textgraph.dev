@@ -28,6 +28,14 @@ test('example fences retain escaped, copyable DSL alongside the rendered PNG', a
     assert.match(diagramOnly, /<img/);
     assert.doesNotMatch(diagramOnly, /textgraph-example|class="copy"/);
 
+    const markdown = await md.renderAsync('~~~textgraph example markdown\napi -> db\n~~~', {});
+    assert.match(markdown, /Markdown source/);
+    assert.match(markdown, /language-markdown/);
+    assert.match(markdown, /```textgraph/);
+    assert.match(markdown, /api -(?:&gt;|>) db/);
+    assert.equal((markdown.match(/<img /g) ?? []).length, 1);
+    assert.doesNotMatch(markdown, /textgraph-error/);
+
     const invalid = await md.renderAsync('~~~textgraph example\nA ->\n~~~', {});
     assert.match(invalid, /textgraph-error/);
     assert.match(invalid, /Preview unavailable in the current renderer/);

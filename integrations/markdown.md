@@ -2,17 +2,18 @@
 
 TextGraph diagrams can be rendered when Markdown is built, so readers receive a static image. This page uses the Markdown plugin and the public TextGraph SDK.
 
-```textgraph
-A -> B
+## From a Markdown file to a published diagram
+
+Write a fenced block in your Markdown file. When the documentation is built, the block becomes the image shown beside it.
+
+```textgraph example markdown
+draft -> review -> publish
+publish(fill success): Published
 ```
 
-Write the diagram in a fenced block:
+Readers receive a static PNG; they do not need the renderer in their browser. To see the diagram while writing, use the [VS Code extension](/integrations/vscode).
 
-````markdown
-```textgraph
-A -> B
-```
-````
+## Install
 
 Install the Markdown plugin, which uses TextGraph SDK 0.2.1:
 

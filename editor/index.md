@@ -1,8 +1,23 @@
+---
+aside: false
+---
+
 # DrawMotive editor
 
 `@drawmotive/editor` embeds a visual diagram editor in your web application. Start with TextGraph, move shapes and edit labels on the canvas, then save an editable document or download a PNG. The editor runs in the browser without an account or rendering service.
 
-<a href="/examples/editor/" target="_self">Open the runnable editor example →</a>
+<figure class="guide-figure">
+  <a href="/guide-images/drawmotive-editor.png"><img src="/guide-images/drawmotive-editor.png" alt="DrawMotive editor demo: TextGraph source and document controls on the left, with the generated User, Application and Database shapes on the editable canvas on the right." width="1376" height="771"></a>
+  <figcaption>The running editor demo: generate from text, edit on the canvas, then save a document or export a PNG. Select the image to see it at full size.</figcaption>
+</figure>
+
+<a href="/examples/editor/" target="_self">Run the visual editor SDK demo →</a>
+
+## From TextGraph to visual editing
+
+The [Playground](/playground) updates an image as you edit text. DrawMotive takes the next step: generate a starting diagram, then work directly with its shapes, labels and connections. Save the editable document to reopen your canvas changes; export a PNG to share the result. Visual edits do not update the original TextGraph.
+
+If your application only needs to produce images, use the [JavaScript renderer](/integrations/javascript). Choose the editor when people need a canvas:
 
 | What you need | Package |
 | --- | --- |

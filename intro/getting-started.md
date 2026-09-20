@@ -1,12 +1,16 @@
+---
+aside: false
+---
+
 # Getting Started
 
-This page walks you through TextGraph's core features using a cloud architecture example that builds from two nodes to a multi-tier platform. Each section introduces exactly one new concept.
+This page walks you through TextGraph's core features using a cloud architecture example that builds from two nodes to a multi-tier platform. Each section introduces one concept, with the source beside its rendered result.
 
 ## Your First Diagram
 
 Two nodes, one arrow — TextGraph does the rest.
 
-```text
+```textgraph example
 client -> api
 ```
 
@@ -16,7 +20,7 @@ Each word becomes a node labeled with its own name. The `->` operator draws a di
 
 Chain nodes to extend the diagram. Each `->` adds one edge.
 
-```text
+```textgraph example
 client -> api -> database
 ```
 
@@ -26,7 +30,7 @@ Three identifiers, two arrows, one complete request flow. Chains can be as long 
 
 By default, a node displays its identifier as its label. To assign a human-readable name, declare it on a separate line with `id: Label`.
 
-```text
+```textgraph example
 client -> api -> db
 
 client: Browser Client
@@ -49,7 +53,7 @@ See [Flowcharts — Node Labels](/diagrams/flowcharts#node-labels) for more deta
 
 Append `: label` after a connection to annotate the edge.
 
-```text
+```textgraph example
 client -> api : HTTPS
 api -> db : SQL query
 
@@ -64,7 +68,7 @@ Edge labels describe protocols, data formats, or outcomes. The label text is tri
 
 Place style classes in parentheses after the node identifier. Classes compose — list as many as you need, separated by spaces.
 
-```text
+```textgraph example
 client -> api -> db
 
 client: Browser Client
@@ -80,7 +84,7 @@ See [Style Classes](/reference/classes) for the full list of colors, shapes, bor
 
 Curly braces define a named scope. Nodes inside a group are laid out independently. Connect across groups using dot notation.
 
-```text
+```textgraph example
 frontend {
   browser -> cdn
   browser: Browser
@@ -111,7 +115,7 @@ See [Flowcharts — Groups](/diagrams/flowcharts#groups-and-scopes) for named gr
 
 Apply the `horizontal` class to a scope to arrange its children left to right instead of the default top to bottom.
 
-```text
+```textgraph example
 services(horizontal) {
   api -> auth -> worker
 }
@@ -129,7 +133,7 @@ The fastest way to try TextGraph — no install required.
 
 [Open the Playground →](/playground)
 
-Paste a diagram example from this page to render it.
+Copy the source from any example on this page into the Playground. Edit the text to update the image, then download a PNG or share a link.
 
 ### Markdown
 
@@ -148,6 +152,8 @@ Use the [Markdown & VitePress plugin](/integrations/markdown) to render these bl
 Search for **TextGraph** in the VS Code extension marketplace, or see the [VS Code Extension](/integrations/vscode) guide.
 
 ## Next Steps
+
+Continue with Flowcharts to learn the language in depth, then [choose your workflow](/integrations/overview): write in the Playground, publish in Markdown, or build an application with the renderer or visual editor.
 
 | Topic | What you'll learn |
 |-------|-------------------|

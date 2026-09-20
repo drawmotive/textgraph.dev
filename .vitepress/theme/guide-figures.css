@@ -1,0 +1,21 @@
+/* Static guide visuals stay readable without loading an interactive runtime. */
+.vp-doc .guide-figure {
+  margin: 24px 0;
+}
+
+.vp-doc .guide-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: white;
+}
+
+.vp-doc .guide-figure figcaption {
+  margin-top: 12px;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
