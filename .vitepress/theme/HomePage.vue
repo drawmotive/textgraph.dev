@@ -102,7 +102,7 @@ app2 -&gt; cache</code></pre></div>
     <section class="home-section home-wrap questions-section" aria-labelledby="questions-title">
       <div><p class="eyebrow">Before you begin</p><h2 id="questions-title">A few useful details.</h2></div>
       <div class="home-questions">
-        <details><summary>What can I make today?</summary><p>Flowcharts and directed graphs, including process, service, and dependency diagrams. Mind maps, sequence diagrams, and slides are planned and are not available yet. <a :href="withBase('/reference/changelog')">See the changelog.</a></p></details>
+        <details><summary>What can I make today?</summary><p>Flowcharts and directed graphs, including process, service, and dependency diagrams. <a :href="withBase('/reference/changelog')">See the changelog.</a></p></details>
         <details><summary>Can I use plain English or AI?</summary><p>TextGraph uses a small, structured syntax. You can write it yourself or ask an AI assistant to draft it, then review and render the source. The playground is a diagram editor; it does not include an AI chat.</p></details>
         <details><summary>Where is my diagram rendered?</summary><p>The playground renders in your browser. Diagram source stays there while you edit. A share link contains the source, so anyone you send that link to can open it.</p></details>
         <details><summary>How do I take the result with me?</summary><p>Download a PNG, copy the image, or copy a link to the editable source from the playground. For documentation, use the Markdown plugin or VS Code extension.</p></details>

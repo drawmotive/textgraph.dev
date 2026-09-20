@@ -1,25 +1,15 @@
 # What is TextGraph?
 
-TextGraph is a natural-language DSL that turns text descriptions into diagrams — built for the AI era.
+TextGraph turns readable text into flowcharts and directed graphs. Describe nodes and their relationships, then render a diagram with automatic layout.
 
-::: warning Current availability: diagrams only
-Flowcharts and directed graphs are implemented. Mind maps, sequence diagrams, and slides are not implemented and are not available yet. Their documentation describes planned features.
-:::
+## Describe Relationships
 
-## Natural Language First
+Write `client -> api -> database` to connect three nodes. Add labels, style classes, and groups as the diagram grows. Try the [Getting Started guide](/intro/getting-started) or the [Playground](/playground).
 
-TextGraph is a domain-specific language with a grammar close to plain English. Describe what you want — TextGraph renders it as a diagram. No wrestling with cryptic symbols or manual layout.
+## Style Your Diagram
 
-## Slides — Not implemented
+Use [style classes](/reference/classes) to choose shapes, colors, and line styles. Groups organize related nodes and control their layout.
 
-::: warning Not implemented
-Slide authoring, layouts, speaker notes, and slide export are not available yet. The planned slide format uses embedded Markdown to describe presentations from a single text source. See [Authoring Slides](/slides/authoring) for the planned scope.
-:::
+## Use Your Existing Tools
 
-## Styling & Themes
-
-TextGraph uses SVG 1.1 CSS support for styling — a subset of CSS2. This lets you customize colors, fonts, strokes, and other visual properties using familiar CSS syntax, without requiring a full browser rendering environment.
-
-## Zero-Effort Integrations
-
-A growing ecosystem of integrations means you can drop TextGraph into your existing tools and pipelines with minimal setup.
+Embed diagrams in Markdown with a fenced block whose language is `textgraph`. Render them with the [Markdown and VitePress plugin](/integrations/markdown), preview them in [VS Code](/integrations/vscode), or use the [JavaScript SDK](/integrations/javascript).

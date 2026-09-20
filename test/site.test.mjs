@@ -29,3 +29,27 @@ test('site is npm-only', async () => {
   await access(path.join(siteRoot, 'package-lock.json'));
   await assert.rejects(access(path.join(siteRoot, 'pnpm-lock.yaml')), { code: 'ENOENT' });
 });
+
+test('published routes and navigation expose usable documentation only', async () => {
+  const { resolveConfig } = await import('vitepress');
+  const config = await resolveConfig(siteRoot, 'build', 'production');
+  const drafts = /^(?:slides\/|diagrams\/(?:sequence|mindmaps)\.md$|integrations\/(?:cli|rest-api|ai-agents)\.md$|reference\/(?:config|grammar|themes)\.md$|docs\/|design\/|README\.md$|CLAUDE\.md$)/;
+  assert.ok(config.pages.includes('reference/syntax.md'));
+  assert.ok(config.pages.includes('diagrams/flowcharts.md'));
+  assert.deepEqual(config.pages.filter(page => drafts.test(page)), []);
+
+  function checkLinks(items) {
+    for (const item of items) {
+      if (item.items) checkLinks(item.items);
+      if (!item.link?.startsWith('/') || item.link.startsWith('/examples/')) continue;
+      const route = item.link.slice(1);
+      assert.ok(config.pages.includes(route.endsWith('/') ? route + 'index.md' : route + '.md'), item.link);
+    }
+  }
+  checkLinks(config.site.themeConfig.nav);
+  checkLinks(config.site.themeConfig.sidebar);
+  for (const page of config.pages) {
+    const content = await readFile(path.join(siteRoot, page), 'utf8');
+    assert.doesNotMatch(content, /not implemented|CONTENT TO ADD|@textgraph|@slide|\(notes\)|mindmaps?|sequence diagrams?|speaker notes/i, page);
+  }
+});

@@ -21,7 +21,7 @@ npm run build
 
 The site installs `@drawmotive/markdown-it-textgraph@0.2.1` from npm, which renders diagrams with the public TextGraph SDK 0.2.1. A standalone checkout needs no sibling repositories.
 
-Use a fenced block with language `textgraph` and metadata `example` to pair copyable source with its static diagram. The site expands the single source block into both panels; ordinary `textgraph` fences still show only the diagram. Examples stack on narrow screens. Known renderer limitations show an availability message beside the source, using the adapter's inline error mode.
+Use a fenced block with language `textgraph` and metadata `example` to pair copyable source with its static diagram. The site expands the single source block into both panels; ordinary `textgraph` fences still show only the diagram. Examples stack on narrow screens. Published examples must render successfully; rendering failures stop the site build.
 
 Run `npm run build:release` to validate the coordinated version and installed registry dependencies before building. Cloudflare Pages project `textgraph-dev` deploys this repository's `main` branch to https://textgraph.dev; its output directory is `.vitepress/dist`.
 
@@ -29,6 +29,12 @@ Cloudflare's direct `npx vitepress build` command is also supported. Required
 homepage images and playground runtime assets are prepared by the Vite configuration
 before bundling. Preparation cannot rely on npm `prebuild`/`predev` hooks: direct
 VitePress commands skip them, leaving Git-ignored assets absent in a clean checkout.
+
+## Published documentation
+
+The navigation and `srcExclude` list in `.vitepress/config.mts` define the public documentation. Pages for unfinished features and internal design documents stay in the repository but are excluded from generated routes and local search. Add them back only when their features work and their examples have been verified with the published SDK. Earlier design material from mixed reference pages remains in Git history.
+
+Markdown integrations use fenced `textgraph` code blocks. The unpublished PEG grammar is historical design material, not the current renderer contract; the public syntax and language references describe current usage.
 
 ## Homepage
 

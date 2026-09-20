@@ -197,7 +197,7 @@ Multiple nodes can be chained in a single statement:
 a -> b -> x <- y
 ```
 
-This creates three edges: `a → b`, `b → x`, and `y → x`. All inline label and style syntax applies to each node in the chain.
+This creates three edges: `a → b`, `b → x`, and `y → x`. Endpoint styles apply to each node in the chain; declare node labels separately.
 
 Anonymous nodes follow the same chaining rule:
 

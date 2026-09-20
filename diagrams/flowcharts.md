@@ -4,11 +4,11 @@ aside: false
 
 # Flowcharts
 
-Flowcharts are the default diagram type in TextGraph. Any document containing `->` connections is rendered as a flowchart — no explicit declaration needed. For mixed-type documents, apply the `flowchart` class to a scope to force flowchart rendering.
+Describe nodes and their connections to create a flowchart or directed graph. No diagram-type declaration is needed.
 
 All examples on this page use cloud architecture as the running context.
 
-Each runnable example pairs its TextGraph source with a rendered diagram. On narrow screens, the diagram appears below the source. Previews use the current TextGraph renderer; examples it cannot render yet display an explanation in the preview panel.
+Each runnable example pairs its TextGraph source with a rendered diagram. On narrow screens, the diagram appears below the source.
 
 ## Your First Flowchart
 
@@ -18,7 +18,7 @@ Three identifiers and two arrows produce a complete diagram.
 client -> api -> database
 ```
 
-Each identifier becomes a node labeled with its own name. The `->` operator draws a directed edge. TextGraph infers the flowchart type automatically.
+Each identifier becomes a node labeled with its own name. The `->` operator draws a directed edge. TextGraph arranges the nodes automatically.
 
 ## Node Labels
 
@@ -124,27 +124,19 @@ This creates three edges: `a -> b`, `b -> c`, and `d -> c`.
 Inline styles apply per node in a chain:
 
 ```textgraph example
-commit(circle) -> build(fill) -> test(fill) -> deploy(fill success) -> prod(stadium)
+commit(circle) -> build(fill) -> test(fill) -> deploy(fill success) -> prod(ellipse)
 ```
 
 ## Node Shapes
 
 Shapes map to standard flowchart conventions. Apply a shape class in parentheses after the node identifier.
 
-| Class | Alias | Convention |
-|-------|-------|------------|
-| `rectangle` | `rect` | Process / action (default) |
-| `circle` | — | Start / end / event |
-| `diamond` | `decision` | Decision / branch |
-| `cylinder` | `db`, `database` | Storage / database |
-| `parallelogram` | `io` | Input / output |
-| `stadium` | `pill` | Terminal / endpoint |
-| `document` | `doc` | Document / artifact |
-| `callout` | — | Annotation / note |
-| `triangle` | — | Warning / caution |
-| `hexagon` | — | Preparation / complex process |
-
-Use `rounded` (default) or `no-rounded` to control corner rounding on any shape.
+| Class | Convention |
+|-------|------------|
+| `rectangle` | Process / action (default) |
+| `circle` | Start / end / event |
+| `ellipse` | Start / end |
+| `diamond` | Decision / branch |
 
 ```textgraph example
 start -> check
@@ -157,9 +149,9 @@ build -> api
 start(circle): Deploy
 check(diamond): Tests pass?
 build: Build Image
-artifact(document): Release Notes
-db(cylinder): Config Store
-api(stadium): Live API
+artifact: Release Notes
+db: Config Store
+api(ellipse): Live API
 fail(circle danger): Abort
 ```
 
@@ -167,7 +159,7 @@ fail(circle danger): Abort
 
 ### Fill and Colors
 
-The `fill` class fills a node with the default background. Combine with a color class to set a specific fill color.
+The `fill` class fills a node with the primary fill color. Combine with a color class to set a specific fill color.
 
 ```textgraph example
 api(fill): Default Fill
@@ -178,9 +170,7 @@ degraded(fill warning): Degraded
 down(fill danger): Down
 ```
 
-Use `no-fill` to make a node transparent.
-
-Semantic colors — `primary`, `secondary`, `info`, `success`, `warning`, `danger` — carry meaning. Surface colors — `background`, `foreground` — match the current theme.
+Semantic colors — `primary`, `secondary`, `info`, `success`, `warning`, `danger` — carry meaning.
 
 ```textgraph example
 <!-- service health dashboard -->
@@ -197,13 +187,10 @@ cache(fill info): Cache Layer
 
 ### Border Styles
 
-Control borders with `border`, `no-border`, and line style classes.
+Use line style classes for node borders.
 
 | Class | Effect |
 |-------|--------|
-| `border` | Show border (default) |
-| `no-border` | Remove border |
-| `solid` | Solid line (default) |
 | `dashed` | Dashed line |
 | `dotted` | Dotted line |
 
@@ -211,7 +198,7 @@ Control borders with `border`, `no-border`, and line style classes.
 live -> preview : promote
 preview -> legacy : replace
 
-live(solid): Production
+live: Production
 preview(dashed): Staging
 legacy(dotted): Deprecated
 ```
@@ -220,60 +207,14 @@ legacy(dotted): Deprecated
 
 | Class | Effect |
 |-------|--------|
-| `normal` | Default weight |
 | `bold` | Heavy stroke |
-| `thick` | Heavier than bold |
 
 ```textgraph example
 critical -> standard -> minor
 
 critical(bold): Core Service
 standard: Standard Service
-minor(normal): Background Job
-```
-
-### Shared Styles
-
-Apply one style declaration to multiple nodes with a comma-separated list.
-
-```textgraph example
-web -> api -> worker
-
-web, api, worker(fill primary)
-web: Web Server
-api: API Server
-worker: Worker
-```
-
-### Scope-Level Style
-
-Style classes without an identifier apply to the current scope.
-
-```textgraph example
-(fill primary)
-a -> b
-a: Service A
-b: Service B
-```
-
-This sets the scope background to filled primary.
-
-### Reset and Special Classes
-
-| Class | Effect |
-|-------|--------|
-| `clear` | Remove all previously applied styles |
-| `hidden` | Render invisibly — useful as a spacing anchor |
-| `title` | Prominent title block with no border |
-
-```textgraph example
-header(title): Cloud Architecture
-
-spacer(hidden)
-
-api -> db
-api: API Server
-db(cylinder): Database
+minor: Background Job
 ```
 
 ## Styling Edges
@@ -303,7 +244,7 @@ gateway: API Gateway
 auth: Auth Service
 queue: Message Queue
 legacy: Legacy API
-db(cylinder): Database
+db: Database
 ```
 
 Combine edge style and edge label in one statement:
@@ -312,120 +253,25 @@ Combine edge style and edge label in one statement:
 a ->(dashed warning) b : retry on failure
 ```
 
-## Rich Labels
+## Line Breaks
 
-### Inline Markdown
-
-Label text supports inline Markdown formatting.
-
-```textgraph example
-api: **API Gateway** v2.1
-db: _read replica_
-```
-
-### Heading Labels
-
-Use heading syntax for a title-style label — larger and bold.
-
-```textgraph example
-platform: # Cloud Platform
-api: ## API Layer
-```
-
-### Block Markdown
-
-For multi-line rich content, use a fenced ` ```md ` block on the lines following the identifier.
-
-````textgraph example
-api:
-```md
-# API Gateway
-- /users
-- /orders
-- /health
-```
-
-db:
-```md
-# PostgreSQL 16
-- 3 replicas
-- 500 GB storage
-```
-
-api -> db
-````
-
-### Line Breaks
-
-Use `\n` for inline line breaks in simple cases.
+Use `\n` inside a label to split it across lines.
 
 ```textgraph example
 api: API Gateway\nPort 8080
 ```
 
-TextGraph line break rules differ from standard Markdown:
+## Embedded TextGraph Blocks
 
-- A **newline** produces a line break (no trailing spaces needed).
-- A **single blank line** collapses to a line break.
-- **Two or more blank lines** produce a paragraph break with visible vertical gap.
+In a Markdown file, put the diagram inside a fenced code block with the language `textgraph`:
 
-### Standalone Text Labels
-
-An identifier with a label but no connections or shape renders as plain text with no border.
-
-```textgraph example
-api -> db
-
-note: Deployed to us-east-1
-api: API Server
-db(cylinder): Database
-```
-
-### Resource References
-
-A label starting with `@` renders a resource — an icon, image, or embedded diagram.
-
-The static renderer currently displays these resource references as text. The previews below show that current behavior; external files and stock icons are not loaded by this page.
-
-Stock cloud icons by slug:
-
-```textgraph example
-s3: @aws-s3
-batch: @az-batch-ai
-```
-
-Local, external, or base64 images:
-
-```textgraph example
-logo: @(./icons/company-logo.png)
-ext: @(https://example.com/icon.png)
-```
-
-An external TextGraph diagram file:
-
-```textgraph example
-arch: @(./architecture.md)
-```
-
-Reference a named diagram within a multi-diagram file:
-
-```textgraph example
-arch: @(./diagrams.md#architecture)
-```
-
-### Embedded TextGraph Blocks
-
-Use `@textgraph` delimiters to embed a named TextGraph diagram inside a Markdown file.
-
-```textgraph example
-@textgraph: auth-flow
+````markdown
+```textgraph
 client -> gateway -> auth -> db
-@textgraph
 ```
+````
 
-Reference it from another diagram with `@(./file.md#auth-flow)`.
-
-If the file contains only one diagram, the closing `@textgraph` is optional.
+Render it with the [Markdown & VitePress plugin](/integrations/markdown) or preview it with the [VS Code extension](/integrations/vscode). In the Playground, paste only the diagram source inside the fence.
 
 ## Groups and Scopes
 
@@ -448,8 +294,8 @@ backend {
 
 data {
   db -- cache
-  db(cylinder): PostgreSQL
-  cache(cylinder): Redis
+  db: PostgreSQL
+  cache: Redis
 }
 
 frontend.cdn -> backend.api
@@ -462,25 +308,24 @@ backend.api -> data.cache
 Groups follow the same rules as nodes — styles and labels can be combined. A named group uses its identifier as the default title: `D { B -> C }` displays `D`. A separate `D: Services` declaration changes its title to `Services` while keeping the identifier `D`.
 
 ```textgraph example
-frontend(fill info): Frontend
-frontend {
+frontend(fill info): Frontend {
   browser -> cdn
   browser: Browser
   cdn: CDN
 }
 
-backend(fill primary): Backend
-backend {
+backend(fill primary): Backend {
   api -> worker
   api: API Server
   worker: Worker
 }
 ```
 
-Or combined in the group header, with the body starting on the next line:
+A group can also have its title declared separately:
 
 ```textgraph example
-frontend(fill info): Frontend {
+frontend: Frontend
+frontend(fill info) {
   browser -> cdn
   browser: Browser
   cdn: CDN
@@ -574,86 +419,26 @@ Layout classes control how children are arranged within a scope.
 | `layout-4-col` | Four-column grid |
 | `layout-6-col` | Six-column grid |
 
-Layout can be set on the scope identifier or as a scope-level style inside braces — both are equivalent:
+Set the direction on the group header:
 
 ```textgraph example
 services(horizontal) {
-  api: API
-  auth: Auth
-  worker: Worker
+  api -> auth -> worker
 }
 ```
 
-```textgraph example
-services {
-  (horizontal)
-  api: API
-  auth: Auth
-  worker: Worker
-}
-```
+For the whole diagram, place `(horizontal)` or `(vertical)` at the start of the source.
 
-### Justify and Align
-
-Justify controls distribution along the main axis. Align controls the cross axis.
-
-| Class | Effect |
-|-------|--------|
-| `justify-start` | Pack toward start (default) |
-| `justify-center` | Center along main axis |
-| `justify-end` | Pack toward end |
-| `justify-between` | Equal space between children |
-| `justify-around` | Equal space around each child |
-| `justify-evenly` | Equal space between and around |
-| `align-start` | Align to cross-axis start |
-| `align-center` | Center on cross axis |
-| `align-end` | Align to cross-axis end |
+Use a column grid on a group of nodes:
 
 ```textgraph example
-<!-- services arranged horizontally with equal spacing -->
-services(horizontal justify-between) {
-  api: API Gateway
-  auth: Auth Service
-  billing: Billing
-  notify: Notifications
-}
-
-<!-- metrics in a 3-column grid -->
-metrics(layout-3-col): Metrics {
+metrics(layout-3-col) {
   cpu: CPU Usage
   mem: Memory
   disk: Disk I/O
   net: Network
   lat: Latency
   err: Error Rate
-}
-
-<!-- availability zones spaced evenly -->
-zones(horizontal justify-evenly) {
-  az1: us-east-1a
-  az2: us-east-1b
-  az3: us-east-1c
-}
-```
-
-### Nested Layout
-
-Each scope controls its own layout independently of its parent.
-
-```textgraph example
-platform(horizontal) {
-  frontend(vertical) {
-    browser: Browser
-    mobile: Mobile App
-  }
-  backend(vertical) {
-    api: API
-    worker: Worker
-  }
-  data(vertical) {
-    db(cylinder): PostgreSQL
-    cache(cylinder): Redis
-  }
 }
 ```
 
@@ -675,7 +460,7 @@ backend {
 }
 
 data {
-  db(cylinder): PostgreSQL
+  db: PostgreSQL
 }
 
 frontend.browser -> backend.gateway
@@ -690,7 +475,7 @@ platform {
     gateway: API Gateway
   }
   data {
-    db(cylinder): Database
+    db: Database
   }
 }
 
@@ -699,7 +484,7 @@ platform.backend.gateway -> platform.data.db
 
 ### Identifier Resolution
 
-Identifiers resolve from the current scope outward. The first match wins. An inner declaration shadows an outer one with the same name.
+References first check the current scope, then parent scopes, then the rest of the document. A unique name can be used across groups. Use a group-qualified name when several nodes share an identifier.
 
 ```textgraph example
 frontend {
@@ -713,163 +498,7 @@ api -> db
 <!-- "api" here resolves to "External API" -->
 
 api: External API
-db(cylinder): Database
+db: Database
 ```
 
-No special syntax is needed to reference an outer scope — if an identifier is not found locally, lookup continues through enclosing scopes automatically. Dot notation is only necessary to reach inward, from an outer scope into a named group.
-
-## Overlay Positioning
-
-Overlay classes remove an element from the normal layout flow and anchor it at a fixed position within the parent scope.
-
-| Class | Position |
-|-------|----------|
-| `overlay-center` | Centered on parent |
-| `overlay-top-left` | Top-left corner |
-| `overlay-top-center` | Top-center edge |
-| `overlay-top-right` | Top-right corner |
-| `overlay-center-left` | Center-left edge |
-| `overlay-center-right` | Center-right edge |
-| `overlay-bottom-left` | Bottom-left corner |
-| `overlay-bottom-center` | Bottom-center edge |
-| `overlay-bottom-right` | Bottom-right corner |
-| `overlay-cover` | Stretch to fill parent (watermarks, backgrounds) |
-
-When multiple overlays exist in the same scope, later declarations render on top (higher z-order).
-
-### Badge Pattern
-
-A small status indicator anchored to a corner of a group.
-
-```textgraph example
-services {
-  api -> db
-  api: API Server
-  db(cylinder): Database
-
-  status(overlay-top-right circle success fill): ✓
-}
-```
-
-### Annotation Callout
-
-A floating note connected to a specific node.
-
-```textgraph example
-main {
-  lb -> api -> db
-  lb: Load Balancer
-  api: API Server
-  db(cylinder): Database
-}
-
-tip(overlay-top-right callout warning): Bottleneck — scale horizontally
-tip -> main.api
-```
-
-Overlay elements can have connections to flow elements — the renderer routes edges between layers.
-
-### Cover Overlay
-
-Use `overlay-cover` for a watermark or translucent background layer.
-
-```textgraph example
-services {
-  api -> db
-  api: API
-  db(cylinder): DB
-
-  (overlay-cover no-border): STAGING
-}
-```
-
-## Putting It All Together
-
-A comprehensive example: a multi-tier cloud deployment platform with CI/CD pipeline and monitoring overlay. This exercises every major feature covered on this page.
-
-```textgraph example
-<!-- scope-level style for the root -->
-(fill)
-
-header(title): # Multi-Tier Cloud Platform
-
-<!-- CI/CD pipeline across the top, horizontal layout -->
-pipeline(horizontal dashed): CI/CD Pipeline {
-  commit -> build -> test -> gate
-  gate -> deploy : yes
-  gate -> commit : no, fix
-
-  commit(circle): Commit
-  build(fill): Build
-  test(fill): Test
-  gate(diamond): Approve?
-  deploy(fill success stadium): Deploy
-}
-
-<!-- three main tiers side by side -->
-tiers(horizontal justify-between) {
-
-  frontend(fill info): Frontend {
-    browser -> cdn
-    mobile -> cdn
-
-    cdn: @aws-s3
-    browser: Browser Client
-    mobile: Mobile App
-  }
-
-  backend(fill primary): Backend Services {
-    gw -> auth : JWT
-    gw -> billing
-    gw -> notify
-    gw ->(dashed info) worker : async
-
-    gw(bold): API Gateway
-    auth: Auth Service
-    billing: Billing
-    notify: Notifications
-    worker: Worker
-
-    <!-- shared style for internal services -->
-    auth, billing, notify(fill)
-  }
-
-  data(fill secondary): Data Layer {
-    db -- cache : sync
-    queue ->(dashed) db : drain
-
-    db(cylinder): PostgreSQL
-    cache(cylinder): Redis
-    queue(cylinder): Message Queue
-  }
-}
-
-<!-- cross-scope connections -->
-pipeline.deploy ->(bold success) tiers.backend.gw : release
-tiers.frontend.cdn -> tiers.backend.gw : HTTPS
-tiers.backend.auth -> tiers.data.db : query
-tiers.backend.auth -> tiers.data.cache : session
-tiers.backend.worker -> tiers.data.queue
-
-<!-- monitoring overlay -->
-monitor(overlay-bottom-right callout warning): Latency Warning\np99 > 200ms
-monitor ->(dotted danger) tiers.backend.gw
-
-health(overlay-top-right circle success fill): ✓
-```
-
-## Tips
-
-1. **Group by logical tier.** Use named scopes to separate frontend, backend, and data layers. This keeps the diagram readable and enables cross-scope connections with dot notation.
-
-2. **Define labels after connections.** Write the diagram structure first, then declare `id: Label` lines below. This keeps you focused on relationships before naming.
-
-3. **Reserve diamonds for decisions.** The `diamond` shape signals a branch point. Overusing it dilutes its meaning.
-
-4. **Label non-obvious edges.** If the protocol, format, or condition is not self-evident, add an edge label. Skip labels on edges where the relationship is clear from context.
-
-5. **Color by status semantics.** Use `success` for healthy, `warning` for degraded, `danger` for down or deprecated. Readers will intuit the meaning without a legend.
-
-6. **Use `dashed` for async, `dotted` for deprecated.** Consistent line styles create a visual language across your diagrams.
-
-7. **Use `@textgraph` blocks for embedding.** When documenting architecture in Markdown, embed diagrams inline with `@textgraph` delimiters and reference them from other diagrams with `@(./file.md#name)`.
+Use the shortest group prefix that makes the reference unique, such as `frontend.api` or `platform.backend.gateway`.

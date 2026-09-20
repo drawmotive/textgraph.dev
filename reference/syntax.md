@@ -1,10 +1,6 @@
 # Syntax Reference
 
-::: warning Implementation status
-Only flowcharts and directed graphs are implemented. Mind maps, sequence diagrams, and slides are not implemented yet. References to those formats, including `@slide` and `(notes)`, describe planned syntax.
-:::
-
-A complete reference for all operators and punctuation in the TextGraph DSL. For the formal, machine-readable syntax definition see the [PEG Grammar](/reference/grammar).
+A reference for diagram source and Markdown embedding.
 
 Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a node with children. Omitting its identifier creates an anonymous group.
 
@@ -23,13 +19,13 @@ Node and scope names must start with a letter or underscore, and can contain let
 
 Connections can be chained:
 
-```
+```text
 a -> b -> c <- d
 ```
 
 Connection endpoints may also be anonymous nodes:
 
-```
+```text
 A -> [B]
 C -> [B]
 ```
@@ -47,17 +43,16 @@ Each outer arrow connects to the **group boundary**. It does not connect to, or 
 
 ## `:` — Label and Name Declaration
 
-A colon declares a display label for a node, group, or slide:
+A colon declares a display label for a node or group:
 
-```
+```text
 a: Agent
 group1: Services
-@slide: intro
 ```
 
 A colon after a connection declares an edge label. In a chained connection, the label applies to **all** edges in the chain:
 
-```
+```text
 a -> b : contains
 a -> b -> c : data
 ```
@@ -66,7 +61,7 @@ To label edges individually, use separate connection lines.
 
 Declare endpoint labels separately from their connections. At the same brace depth, `:` introduces a display label in a declaration and an edge label after a connection:
 
-```
+```text
 <!-- invalid -->
 a: Agent -> b: Bias
 
@@ -80,32 +75,25 @@ A group body has its own statements, so `A -> { B: Bee }: outer` is valid: `Bee`
 
 ## `()` — Style Classes
 
-Parentheses apply style classes to a node, edge, scope, or slide boundary. After a token, `()` binds to that token. With no preceding token, it styles the following anonymous group or the current scope:
+Parentheses apply style classes to a node, edge, or group. After a token, `()` binds to that token. With no preceding token, it styles the following anonymous group. A standalone direction class sets the root layout:
 
-- After a node or scope token → styles on that token: `a(fill primary dashed)`, `group1(horizontal)`, `[B](dashed)`, and `{ B -> C }(horizontal)`
+- After a node or scope token → styles on that token: `a(fill primary dashed): Agent`, `group1(horizontal) { a -> b }`, `[B](dashed)`, and `{ B -> C }(horizontal)`
 - After an arrow → edge styles: `a ->(bold) b`
 - Before an anonymous group → styles on that group: `(horizontal) { B -> C } -> A`
-- Start of line with no group body → scope-level styles: `(horizontal)`
+- Start of line with no group body → root layout direction: `(horizontal)`
 
 Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B -> C }`. Style the target group after its closing brace, as in `A -> { B -> C }(horizontal)`, or after its name, as in `A -> D(horizontal) { B -> C }`.
 
-```
-a(fill primary dashed)
+```text
+a(fill primary dashed): Agent
 a -> [B](dashed)
 a ->(bold) b
 group1(horizontal) {}
-@slide(dark)
-```
-
-Multiple nodes can share the same classes in one declaration:
-
-```
-x, y, z(fill primary)
 ```
 
 Labels and classes can be combined on the same standalone line:
 
-```
+```text
 a(fill primary): Agent
 ```
 
@@ -117,7 +105,7 @@ An empty `{}` is still a group, so `A -> {}` is a valid connection to an empty a
 
 Content inside a group is arranged independently:
 
-```
+```text
 group1 {
   a -> b
 }
@@ -125,7 +113,7 @@ group1 {
 
 Scopes can be nested:
 
-```
+```text
 group1 {
   group2(horizontal) {
     a -> b
@@ -141,53 +129,11 @@ A -> { B -> C } -> D
 
 This creates one anonymous group between `A` and `D`, plus the child connection `B -> C`. Separate `{ ... }` occurrences create separate anonymous groups. Use a named group when it needs to be referenced from another statement.
 
-## `@slide` — Slide Boundary
-
-::: warning Not implemented
-Slide boundaries and diagram content on slides are not available yet. This section describes planned syntax.
-:::
-
-`@slide` at the **start of a line** marks a slide boundary. Style classes and a slide name are declared on the same line:
-
-```
-@slide(dark): intro
-
-# Welcome
-
-@slide(light): next section
-
-More content here.
-```
-
-Slide boundaries always operate at the document root — they cannot appear inside `{}` scopes.
-
-### Diagram Content on Slides
-
-Inside a slide, all text is **Markdown content** by default. To include a diagram, wrap it in a scope block with a diagram-type class — `(diagram) {}`, `(mindmap) {}`, `(sequence) {}`, etc.:
-
-```
-@slide: overview
-
-# System Architecture
-
-(diagram) {
-  client -> api -> db
-}
-
-(mindmap) {
-  Concepts
-    Scalability
-    Reliability
-}
-```
-
-This rule does not apply outside of slides. At the document root (no `@slide`), diagram content is written directly without a type class on the scope.
-
 ## `.` — Cross-Scope Reference
 
 Bare node names are global by default. A reference first checks the current scope, then each parent scope outward, and if still unresolved continues through the rest of the document. If that search finds exactly one node, the bare name is valid even when the node lives in another group:
 
-```
+```text
 group1 {
   m: Inner
 }
@@ -197,7 +143,7 @@ a -> m
 
 Use dot notation only to disambiguate multiple nodes with the same name. Add the shortest group prefix that makes the target unique:
 
-```
+```text
 a -> team1.m
 a -> regionA.payments.api
 ```
@@ -208,7 +154,7 @@ If a bare name or dotted name still matches multiple candidates, it is an ambigu
 
 A bracketed label inside a connection creates a fresh node instance with no reusable identifier:
 
-```
+```text
 A -> [B]
 C -> [B]
 ```
@@ -217,13 +163,13 @@ The two `[B]` occurrences above are different nodes, even though they render the
 
 A single occurrence is still one node within a chain:
 
-```
+```text
 A -> [B] -> C
 ```
 
 Anonymous nodes cannot be declared on their own line or referenced later by name. If you need reuse, give the node an identifier instead:
 
-```
+```text
 b: B
 A -> b
 C -> b
@@ -231,131 +177,38 @@ C -> b
 
 Style classes bind after the closing bracket:
 
-```
+```text
 A -> [B](dashed primary)
-```
-
-## `,` — Multi-Node Declaration
-
-A comma-separated list applies the same style classes to multiple nodes at once. Only style classes are allowed — labels are not valid on multi-node declarations. To label nodes, use separate declaration lines:
-
-```
-x, y, group1(fill primary)
-x: Service X
-y: Service Y
-group1: Services
 ```
 
 ## `\n` — Inline Line Break
 
-Use `\n` inside node text for a simple line break:
+Use `\n` in a node label for a line break:
 
-```
-group1(mindmap) {
-  Topic
-    First line\nSecond line
-}
+```text
+api: API Gateway\nPort 8080
 ```
 
-## ` ```md ``` ` — Fenced Markdown Block
+## TextGraph Blocks in Markdown
 
-A fenced block attaches rich Markdown content to the preceding node:
+Use a fenced code block with the language `textgraph` to embed a diagram in Markdown. Close it with a matching fence:
 
-````
-a:
-```md
-# Heading
-- bullet 1
-- bullet 2
+````markdown
+# Architecture
+
+```textgraph
+client -> api -> database
 ```
+
+The API handles requests from the client.
 ````
 
-Works inside mindmaps too — the block attaches to the preceding indented node.
-
-## `@` — External Resources
-
-A label starting with `@` renders a resource inside the node.
-
-**Stock icons** — reference by slug:
-
-```
-a: @aws-s3
-b: @az-batch-ai
-```
-
-**Images** — local path, external URL, or base64 data:
-
-```
-a: @(./icons/logo.png)
-b: @(https://example.com/icon.png)
-c: @(data:image/png;base64,...)
-```
-
-**External Markdown file** — embeds the TextGraph diagram from the file:
-
-```
-a: @(./diagrams.md)
-```
-
-If the file contains multiple named blocks, reference by name using `#`:
-
-```
-a: @(./diagrams.md#architecture)
-```
-
-## `@textgraph` — TextGraph Block in Markdown
-
-Use `@textgraph` as both the opening and closing delimiter to embed a TextGraph diagram inside a Markdown file. A name is declared with `:`:
-
-```
-@textgraph: architecture
-a -> b
-@textgraph
-
-@textgraph: sequence
-c -> d
-@textgraph
-```
-
-A bare `@textgraph` opens a block when none is open, and closes the current block when one is open. If the entire file is a single diagram, the closing delimiter is optional:
-
-```
-@textgraph
-a -> b
-```
-
-## `(notes)` — Speaker Notes
-
-::: warning Not implemented
-Speaker notes and presenter mode are not available yet. This section describes planned syntax.
-:::
-
-A scope-level `(notes)` class with a label declares speaker notes on a slide. Notes are not rendered on the slide — they are visible only in presenter mode:
-
-```
-@slide: intro
-
-# Welcome
-
-(notes): Remember to introduce the team first.
-```
-
-For multi-line notes, use a fenced Markdown block:
-
-````
-(notes):
-```md
-- Introduce the team
-- Mention the timeline
-```
-````
-
-One `(notes)` per slide. If multiple appear, last wins.
+Use the [Markdown & VitePress plugin](/integrations/markdown) or the [VS Code extension](/integrations/vscode) to render these blocks. Each block contains one diagram. In the [Playground](/playground) and SDK `source`, enter only the diagram source inside the fence.
 
 ## `<!-- -->` — Comments
 
 Standard HTML comment syntax. Comments are ignored by the renderer:
 
-```
+```text
 <!-- this is a comment -->
 ```

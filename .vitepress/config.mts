@@ -7,6 +7,14 @@ import { siteAssets } from './site-assets.mjs'
 export default defineConfig(withTextGraph({
   title: "TextGraph",
   description: "Turn relationships into diagrams with readable text. Explore flowcharts, automatic layout, and a browser playground, with Markdown and VS Code integrations.",
+  // Drafts stay in source until their features work. Exclude them from both
+  // generated routes and local search, including internal project documents.
+  srcExclude: [
+    'README.md', 'CLAUDE.md', 'docs/**', 'design/**',
+    'diagrams/sequence.md', 'diagrams/mindmaps.md', 'slides/**',
+    'integrations/cli.md', 'integrations/rest-api.md', 'integrations/ai-agents.md',
+    'reference/config.md', 'reference/grammar.md', 'reference/themes.md',
+  ],
   markdown: { config: textgraphExamples },
   vite: { plugins: [siteAssets()], worker: { format: 'es' } },
   themeConfig: {
@@ -39,17 +47,6 @@ export default defineConfig(withTextGraph({
         text: 'Diagram Types',
         items: [
           { text: 'Flowcharts', link: '/diagrams/flowcharts' },
-          { text: 'Sequence Diagrams (Not implemented)', link: '/diagrams/sequence' },
-          { text: 'Mind Maps (Not implemented)', link: '/diagrams/mindmaps' },
-        ]
-      },
-      {
-        text: 'Slides (Not implemented)',
-        items: [
-          { text: 'Authoring Slides', link: '/slides/authoring' },
-          { text: 'Layouts & Grids', link: '/slides/layouts' },
-          { text: 'Speaker Notes', link: '/slides/speaker-notes' },
-          { text: 'Exporting', link: '/slides/exporting' },
         ]
       },
       {
@@ -58,11 +55,8 @@ export default defineConfig(withTextGraph({
           { text: 'Overview', link: '/integrations/overview' },
           { text: 'Markdown & VitePress', link: '/integrations/markdown' },
           { text: 'VS Code Extension', link: '/integrations/vscode' },
-          { text: 'CLI', link: '/integrations/cli' },
           { text: 'JavaScript / Node.js', link: '/integrations/javascript' },
           { text: 'Browser example', link: '/examples/textgraph/', target: '_self' },
-          { text: 'REST API', link: '/integrations/rest-api' },
-          { text: 'AI Agents & LLMs', link: '/integrations/ai-agents' },
         ]
       },
       {
@@ -71,9 +65,6 @@ export default defineConfig(withTextGraph({
           { text: 'Language Specification', link: '/reference/textgraph-spec' },
           { text: 'Style Classes', link: '/reference/classes' },
           { text: 'Syntax Reference', link: '/reference/syntax' },
-          { text: 'Formal Grammar', link: '/reference/grammar' },
-          { text: 'Built-in Themes', link: '/reference/themes' },
-          { text: 'Configuration Options', link: '/reference/config' },
           { text: 'Changelog', link: '/reference/changelog' },
         ]
       }
@@ -97,6 +88,6 @@ export default defineConfig(withTextGraph({
     }
   }
 }, {
-  // This language guide includes valid syntax the current SDK cannot lay out yet.
-  errorMode: 'inline',
+  // Published examples must render successfully.
+  errorMode: 'throw',
 }))
