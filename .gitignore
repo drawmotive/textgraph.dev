@@ -150,6 +150,7 @@ node_modules
 
 # Copied public SDK runtime and browser verification output.
 public/textgraph/
+public/reference/
 .vitepress/home/generated/
 test-results/
 playwright-report/

@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 const guides = [
   '/intro/what-is-textgraph.html',
   '/intro/getting-started.html',
   '/diagrams/flowcharts.html',
   '/integrations/overview.html',
+  '/integrations/ai-agents.html',
   '/integrations/markdown.html',
   '/integrations/vscode.html',
   '/integrations/javascript.html',
@@ -19,13 +21,32 @@ test('sidebar leads from the language to tools and application development', asy
   ]);
   const links = sidebar.locator('a');
   const paths = await links.evaluateAll(elements => elements.map(element => new URL(element.href).pathname));
-  expect(paths.slice(0, 9)).toEqual([
-    ...guides.slice(0, 4), '/playground.html', guides[4], guides[5], guides[6], guides[7],
-  ]);
+  expect(paths.slice(0, guides.length)).toEqual(guides);
+  await expect(sidebar.getByRole('link', { name: 'Playground', exact: true })).toHaveCount(0);
+  await expect(page.locator('.VPNavBar').getByRole('link', { name: 'Playground', exact: true })).toBeVisible();
   expect(paths.some(path => path.startsWith('/examples/'))).toBe(false);
   await sidebar.getByRole('link', { name: 'DrawMotive editor', exact: true }).click();
   await expect(page.getByRole('heading', { name: /^DrawMotive editor/, level: 1 })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Run the visual editor SDK demo' })).toHaveAttribute('href', '/examples/editor/');
+});
+
+test('AI guide downloads canonical Markdown instead of documentation HTML', async ({ page, request }) => {
+  await page.goto('/integrations/ai-agents.html');
+  for (const [file, name] of [
+    ['textgraph-spec.md', 'Language Specification Markdown'],
+    ['classes.md', 'Style Classes Markdown'],
+  ]) {
+    const link = page.getByRole('link', { name, exact: true });
+    await expect(link).toHaveAttribute('href', '/reference/' + file);
+    const response = await request.get(await link.getAttribute('href'));
+    expect(response.ok()).toBe(true);
+    expect(await response.body()).toEqual(await readFile(new URL('../../reference/' + file, import.meta.url)));
+    const download = page.waitForEvent('download');
+    await link.click();
+    const artifact = await download;
+    expect(artifact.suggestedFilename()).toBe(file);
+    expect(await readFile(await artifact.path())).toEqual(await response.body());
+  }
 });
 
 test('every non-reference guide has static, accessible images that fit desktop and mobile', async ({ browser, baseURL }) => {

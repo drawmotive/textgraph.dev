@@ -21,12 +21,21 @@ test('direct VitePress configuration prepares assets in a clean checkout without
       filter: source => !['verification', 'generated', 'cache', 'dist'].includes(path.basename(source)),
     });
     await cp(path.join(siteRoot, 'scripts'), path.join(root, 'scripts'), { recursive: true });
+    await cp(path.join(siteRoot, 'reference'), path.join(root, 'reference'), { recursive: true });
     await cp(path.join(siteRoot, 'package.json'), path.join(root, 'package.json'));
     await symlink(path.join(siteRoot, 'node_modules'), path.join(root, 'node_modules'), 'junction');
 
     const [config, configPath] = await resolveUserConfig(root, 'build', 'production');
     assert.equal(configPath, path.join(root, '.vitepress/config.mts'));
     await resolveConfig({ ...config.vite, root, configFile: false }, 'build');
+
+    for (const file of ['textgraph-spec.md', 'classes.md']) {
+      assert.deepEqual(
+        await readFile(path.join(root, 'public/reference', file)),
+        await readFile(path.join(siteRoot, 'reference', file)),
+        file + ' must retain the exact canonical content and license',
+      );
+    }
 
     const generated = path.join(root, '.vitepress/home/generated');
     const images = await readFile(path.join(generated, 'images.mjs'), 'utf8');

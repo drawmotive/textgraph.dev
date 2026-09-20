@@ -42,6 +42,8 @@ The sidebar follows **Learn TextGraph → Use TextGraph → Build applications �
 
 Every published guide outside Reference includes real rendered examples or a relevant static illustration. Home, Playground and the SDK demos already show rendered diagrams. `public/guide-images/textgraph-workflows.svg` is the editable workflow illustration. `drawmotive-editor.png` is a screenshot of the pinned editor 0.2.1 demo, captured at 1440 × 1100 after “Ready to edit”, cropped to `.workspace`. Refresh it against the pinned release when the editor changes. Images link to their full-size assets where detail benefits from enlargement. Browser checks verify guide images without JavaScript and at mobile widths.
 
+**AI tools** under **Use TextGraph** provides a copyable prompt; the Playground remains in the top navigation. Asset preparation copies the canonical specification and style catalog unchanged to `/reference/textgraph-spec.md` and `/reference/classes.md`. These downloadable Markdown files retain their license notices and are generated, not separately maintained. Use HTML anchors with `download` for them so VitePress does not rewrite the links into documentation routes. The specification covers syntax; the separate class catalog is needed for styling, while the syntax summary is redundant.
+
 ## Homepage
 
 The homepage demonstrates source and real rendered output, then links each example

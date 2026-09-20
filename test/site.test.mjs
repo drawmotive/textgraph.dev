@@ -33,9 +33,10 @@ test('site is npm-only', async () => {
 test('published routes and navigation expose usable documentation only', async () => {
   const { resolveConfig } = await import('vitepress');
   const config = await resolveConfig(siteRoot, 'build', 'production');
-  const drafts = /^(?:slides\/|diagrams\/(?:sequence|mindmaps)\.md$|integrations\/(?:cli|rest-api|ai-agents)\.md$|reference\/(?:config|grammar|themes)\.md$|docs\/|design\/|README\.md$|CLAUDE\.md$)/;
+  const drafts = /^(?:slides\/|diagrams\/(?:sequence|mindmaps)\.md$|integrations\/(?:cli|rest-api)\.md$|reference\/(?:config|grammar|themes)\.md$|docs\/|design\/|README\.md$|CLAUDE\.md$)/;
   assert.ok(config.pages.includes('reference/syntax.md'));
   assert.ok(config.pages.includes('diagrams/flowcharts.md'));
+  assert.ok(config.pages.includes('integrations/ai-agents.md'));
   assert.deepEqual(config.pages.filter(page => drafts.test(page)), []);
 
   function checkLinks(items) {

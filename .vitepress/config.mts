@@ -12,7 +12,7 @@ export default defineConfig(withTextGraph({
   srcExclude: [
     'README.md', 'CLAUDE.md', 'docs/**', 'design/**',
     'diagrams/sequence.md', 'diagrams/mindmaps.md', 'slides/**',
-    'integrations/cli.md', 'integrations/rest-api.md', 'integrations/ai-agents.md',
+    'integrations/cli.md', 'integrations/rest-api.md',
     'reference/config.md', 'reference/grammar.md', 'reference/themes.md',
   ],
   markdown: { config: textgraphExamples },
@@ -43,7 +43,7 @@ export default defineConfig(withTextGraph({
         text: 'Use TextGraph',
         items: [
           { text: 'Choose your workflow', link: '/integrations/overview' },
-          { text: 'Playground', link: '/playground' },
+          { text: 'AI tools', link: '/integrations/ai-agents' },
           { text: 'Markdown & VitePress', link: '/integrations/markdown' },
           { text: 'VS Code Extension', link: '/integrations/vscode' },
         ]
