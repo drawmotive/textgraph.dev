@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { createMarkdownRenderer, disposeMdItInstance } from 'vitepress';
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress';
 
@@ -40,6 +41,26 @@ test('example fences retain escaped, copyable DSL alongside the rendered PNG', a
     assert.match(invalid, /textgraph-error/);
     assert.match(invalid, /Preview unavailable in the current renderer/);
     assert.match(await md.renderAsync('~~~textgraph example\nA -> B\n~~~', {}), /<img/);
+  } finally {
+    await config.buildEnd({});
+    await disposeMdItInstance();
+  }
+});
+
+test('the published Connection Types example renders all mixed edge operators', async () => {
+  const { textgraphExamples } = await import('../.vitepress/textgraph-examples.mjs');
+  const document = await readFile(new URL('../diagrams/flowcharts.md', import.meta.url), 'utf8');
+  const section = document.split('## Connection Types\n')[1]?.split('\n## ')[0];
+  assert.ok(section, 'Connection Types documentation must exist');
+  const config = withTextGraph({ markdown: { config: textgraphExamples } }, { errorMode: 'throw' });
+  const md = await createMarkdownRenderer(process.cwd(), config.markdown);
+  try {
+    const fences = md.parse(section, {}).filter(token => token.type === 'fence' && token.info.trim().startsWith('textgraph'));
+    assert.equal(fences.length, 1);
+    for (const operator of ['->', '<-', '<->', '--']) assert.ok(fences[0].content.includes(operator));
+    const html = await md.renderAsync(section, {});
+    assert.equal((html.match(/<img /g) ?? []).length, 1);
+    assert.doesNotMatch(html, /textgraph-error/);
   } finally {
     await config.buildEnd({});
     await disposeMdItInstance();

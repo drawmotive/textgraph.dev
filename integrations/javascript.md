@@ -20,7 +20,7 @@ Your application supplies the text, calls `renderPng()`, and displays or saves t
 ## Install
 
 ```bash
-npm install @drawmotive/textgraph@0.2.2-alpha.1
+npm install @drawmotive/textgraph@0.2.2-alpha.2
 ```
 
 ## Browser quick start

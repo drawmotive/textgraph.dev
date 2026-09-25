@@ -144,6 +144,10 @@ test('a runtime download failure is visible and can be retried', async ({ page }
 
 test('refresh keeps the preview geometry stable, including with warnings and narrow panes', async ({ page }) => {
   const diagnostics = captureDiagnostics(page);
+  // Own one browser clock before navigation. Repeated pause/resume advances its
+  // timeline independently of the test runner's wall clock.
+  let pauseTime = Date.UTC(2020, 0, 1);
+  await page.clock.install({ time: pauseTime });
   await page.goto('/playground');
   const status = page.getByRole('status', { name: 'Render status' });
   const editor = page.getByRole('textbox', { name: 'TextGraph source' });
@@ -157,7 +161,8 @@ test('refresh keeps the preview geometry stable, including with warnings and nar
     const previousDiagnostics = diagnostics.length;
     // Hold the debounce so the layout is observed with the existing result and
     // new source. The renderer has not produced any new geometry at this point.
-    await page.clock.pauseAt(new Date());
+    pauseTime += 60 * 60 * 1000;
+    await page.clock.pauseAt(pauseTime);
     await editor.fill((await editor.inputValue()) + ' ');
     await expect(status).toHaveText('Waiting for edits…');
     expect(await preview.boundingBox()).toEqual(before);

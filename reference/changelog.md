@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2-alpha.2
+
+- Fix the Connection Types example by including the SDK correction for backward connections mixed with relation edges.
+- Update the SDK, Markdown plugin, optional fonts and embedded editor to 0.2.2-alpha.2.
+- Keep language fonts on demand and diagnostics in the console; Marketplace publication remains excluded.
+
 ## 0.2.2-alpha.1
 
 - Preview SDK, Markdown plugin and optional font package share the exact version 0.2.2-alpha.1.
