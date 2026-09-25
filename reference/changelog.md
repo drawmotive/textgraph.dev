@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2-alpha.1
+
+- Preview SDK, Markdown plugin and optional font package share the exact version 0.2.2-alpha.1.
+- Playground loads Chinese, Japanese and emoji fonts on demand and logs diagnostics in the browser console.
+- Existing stable npm tags and Marketplace extensions remain at 0.2.1.
+
 ## 0.2.1
 
 - React, Markdown, and VitePress PNG rendering now defaults to scale 1. Explicit higher scales remain supported.
