@@ -14,7 +14,6 @@ client: Browser
 api(fill primary): API Gateway
 db: Database
 `)
-const editor = ref(null)
 const defaultSource = source.value
 const analytics = getAnalytics()
 const diagramAnalytics = createPlaygroundAnalytics(analytics)
@@ -45,7 +44,7 @@ const statusText = computed(() => ({
   waiting: 'Waiting for edits…',
   rendering: 'Rendering…',
   ready: 'Preview up to date',
-  error: 'Check the errors below',
+  error: 'Could not render the diagram',
   empty: 'Add some TextGraph to begin',
 }[state.value.status]))
 
@@ -180,15 +179,6 @@ async function restoreSourceLink() {
   renderNow()
 }
 
-function goToDiagnostic(diagnostic) {
-  const { line, column } = diagnostic.location
-  const lines = source.value.split('\n')
-  const before = lines.slice(0, line).reduce((offset, text) => offset + text.length + 1, 0)
-  const start = Math.min(source.value.length, before + column)
-  editor.value.focus()
-  editor.value.setSelectionRange(start, Math.min(source.value.length, start + 1))
-}
-
 // The split is a proportion of the space excluding the handle. Pointer capture
 // keeps dragging reliable outside the handle; limits keep both panes usable.
 function setSplit(percent) {
@@ -272,7 +262,6 @@ onBeforeUnmount(() => {
         </header>
         <textarea
           id="textgraph-source"
-          ref="editor"
           :value="source"
           spellcheck="false"
           autocapitalize="off"
@@ -310,20 +299,7 @@ onBeforeUnmount(() => {
         @keydown="resizeWithKeyboard"
       />
 
-      <PreviewImage :image-url="imageUrl" :result="state.result" :busy="busy" :stale="state.stale" :status="state.status" :status-text="statusText">
-        <section v-if="state.diagnostics.length" class="diagnostics" aria-label="Errors and warnings" aria-live="polite">
-          <h3>Errors &amp; warnings ({{ state.diagnostics.length }})</h3>
-          <ul>
-            <li v-for="(diagnostic, index) in state.diagnostics" :key="index" :class="diagnostic.severity">
-              <span class="diagnostic-severity">{{ diagnostic.severity }}</span>
-              <button v-if="diagnostic.location" class="diagnostic-location" type="button" :disabled="busy" @click="goToDiagnostic(diagnostic)">
-                Line {{ diagnostic.location.line + 1 }}, column {{ diagnostic.location.column + 1 }}
-              </button>
-              <p>{{ diagnostic.message }}</p>
-            </li>
-          </ul>
-        </section>
-      </PreviewImage>
+      <PreviewImage :image-url="imageUrl" :result="state.result" :busy="busy" :stale="state.stale" :status="state.status" :status-text="statusText" />
     </div>
   </div>
 </template>
@@ -353,16 +329,6 @@ textarea { display: block; flex: 1; width: 100%; min-height: 300px; resize: none
 textarea:focus { outline: 2px solid var(--vp-c-brand-1); outline-offset: -2px; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
 .editor-help { padding: 12px 20px; border-top: 1px solid var(--vp-c-divider); font-size: 12px; line-height: 1.6; color: var(--vp-c-text-2); }
-.diagnostics { flex-shrink: 0; min-height: 0; max-height: 35%; overflow-y: auto; padding: 16px 20px; border-bottom: 1px solid var(--vp-c-divider); background: var(--vp-c-bg); overflow-wrap: anywhere; }
-.diagnostics h3 { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
-.diagnostics ul { list-style: none; margin: 0; padding: 0; }
-.diagnostics li + li { margin-top: 14px; }
-.diagnostics li p { margin-top: 4px; font-size: 13px; white-space: pre-wrap; }
-.diagnostic-severity { font-size: 11px; font-weight: 600; text-transform: uppercase; margin-right: 10px; }
-.error .diagnostic-severity { color: var(--vp-c-danger-1); }
-.warning .diagnostic-severity { color: var(--vp-c-warning-1); }
-.diagnostic-location { color: var(--vp-c-brand-1); font-size: 12px; text-decoration: underline; cursor: pointer; }
-.diagnostic-location:disabled { cursor: default; opacity: 0.6; }
 @media (max-width: 767px) {
   .playground { padding: 12px; }
   .playground-workspace { grid-template-columns: minmax(0, 1fr); height: auto; max-height: none; }

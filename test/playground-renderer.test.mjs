@@ -5,6 +5,7 @@ import { createPlaygroundRenderer } from '../.vitepress/playground/renderer.mjs'
 function setup(t) {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const workers = [];
+  const logs = [];
   let state;
   const renderer = createPlaygroundRenderer({
     createWorker() {
@@ -19,9 +20,13 @@ function setup(t) {
     },
     onState(next) { state = next; },
     debounceMs: 350,
+    logger: {
+      warn(...args) { logs.push({ severity: 'warning', args }); },
+      error(...args) { logs.push({ severity: 'error', args }); },
+    },
   });
   t.after(() => renderer.dispose());
-  return { renderer, workers, get state() { return state; } };
+  return { renderer, workers, logs, get state() { return state; } };
 }
 
 const png = { success: true, png: new Uint8Array([137, 80, 78, 71]), width: 80, height: 40, diagnostics: [] };
@@ -107,7 +112,7 @@ test('an old success cannot replace the preview while a newer edit is debouncing
   assert.equal(app.state.status, 'ready');
 });
 
-test('diagnostics retain the previous preview and successful warnings are visible', t => {
+test('diagnostics retain the previous preview and successful warnings remain in state', t => {
   const app = setup(t);
   app.renderer.update('A -> B', { immediate: true });
   const worker = app.workers[0];
@@ -142,7 +147,7 @@ test('empty input clears output and discards in-flight results', t => {
   assert.equal(worker.requests.length, 2);
 });
 
-test('refresh retains displayed diagnostics until current results replace them', t => {
+test('refresh retains previous diagnostics until current results replace them', t => {
   const app = setup(t);
   app.renderer.update('A -> B', { immediate: true });
   const worker = app.workers[0];
@@ -192,4 +197,43 @@ test('worker crashes stop busy state and disposal ignores late messages and time
   assert.equal(current.terminated, true);
   assert.equal(current.requests.length, 0);
   assert.equal(app.state, state);
+});
+
+test('accepted results log structured diagnostics once, without logging pending or stale revisions', t => {
+  const app = setup(t);
+  const warning = { severity: 'warning', code: 'FONT', stage: 'font', message: 'Missing glyph', location: { line: 2, column: 4 } };
+  app.renderer.update('A -> B', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  finish(worker, { ...png, diagnostics: [warning] });
+  assert.deepEqual(app.logs, [{ severity: 'warning', args: ['[TextGraph] FONT (font): Missing glyph', warning] }]);
+  finish(worker, { ...png, diagnostics: [warning] });
+  app.renderer.update('A -> C');
+  t.mock.timers.tick(350);
+  app.renderer.update('A -> D');
+  finish(worker, invalid);
+  assert.equal(app.logs.length, 1);
+  t.mock.timers.tick(350);
+  finish(worker, invalid);
+  assert.deepEqual(app.logs[1], { severity: 'error', args: ['[TextGraph] TG001 (parse): Expected a node', invalid.diagnostics[0]] });
+  app.renderer.update('A -> E', { immediate: true });
+  finish(worker);
+  assert.equal(app.logs.length, 2);
+});
+
+test('empty failure diagnostics and renderer failures are logged once and keep the state contract', t => {
+  const app = setup(t);
+  app.renderer.update('A -> B', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  finish(worker, { success: false, diagnostics: [] });
+  assert.equal(app.logs.length, 1);
+  assert.equal(app.logs[0].args[1], app.state.diagnostics[0]);
+  assert.equal(app.logs[0].args[1].code, 'RENDER_FAILED');
+  app.renderer.update('A -> C', { immediate: true });
+  worker.receive({ type: 'fatal', message: 'Could not load renderer' });
+  worker.receive({ type: 'fatal', message: 'Duplicate fatal' });
+  assert.equal(app.logs.length, 2);
+  assert.equal(app.logs[1].args[1], app.state.diagnostics[0]);
+  assert.equal(app.logs[1].args[1].code, 'RENDERER_FAILED');
 });

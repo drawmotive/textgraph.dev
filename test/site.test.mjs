@@ -12,7 +12,7 @@ test('site has standalone public repository metadata', async () => {
   assert.equal(packageJson.private, true);
   assert.equal(packageJson.type, 'module');
   assert.equal(packageJson.engines.node, '>=22');
-  assert.equal(packageJson.scripts.test, 'node --test test/*.test.mjs');
+  assert.equal(packageJson.scripts.test, 'node --test --test-concurrency=1 test/*.test.mjs');
   assert.equal(packageJson.repository.url, 'https://github.com/drawmotive/textgraph.dev.git');
 });
 

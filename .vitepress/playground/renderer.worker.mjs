@@ -1,14 +1,10 @@
 import { initializeTextGraph } from '@drawmotive/textgraph/worker';
+import { playgroundAssets } from './assets.mjs';
 
 // Keep the reusable WASM runtime off the editor's main thread. The complete
 // package assets are served locally, including their fonts and license files.
 try {
-  const runtime = await initializeTextGraph({
-    resolveAsset: asset => new URL(
-      `textgraph/${asset.path}`,
-      new URL(import.meta.env.BASE_URL, self.location.origin),
-    ),
-  });
+  const runtime = await initializeTextGraph(playgroundAssets(import.meta.env.BASE_URL, self.location.origin));
 
   // .NET inspects onmessage during bootstrap; install our handler afterwards.
   self.onmessage = async ({ data }) => {

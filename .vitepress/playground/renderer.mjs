@@ -1,7 +1,7 @@
 /** Own scheduling at the editor boundary: debounce edits, allow one active render,
  * and accept output only for the current source revision. Native work cannot be
  * cancelled mid-render, so obsolete edits never enter the worker's runtime queue. */
-export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 350 }) {
+export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 350, logger = console }) {
   let worker;
   let ready = false;
   let disposed = false;
@@ -14,6 +14,18 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
   function publish(changes) {
     state = { ...state, ...changes };
     onState(state);
+  }
+
+  // Log at result acceptance, not state publication: pending states retain the
+  // previous diagnostics, and obsolete worker results have no current meaning.
+  function logDiagnostics(diagnostics) {
+    for (const diagnostic of diagnostics) {
+      const method = diagnostic.severity === 'error' ? 'error' : 'warn';
+      logger[method](
+        `[TextGraph] ${diagnostic.code} (${diagnostic.stage}): ${diagnostic.message}`,
+        diagnostic,
+      );
+    }
   }
 
   function stopWorker() {
@@ -31,9 +43,11 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
     timer = undefined;
     pending = undefined;
     stopWorker();
-    publish({ status: 'error', stale: Boolean(state.result), diagnostics: [
+    const diagnostics = [
       { severity: 'error', stage: 'render', code: 'RENDERER_FAILED', message },
-    ] });
+    ];
+    logDiagnostics(diagnostics);
+    publish({ status: 'error', stale: Boolean(state.result), diagnostics });
   }
 
   function dispatch() {
@@ -64,13 +78,15 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
         active = undefined;
         if (data.id === revision) {
           const { result } = data;
+          const diagnostics = result.diagnostics.length || result.success ? result.diagnostics : [
+            { severity: 'error', code: 'RENDER_FAILED', stage: 'render', message: 'The diagram could not be rendered.' },
+          ];
+          logDiagnostics(diagnostics);
           publish({
             status: result.success ? 'ready' : 'error',
             result: result.success ? result : state.result,
             stale: !result.success && Boolean(state.result),
-            diagnostics: result.diagnostics.length || result.success ? result.diagnostics : [
-              { severity: 'error', code: 'RENDER_FAILED', stage: 'render', message: 'The diagram could not be rendered.' },
-            ],
+            diagnostics,
           });
         }
         dispatch();
@@ -98,7 +114,7 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
       }
       pending = { id: revision, source };
       // Pending input has no diagnostic result yet. Keep the displayed result
-      // together until its replacement arrives, so warning panels do not flash.
+      // together until its replacement arrives, preserving the renderer state API.
       publish({ status: ready ? 'waiting' : 'loading', stale: Boolean(state.result) });
       if (!immediate) timer = setTimeout(() => { timer = undefined; dispatch(); }, debounceMs);
       if (!worker) startWorker();

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { cp, mkdir, mkdtemp, readFile, rm, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
@@ -64,5 +65,18 @@ test('direct VitePress configuration prepares assets in a clean checkout without
         file,
       );
     }
+    const fontRoot = path.join(siteRoot, 'node_modules/@drawmotive/textgraph-fonts/assets');
+    const fontDestination = path.join(root, 'public/textgraph/fonts');
+    const files = JSON.parse(await readFile(path.join(fontRoot, 'files.json'), 'utf8'));
+    const catalog = JSON.parse(await readFile(path.join(fontRoot, 'font-catalog.json'), 'utf8'));
+    assert.ok(catalog.fonts.some(font => font.languages.includes('zh')));
+    assert.ok(catalog.fonts.some(font => font.languages.includes('ja')));
+    assert.ok(catalog.fonts.some(font => font.family === 'NotoColorEmoji'));
+    for (const file of ['font-catalog.json', 'files.json', ...Object.keys(files)]) {
+      const copied = await readFile(path.join(fontDestination, file));
+      assert.deepEqual(copied, await readFile(path.join(fontRoot, file)), file);
+      if (files[file]) assert.equal(createHash('sha256').update(copied).digest('hex'), files[file], file);
+    }
+    for (const font of catalog.fonts) assert.equal(files[font.path], font.sha256, font.path);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
