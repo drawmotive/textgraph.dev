@@ -23,13 +23,16 @@
 .home-example { border: 1px solid var(--home-line); border-radius: 10px; overflow: hidden; margin: 0; min-width: 0; background: var(--home-paper); }
 .home-hero .home-example { box-shadow: 0 18px 55px #2834540a; }
 .example-panes { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 275px; }
-.example-source { padding: 22px 18px; background: var(--home-soft); min-width: 0; }
+.example-source, .example-result { --example-inset: 18px; display: flex; flex-direction: column; min-width: 0; }
+.example-source { background: var(--home-soft); }
 .panel-label { font: 10px/1.5 var(--vp-font-family-base); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--home-muted); }
+/* Both panes own the same header box, independent of code line boxes and image sizing. */
+.home-example .panel-label { display: block; flex: none; padding: 14px var(--example-inset); border-bottom: 1px solid var(--home-line); background: var(--home-paper); font-size: 11px; }
 .textgraph-home pre { margin: 20px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.textgraph-home .example-source pre { margin: 0; padding: 18px var(--example-inset); }
 .textgraph-home code { font: 13px/1.9 var(--vp-font-family-mono); letter-spacing: -.03em; }
-.example-result { padding: 22px 14px 18px; display: flex; flex-direction: column; align-items: center; background: #fff; border-left: 1px solid var(--home-line); min-width: 0; }
-.example-result .panel-label { color: #616879; align-self: flex-start; }
-.example-result img { display: block; width: 100%; height: 255px; object-fit: contain; margin-top: 12px; }
+.example-result { padding-bottom: 18px; background: #fff; border-left: 1px solid var(--home-line); }
+.example-result img { display: block; width: calc(100% - 2 * var(--example-inset)); height: 255px; object-fit: contain; margin: 18px var(--example-inset) 0; }
 .home-hero .example-result img { height: 300px; }
 .home-example figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--home-line); padding: 13px 18px; font-size: 11px; color: var(--home-muted); }
 .home-example figcaption a { color: var(--home-accent); font-weight: 600; }
@@ -127,16 +130,14 @@
   .questions-section { gap: 36px; }
   .closing-section { padding: 44px 20px; margin-bottom: 24px; }
   .textgraph-home code { font-size: 12px; }
-  .example-source { padding: 18px 12px; }
-  .example-result { padding: 18px 10px; }
+  .example-source, .example-result { --example-inset: 12px; }
 }
 @media (max-width: 540px) {
   .example-panes, .compact .example-panes { display: grid; grid-template-columns: 1fr; }
   .example-result, .compact .example-result { border-left: 0; border-top: 1px solid var(--home-line); }
   .home-hero .example-panes { display: flex; flex-direction: column-reverse; }
   .home-hero .example-result { border-top: 0; border-bottom: 1px solid var(--home-line); }
-  .example-source { padding: 20px; }
-  .example-result { padding-inline: 20px; }
+  .example-source, .example-result { --example-inset: 20px; }
 }
 @media (min-width: 768px) and (max-width: 959px) {
   .home-hero { grid-template-columns: 1fr; gap: 36px; padding-top: 48px; }

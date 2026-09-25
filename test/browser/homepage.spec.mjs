@@ -1,6 +1,44 @@
 import { test, expect } from '@playwright/test';
 import { homeExamples } from '../../.vitepress/home/examples.mjs';
 
+test('example titles share an aligned header and stay distinct from the source', async ({ page }) => {
+  for (const colorScheme of ['light', 'dark']) {
+    await page.emulateMedia({ colorScheme });
+    for (const width of [390, 640, 768, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto('/');
+      for (const example of await page.locator('.home-example').all()) {
+        const source = example.locator('.example-source');
+        const result = example.locator('.example-result');
+        const sourceTitle = source.getByText('TextGraph source', { exact: true });
+        const resultTitle = result.getByText('The diagram', { exact: true });
+        const titleStyle = title => title.evaluate(element => {
+          const style = getComputedStyle(element);
+          return { font: style.font, color: style.color, background: style.backgroundColor,
+            spacing: style.letterSpacing, padding: style.padding, border: style.borderBottom };
+        });
+        expect(await titleStyle(sourceTitle)).toEqual(await titleStyle(resultTitle));
+        const contentOrigin = pane => pane.evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          return { x: bounds.x + element.clientLeft, y: bounds.y + element.clientTop };
+        });
+        const sourceBounds = await contentOrigin(source);
+        const resultBounds = await contentOrigin(result);
+        const first = await sourceTitle.boundingBox();
+        const second = await resultTitle.boundingBox();
+        expect(first.y - sourceBounds.y).toBeCloseTo(second.y - resultBounds.y, 0);
+        expect(first.x - sourceBounds.x).toBeCloseTo(second.x - resultBounds.x, 0);
+        expect(first.height).toBeCloseTo(second.height, 0);
+        expect(await sourceTitle.evaluate(element => getComputedStyle(element).borderBottomStyle)).toBe('solid');
+        expect(await sourceTitle.evaluate(element => parseFloat(getComputedStyle(element).borderBottomWidth))).toBeGreaterThan(0);
+        const code = await source.locator('code').boundingBox();
+        expect(code.y).toBeGreaterThan(first.y + first.height);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+  }
+});
+
 test('homepage demonstrates the product without loading a renderer and each example opens its exact source', async ({ page }) => {
   const requests = [];
   page.on('request', request => requests.push(request.url()));

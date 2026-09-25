@@ -1,11 +1,13 @@
 # textgraph.dev
 
-TextGraph DSL 的规范、教程、API 文档、Playground、示例和迁移指南。
+Specifications, tutorials, API documentation, a playground, examples, and migration guides for the TextGraph DSL.
 
-> **[所有 TextGraph 问题统一提交到 GitHub Issues →](https://github.com/drawmotive/textgraph/issues)**
-> 包括缺陷、功能建议、文档、Playground、SDK、字体、Markdown 和 VS Code 集成问题。
+> **[Report all TextGraph issues on GitHub →](https://github.com/drawmotive/textgraph/issues)**
+> This includes bugs, feature requests, documentation, the playground, SDKs, fonts, and Markdown and VS Code integrations.
 
-## 本地开发
+All site documentation, including this README and internal design notes, is maintained in English.
+
+## Local development
 
 ```console
 npm ci
@@ -13,10 +15,11 @@ npm test
 npm run build
 ```
 
-## 许可证
+## Licenses
 
-- 网站代码和代码示例使用 MIT 许可证，见 `LICENSE-CODE`。
-- 文档内容使用 Creative Commons Attribution 4.0 International（CC BY 4.0），见 `LICENSE-DOCS`。
+- Site code and code examples use the MIT license; see `LICENSE-CODE`.
+- Documentation uses Creative Commons Attribution 4.0 International (CC BY 4.0); see `LICENSE-DOCS`.
+
 ## Markdown rendering and deployment
 
 The site installs `@drawmotive/markdown-it-textgraph@0.2.2-alpha.2` from npm, which renders diagrams with the public TextGraph SDK 0.2.2-alpha.2. A standalone checkout needs no sibling repositories.
@@ -55,6 +58,11 @@ After changing example source during development, run npm run home:render again.
 Generated images are ignored by Git and bundled as static assets; visiting the
 homepage does not load the WASM renderer. Examples remain visible without JavaScript.
 Homepage events carry version diagram-story-v1.
+
+Source and diagram panes share a header style, spacing, and divider. The source
+body has a contrasting background so its title stays distinct from the DSL.
+Both headers use the same block layout: mixing an inline source label with a
+flex-item diagram label previously introduced different line-box offsets.
 
 ## Analytics
 

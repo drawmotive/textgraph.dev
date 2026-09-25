@@ -12,11 +12,11 @@ defineProps({ example: { type: Object, required: true }, compact: Boolean, eager
   <figure class="home-example" :class="{ compact }">
     <div class="example-panes">
       <div class="example-source">
-        <span class="panel-label">TextGraph source</span>
+        <header class="panel-label">TextGraph source</header>
         <pre><code>{{ example.source }}</code></pre>
       </div>
       <div class="example-result">
-        <span class="panel-label">The diagram</span>
+        <header class="panel-label">The diagram</header>
         <img :src="images[example.id].src" :alt="example.alt"
           :width="images[example.id].width" :height="images[example.id].height"
           :loading="eager ? 'eager' : 'lazy'" :fetchpriority="eager ? 'high' : 'auto'">
