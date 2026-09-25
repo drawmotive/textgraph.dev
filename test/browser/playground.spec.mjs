@@ -210,7 +210,7 @@ test('deployed language fonts load only as needed and remain available across ed
     await preview.evaluate(image => image.decode());
     expect(diagnostics.filter(message => /TG_FONT_MISSING_GLYPH/.test(message.text))).toEqual([]);
   };
-  await render('A -> B <!-- 中文 comments do not display -->');
+  await render('<!-- 中文 comments do not display -->\nA -> B');
   expect(fontRequests).toEqual([]);
   for (const [source, filename] of [
     ['A: 简体中文 繁體中文', 'NotoSansSC-Regular.ttf'],

@@ -7,6 +7,7 @@ import { resolveConfig } from 'vite';
 import { resolveUserConfig } from 'vitepress';
 import { readSourceLink } from '../.vitepress/playground/source-link.mjs';
 import { homeExamples } from '../.vitepress/home/examples.mjs';
+import { fileURLToPath } from 'node:url';
 
 const siteRoot = path.resolve(import.meta.dirname, '..');
 
@@ -49,7 +50,8 @@ test('direct VitePress configuration prepares assets in a clean checkout without
       assert.deepEqual(Array.from(png.subarray(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
     }
 
-    const runtimeRoot = path.join(siteRoot, 'node_modules/@drawmotive/textgraph/generated');
+    const sdkRoot = fileURLToPath(new URL('../../', import.meta.resolve('@drawmotive/textgraph/browser')));
+    const runtimeRoot = path.join(sdkRoot, 'generated');
     const manifest = JSON.parse(await readFile(path.join(runtimeRoot, 'wasm-manifest.json'), 'utf8'));
     for (const asset of manifest.assets) {
       assert.deepEqual(
@@ -61,11 +63,11 @@ test('direct VitePress configuration prepares assets in a clean checkout without
     for (const file of ['src/platform/browser.js', 'src/index.js', 'generated/wasm-manifest.js', 'LICENSE']) {
       assert.deepEqual(
         await readFile(path.join(root, 'public/textgraph/sdk', file)),
-        await readFile(path.join(siteRoot, 'node_modules/@drawmotive/textgraph', file)),
+        await readFile(path.join(sdkRoot, file)),
         file,
       );
     }
-    const fontRoot = path.join(siteRoot, 'node_modules/@drawmotive/textgraph-fonts/assets');
+    const fontRoot = fileURLToPath(new URL('./assets/', import.meta.resolve('@drawmotive/textgraph-fonts')));
     const fontDestination = path.join(root, 'public/textgraph/fonts');
     const files = JSON.parse(await readFile(path.join(fontRoot, 'files.json'), 'utf8'));
     const catalog = JSON.parse(await readFile(path.join(fontRoot, 'font-catalog.json'), 'utf8'));
