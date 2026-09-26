@@ -1,5 +1,5 @@
 export const MAX_SOURCE_BYTES = 16 * 1024;
-export const DEFAULT_FIX_API_URL = 'https://api.drawmotive.com/api/textgraph/fix';
+export const DEFAULT_FIX_API_URL = 'https://staging.drawmotive.com/api/textgraph/fix';
 
 const messages = {
   INVALID_SOURCE: 'Send a TextGraph diagram to repair.',
