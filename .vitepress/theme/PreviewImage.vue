@@ -37,7 +37,7 @@ function changeZoom(factor) {
 }
 
 function startPan(event) {
-  if (!props.imageUrl || event.button !== 0 || !event.isPrimary) return
+  if (!props.imageUrl || event.button !== 0 || !event.isPrimary || event.target.closest('[data-preview-overlay]')) return
   event.preventDefault()
   event.currentTarget.focus({ preventScroll: true })
   event.currentTarget.setPointerCapture(event.pointerId)
@@ -61,7 +61,7 @@ function stopPan(event) {
 }
 
 function keyboardView(event) {
-  if (!props.imageUrl || event.ctrlKey || event.metaKey || event.altKey) return
+  if (!props.imageUrl || event.ctrlKey || event.metaKey || event.altKey || event.target.closest('[data-preview-overlay]')) return
   const moves = { ArrowLeft: [-30, 0], ArrowRight: [30, 0], ArrowUp: [0, -30], ArrowDown: [0, 30] }
   if (moves[event.key]) {
     event.preventDefault()
@@ -164,8 +164,9 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(feedbackTimer) })
           :width="result.displayWidth ?? result.width / 2" :height="result.displayHeight ?? result.height / 2"
           :style="{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }"
         >
-        <p v-else class="preview-placeholder">{{ status === 'error' ? 'Fix the errors above to see your diagram.' : status === 'empty' ? 'Your diagram will appear here.' : 'Preparing your preview…' }}</p>
+        <p v-else class="preview-placeholder">{{ status === 'error' ? 'Fix the source to see your diagram.' : status === 'empty' ? 'Your diagram will appear here.' : 'Preparing your preview…' }}</p>
       </div>
+      <slot name="overlay" />
       <p v-show="feedback" class="image-feedback" role="status" aria-label="Image actions">{{ feedback }}</p>
     </div>
   </section>
@@ -186,6 +187,8 @@ svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width:
    layout. Refresh status and action feedback cannot change its dimensions. */
 .preview-canvas { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: clip; background: var(--vp-c-bg-soft); }
 .pannable { cursor: grab; touch-action: none; }
+/* Error controls own touch scrolling while they cover the pan surface. */
+.preview-canvas:has([data-preview-overlay]) { touch-action: auto; }
 .panning { cursor: grabbing; user-select: none; }
 .preview-image { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; margin: 28px; }
 .preview-image img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }

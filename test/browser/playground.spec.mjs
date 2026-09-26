@@ -21,7 +21,7 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   const status = page.getByRole('status', { name: 'Render status' });
   await expect(editor).toBeVisible();
   await expect(status).toHaveText('Preview up to date');
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Diagram errors' })).toHaveCount(0);
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   const editorBounds = await editor.boundingBox();
@@ -33,18 +33,18 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   await expect(status).toHaveText('Preview up to date');
   await expect(preview).not.toHaveAttribute('src', initialImage);
   await expect.poll(() => diagnostics.filter(message => message.type === 'warning').length).toBeGreaterThan(0);
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Diagram errors' })).toHaveCount(0);
   const validImage = await preview.getAttribute('src');
   await editor.fill('group {\n  A ->\n}');
   await expect(status).toHaveText('Could not render the diagram');
   await expect.poll(() => diagnostics.filter(message => message.type === 'error').length).toBeGreaterThan(0);
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Diagram errors' })).toBeVisible();
   await expect(preview).toHaveAttribute('src', validImage);
   await expect(preview).toHaveAttribute('title', 'Preview from the last successful render');
 
   await editor.fill('A -> B');
   await expect(status).toHaveText('Preview up to date');
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Diagram errors' })).toHaveCount(0);
   await editor.fill('');
   await expect(preview).toHaveCount(0);
   await expect(status).toHaveText('Add some TextGraph to begin');
@@ -135,7 +135,7 @@ test('a runtime download failure is visible and can be retried', async ({ page }
   const status = page.getByRole('status', { name: 'Render status' });
   await expect(status).toHaveText('Could not render the diagram');
   await expect.poll(() => diagnostics.filter(message => message.type === 'error' && /Could not load/.test(message.text)).length).toBe(1);
-  await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Diagram errors' })).toBeVisible();
   await page.unroute('**/textgraph/wasm/**');
   await page.getByRole('button', { name: 'Render now' }).click();
   await expect(status).toHaveText('Preview up to date');
@@ -168,7 +168,7 @@ test('refresh keeps the preview geometry stable, including with warnings and nar
     expect(await preview.boundingBox()).toEqual(before);
     await expect(preview).toHaveAttribute('src', previousUrl);
     expect(diagnostics.length).toBe(previousDiagnostics);
-    await expect(page.getByRole('region', { name: 'Errors and warnings' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Diagram errors' })).toHaveCount(0);
     await page.clock.resume();
     await expect(preview).not.toHaveAttribute('src', previousUrl);
     await expect(status).toHaveText('Preview up to date');
