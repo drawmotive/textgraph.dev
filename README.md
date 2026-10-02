@@ -19,8 +19,8 @@ npm run build
 
 | Layer | Supported environment | Verification boundary |
 | --- | --- | --- |
-| Site development and build | Node.js 22.12+ in the 22 line, or Node.js 24; npm 10 or 11 | VitePress/Vite requires the 22.12 minimum |
-| Desktop build systems | Linux, Windows, macOS | CI targets all three systems with both Node lines |
+| Site development and build | Node.js 22.12+ in the 22 line; npm 10 or 11 | VitePress/Vite requires the 22.12 minimum; Node 22 is the current verification target |
+| Desktop build systems | Linux, Windows, macOS | CI targets all three systems with Node 22 |
 | Site, playground and editor example | Current Chromium is covered by the site browser suite | The SDK has separate Chromium/Firefox/WebKit tests; the embedded editor is currently verified only in Chromium |
 | Deployment | Static `.vitepress/dist` output | HTTPS or localhost is required for interactive WASM/Web Crypto; this private package is not published to npm |
 

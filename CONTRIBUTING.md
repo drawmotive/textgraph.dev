@@ -5,7 +5,7 @@ for documentation, playground and website issues. Include the affected URL,
 browser/OS, expected behavior and a small TextGraph example when relevant.
 Site documentation and design notes are maintained in English.
 
-Use Node.js 22.12+ on the 22 line or Node.js 24, with npm 10 or 11 on Linux,
+Use Node.js 22.12+ on the 22 line, with npm 10 or 11 on Linux,
 Windows or macOS. See the [support matrix](README.md#supported-environments)
 for browser and platform verification limits.
 

@@ -28,7 +28,9 @@ test('direct VitePress configuration prepares assets in a clean checkout without
     await symlink(path.join(siteRoot, 'node_modules'), path.join(root, 'node_modules'), 'junction');
 
     const [config, configPath] = await resolveUserConfig(root, 'build', 'production');
-    assert.equal(configPath, path.join(root, '.vitepress/config.mts'));
+    // VitePress returns slash-normalized paths even on Windows. Compare the
+    // filesystem location rather than its platform-dependent spelling.
+    assert.equal(path.normalize(configPath), path.join(root, '.vitepress/config.mts'));
     await resolveConfig({ ...config.vite, root, configFile: false }, 'build');
 
     for (const file of ['textgraph-spec.md', 'classes.md']) {

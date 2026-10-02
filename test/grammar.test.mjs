@@ -8,9 +8,11 @@ const parser = peggy.generate(grammar);
 const parse = source => parser.parse(source).lines.filter(line => line.type !== 'blank');
 
 test('the published grammar is the executable canonical grammar', async () => {
-  const page = await readFile(new URL('../reference/grammar.md', import.meta.url), 'utf8');
+  // Git may check these source documents out with CRLF on Windows. Their
+  // grammar content must agree independently of checkout line endings.
+  const page = (await readFile(new URL('../reference/grammar.md', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
   const published = page.split('```peg\n')[1].split('\n```')[0];
-  assert.equal(published, grammar.trimEnd());
+  assert.equal(published, grammar.replace(/\r\n/g, '\n').trimEnd());
 });
 
 test('inline empty groups and compact nested chains are structural endpoints', () => {

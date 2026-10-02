@@ -49,7 +49,7 @@ test('example fences retain escaped, copyable DSL alongside the rendered PNG', a
 
 test('the published Connection Types example renders all mixed edge operators', async () => {
   const { textgraphExamples } = await import('../.vitepress/textgraph-examples.mjs');
-  const document = await readFile(new URL('../diagrams/flowcharts.md', import.meta.url), 'utf8');
+  const document = (await readFile(new URL('../diagrams/flowcharts.md', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
   const section = document.split('## Connection Types\n')[1]?.split('\n## ')[0];
   assert.ok(section, 'Connection Types documentation must exist');
   const config = withTextGraph({ markdown: { config: textgraphExamples } }, { errorMode: 'throw' });
