@@ -11,6 +11,7 @@ export default defineConfig(withTextGraph({
   // generated routes and local search, including internal project documents.
   srcExclude: [
     'README.md', 'CLAUDE.md', 'docs/**', 'design/**',
+    'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'diagrams/sequence.md', 'diagrams/mindmaps.md', 'slides/**',
     'integrations/cli.md', 'integrations/rest-api.md',
     'reference/config.md', 'reference/grammar.md', 'reference/themes.md',
