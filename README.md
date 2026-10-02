@@ -15,10 +15,29 @@ npm test
 npm run build
 ```
 
+## Supported environments
+
+| Layer | Supported environment | Verification boundary |
+| --- | --- | --- |
+| Site development and build | Node.js 22.12+ in the 22 line, or Node.js 24; npm 10 or 11 | VitePress/Vite requires the 22.12 minimum |
+| Desktop build systems | Linux, Windows, macOS | CI targets all three systems with both Node lines |
+| Site, playground and editor example | Current Chromium is covered by the site browser suite | The SDK has separate Chromium/Firefox/WebKit tests; the embedded editor is currently verified only in Chromium |
+| Deployment | Static `.vitepress/dist` output | HTTPS or localhost is required for interactive WASM/Web Crypto; this private package is not published to npm |
+
+The standalone audit on 2026-10-01 executed Linux x64 with Node 22.23.2 and
+npm 10.9.8. Declared support and CI targets do not claim Windows, macOS,
+Node 24, Firefox, WebKit or real mobile-device verification in that audit.
+The browser suite includes mobile viewport checks in Chromium.
+
+For contribution and browser-check commands, see [Contributing](CONTRIBUTING.md).
+Changes are recorded in [Changelog](CHANGELOG.md).
+Vulnerability reports follow [Security reporting](SECURITY.md).
+
 ## Licenses
 
-- Site code and code examples use the MIT license; see `LICENSE-CODE`.
-- Documentation uses Creative Commons Attribution 4.0 International (CC BY 4.0); see `LICENSE-DOCS`.
+- Site code and code examples use the MIT license; see [LICENSE-CODE](LICENSE-CODE).
+- Documentation uses Creative Commons Attribution 4.0 International (CC BY 4.0); see [LICENSE-DOCS](LICENSE-DOCS).
+- Copied dependencies and fonts retain their own licenses; see [NOTICE](NOTICE).
 
 ## Markdown rendering and deployment
 
