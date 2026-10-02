@@ -1,0 +1,20 @@
+textgraph.dev redistribution notices
+
+Site code and code examples use the MIT license in LICENSE-CODE.
+Documentation uses Creative Commons Attribution 4.0 International as stated
+in LICENSE-DOCS. Reusing documentation requires appropriate credit, a link
+to that license, and an indication of changes.
+
+The build copies public SDK modules, compiled runtimes, fonts and reference
+documents into the static site. Preserve their accompanying license and
+notice files. The TextGraph and Editor public package code uses MIT; bundled
+text fonts retain SIL Open Font License 1.1; Material Symbols in the Editor
+retain Apache License 2.0. The Editor also carries its .NET and other runtime
+dependency notices. Reference document copies retain their original notices.
+
+VitePress and other dependencies retain their own terms. The site licenses do
+not override copied assets, dependency licenses or the rights in private
+producer source that is not part of this repository.
+
+This file indexes existing terms. It does not amend any license or grant
+rights to third-party names or trademarks.

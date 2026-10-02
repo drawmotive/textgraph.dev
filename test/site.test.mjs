@@ -33,6 +33,9 @@ test('site is npm-only', async () => {
 test('published routes and navigation expose usable documentation only', async () => {
   const { resolveConfig } = await import('vitepress');
   const config = await resolveConfig(siteRoot, 'build', 'production');
+  // Repository governance files link to non-page sources and must stay out
+  // of the public documentation routes and search index.
+  assert.deepEqual(config.pages.filter(page => /^(?:CHANGELOG|CONTRIBUTING|SECURITY)\.md$/.test(page)), []);
   const drafts = /^(?:slides\/|diagrams\/(?:sequence|mindmaps)\.md$|integrations\/(?:cli|rest-api)\.md$|reference\/(?:config|grammar|themes)\.md$|docs\/|design\/|README\.md$|CLAUDE\.md$)/;
   assert.ok(config.pages.includes('reference/syntax.md'));
   assert.ok(config.pages.includes('diagrams/flowcharts.md'));
