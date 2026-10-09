@@ -74,7 +74,14 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
           dispatch();
           return;
         }
-        if (data.type !== 'result' || data.id !== active?.id) return;
+        if (!active || data.id !== active.id) return;
+        if (data.type === 'preview') {
+          if (data.id === revision && data.result.success) publish({
+            status: 'fonts-loading', result: data.result, stale: false, diagnostics: [],
+          });
+          return;
+        }
+        if (data.type !== 'result') return;
         active = undefined;
         if (data.id === revision) {
           const { result } = data;

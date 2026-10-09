@@ -54,11 +54,12 @@ const imageUrl = ref('')
 const state = shallowRef({ status: 'loading', result: null, diagnostics: [], stale: false })
 let renderer
 let imageResult
-const busy = computed(() => ['loading', 'waiting', 'rendering'].includes(state.value.status))
+const busy = computed(() => ['loading', 'waiting', 'rendering', 'fonts-loading'].includes(state.value.status))
 const statusText = computed(() => ({
   loading: 'Loading renderer…',
   waiting: 'Waiting for edits…',
   rendering: 'Rendering…',
+  'fonts-loading': 'Fonts are still loading…',
   ready: 'Preview up to date',
   error: 'Could not render the diagram',
   empty: 'Add some TextGraph to begin',
@@ -390,7 +391,7 @@ onBeforeUnmount(() => {
             <button type="button" class="share-button" :disabled="!undoAvailable || composing" title="Undo (Ctrl / ⌘ + Z)" @click="restoreHistory('undo')">Undo</button>
             <button type="button" class="share-button" :disabled="!redoAvailable || composing" title="Redo (Ctrl / ⌘ + Shift + Z)" @click="restoreHistory('redo')">Redo</button>
             <button type="button" class="share-button" :disabled="copying || restoringSource" title="Copy a link to this source" @click="shareSource">Share</button>
-            <button type="button" class="render-button" :disabled="['loading', 'rendering'].includes(state.status) || !source.trim()" @click="renderNow">Render now</button>
+            <button type="button" class="render-button" :disabled="['loading', 'rendering', 'fonts-loading'].includes(state.status) || !source.trim()" @click="renderNow">Render now</button>
           </div>
         </header>
         <textarea

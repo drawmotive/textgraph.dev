@@ -253,3 +253,38 @@ test('deployed language fonts load only as needed and remain available across ed
   expect(fontRequests).toEqual(loaded);
   expect(externalRequests.filter(url => /staging[.]drawmotive[.]com/.test(url))).toEqual([]);
 });
+
+test('slow optional fonts keep a visible preview and SDK font cache survives a worker and page reload', async ({ page, context }) => {
+  const gate = Promise.withResolvers();
+  const fontRequests = [];
+  await context.route('**/*.ttf?*', async route => {
+    const url = new URL(route.request().url());
+    fontRequests.push(url.href);
+    if (url.pathname.includes('/textgraph/fonts/')) await gate.promise;
+    await route.continue();
+  });
+  try {
+    await page.goto('/playground');
+    const status = page.getByRole('status', { name: 'Render status' });
+    const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
+    const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+    await expect(status).toHaveText('Preview up to date');
+    const previous = await preview.getAttribute('src');
+    await editor.fill('A: 中文测试');
+    await expect(status).toHaveText('Fonts are still loading…');
+    await expect(preview).not.toHaveAttribute('src', previous);
+    await preview.evaluate(image => image.decode());
+    await expect(page.getByText('Fonts are still loading… The preview will update automatically.')).toBeVisible();
+    const provisional = await preview.getAttribute('src');
+    gate.resolve();
+    await expect(status).toHaveText('Preview up to date');
+    await expect(preview).not.toHaveAttribute('src', provisional);
+    expect(fontRequests.filter(url => new URL(url).pathname.includes('/textgraph/fonts/'))).toHaveLength(1);
+    const count = fontRequests.length;
+    await expect.poll(() => new URL(page.url()).searchParams.has('d')).toBe(true);
+    await page.reload();
+    await expect(status).toHaveText('Preview up to date');
+    await expect(editor).toHaveValue('A: 中文测试');
+    expect(fontRequests).toHaveLength(count);
+  } finally { gate.resolve(); }
+});

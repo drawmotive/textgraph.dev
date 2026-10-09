@@ -167,6 +167,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(feedbackTimer) })
         <p v-else class="preview-placeholder">{{ status === 'error' ? 'Fix the source to see your diagram.' : status === 'empty' ? 'Your diagram will appear here.' : 'Preparing your preview…' }}</p>
       </div>
       <slot name="overlay" />
+      <p v-if="status === 'fonts-loading'" class="image-feedback font-status">Fonts are still loading… The preview will update automatically.</p>
       <p v-show="feedback" class="image-feedback" role="status" aria-label="Image actions">{{ feedback }}</p>
     </div>
   </section>
@@ -194,6 +195,7 @@ svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width:
 .preview-image img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .preview-placeholder { color: var(--vp-c-text-2); font-size: 14px; text-align: center; }
 .image-feedback { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 1; width: fit-content; max-width: calc(100% - 24px); margin: 0 auto; padding: 8px 12px; border: 1px solid var(--vp-c-divider); border-radius: 6px; background: var(--vp-c-bg); color: var(--vp-c-text-1); font-size: 12px; pointer-events: none; }
+.font-status { top: auto; bottom: 12px; }
 @container (max-width: 260px) {
   .preview-heading { justify-content: center; padding-inline: 2px; }
   h2 { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); }

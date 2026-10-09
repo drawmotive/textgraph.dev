@@ -237,3 +237,51 @@ test('empty failure diagnostics and renderer failures are logged once and keep t
   assert.equal(app.logs[1].args[1], app.state.diagnostics[0]);
   assert.equal(app.logs[1].args[1].code, 'RENDERER_FAILED');
 });
+
+test('font previews show immediately but only the final result completes the active render', t => {
+  const app = setup(t);
+  app.renderer.update('A: 中文', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  const id = worker.requests[0].id;
+  const provisional = { ...png, diagnostics: [{ code: 'TG_FONT_MISSING_GLYPH', stage: 'font', severity: 'warning', message: 'Missing glyph' }] };
+  worker.receive({ type: 'preview', id, result: provisional });
+  assert.equal(app.state.status, 'fonts-loading');
+  assert.equal(app.state.result, provisional);
+  assert.deepEqual(app.logs, []);
+  finish(worker);
+  assert.equal(app.state.status, 'ready');
+  assert.equal(app.state.result, png);
+});
+
+test('old font previews cannot replace new input or resurrect cleared output', t => {
+  const app = setup(t);
+  app.renderer.update('A: 中文', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  const id = worker.requests[0].id;
+  app.renderer.update('A: English');
+  worker.receive({ type: 'preview', id, result: png });
+  assert.equal(app.state.result, null);
+  app.renderer.update('');
+  worker.receive({ type: 'preview', id, result: png });
+  assert.equal(app.state.status, 'empty');
+  finish(worker);
+  worker.receive({ type: 'preview', id, result: png });
+  assert.equal(app.state.result, null);
+});
+
+test('font download failure retains the provisional preview and manual retry recovers', t => {
+  const app = setup(t);
+  app.renderer.update('A: 中文', { immediate: true });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  worker.receive({ type: 'preview', id: worker.requests[0].id, result: png });
+  finish(worker, invalid);
+  assert.equal(app.state.status, 'error');
+  assert.equal(app.state.result, png);
+  assert.equal(app.state.stale, true);
+  app.renderer.update('A: 中文', { immediate: true });
+  finish(worker);
+  assert.equal(app.state.status, 'ready');
+});
