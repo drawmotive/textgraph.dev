@@ -1,4 +1,25 @@
 import { test, expect } from '@playwright/test';
+import { abiManifest } from '@drawmotive/textgraph/worker';
+
+test('playground requests all WASM in parallel before rendering', async ({ page, context }) => {
+  const gate = Promise.withResolvers();
+  const requested = [];
+  await context.route('**/textgraph/wasm/*.wasm', async route => {
+    requested.push(new URL(route.request().url()).pathname);
+    await gate.promise;
+    await route.continue();
+  });
+  await page.goto('/playground');
+  try {
+    const expected = abiManifest.assets.filter(asset => asset.path.endsWith('.wasm'))
+      .map(asset => '/textgraph/' + asset.path).toSorted();
+    expect(expected.length).toBeGreaterThan(1);
+    await expect.poll(() => requested.toSorted()).toEqual(expected);
+    await expect(page.getByRole('status', { name: 'Render status' })).toHaveText('Loading renderer…');
+  } finally { gate.resolve(); }
+  await expect(page.getByRole('status', { name: 'Render status' })).toHaveText('Preview up to date');
+  await expect(page.getByRole('img', { name: 'Rendered TextGraph diagram' })).toBeVisible();
+});
 
 function captureDiagnostics(page) {
   const diagnostics = [];
