@@ -1,6 +1,6 @@
 {
   "name": "@drawmotive/textgraph.dev",
-  "version": "0.2.2-alpha.2",
+  "version": "0.2.2-alpha.4",
   "description": "Documentation and playground for the TextGraph DSL",
   "private": true,
   "homepage": "https://textgraph.dev",
@@ -29,9 +29,9 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@drawmotive/markdown-it-textgraph": "0.2.2-alpha.2",
-    "@drawmotive/textgraph": "0.2.2-alpha.2",
-    "@drawmotive/textgraph-fonts": "0.2.2-alpha.2",
+    "@drawmotive/markdown-it-textgraph": "0.2.2-alpha.4",
+    "@drawmotive/textgraph": "0.2.2-alpha.4",
+    "@drawmotive/textgraph-fonts": "0.2.2-alpha.4",
     "@playwright/test": "1.63.0",
     "peggy": "^5.1.0",
     "tar": "7.5.22",

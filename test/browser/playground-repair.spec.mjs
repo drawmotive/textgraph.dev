@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { createSourceLink, readSourceLink } from '../../.vitepress/playground/source-link.mjs';
+const sitePackage = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
 
 const invalid = 'group {\n  A ->\n}';
 const repaired = 'group {\n  A -> B\n}';
@@ -47,7 +49,7 @@ test('error overlay covers the empty image viewport and repaired PNG requires re
   await expect.poll(() => preview(page).evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   expect(request.postData()).toBe(invalid);
   expect(request.headers()['content-type']).toBe('text/plain; charset=utf-8');
-  expect(request.headers()['x-textgraph-renderer-version']).toBe('0.2.2-alpha.2');
+  expect(request.headers()['x-textgraph-renderer-version']).toBe(sitePackage.devDependencies['@drawmotive/textgraph']);
   expect(request.headers().referer).toBeUndefined();
   await expect(editor(page)).toHaveValue(invalid);
   expect(page.url()).toBe(originalLink);
