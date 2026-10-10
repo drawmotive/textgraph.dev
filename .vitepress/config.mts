@@ -4,6 +4,7 @@ import { textgraphIssuesUrl } from './support.ts'
 import { textgraphExamples } from './textgraph-examples.mjs'
 import { siteAssets } from './site-assets.mjs'
 import { localRuntimeManifestPlugin } from './local-runtime.mjs'
+import { prepareSiteBrotli } from '../scripts/site-brotli.mjs'
 
 const localRuntime = () => process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME && process.env.DRAWMOTIVE_TEXTGRAPH_SDK
   ? localRuntimeManifestPlugin(process.env.DRAWMOTIVE_TEXTGRAPH_SDK, process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME) : null
@@ -22,6 +23,9 @@ export default defineConfig(withTextGraph({
   ],
   markdown: { config: textgraphExamples },
   vite: { plugins: [siteAssets(), localRuntime()], worker: { format: 'es', plugins: () => [localRuntime()] } },
+  // Encode only the finished website; installed SDKs and copied public inputs
+  // remain original bytes. Fetch supplies decoded bytes to their consumers.
+  buildEnd: async site => { await prepareSiteBrotli(site.outDir) },
   themeConfig: {
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },

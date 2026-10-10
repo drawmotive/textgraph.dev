@@ -13,7 +13,7 @@
     "home:render": "node scripts/render-home.mjs",
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview",
+    "preview": "node scripts/preview-site.mjs",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "test:browser": "playwright test",
     "release:check": "node .release/check.cjs --ready",

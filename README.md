@@ -54,6 +54,21 @@ homepage images and playground runtime assets are prepared by the Vite configura
 before bundling. Preparation cannot rely on npm `prebuild`/`predev` hooks: direct
 VitePress commands skip them, leaving Git-ignored assets absent in a clean checkout.
 
+The final build precompresses WASM, DLL, TTF and OTF files with Brotli quality 6
+at their original URLs. `.vitepress/dist/_headers` supplies `Content-Encoding: br`
+and the original MIME types for Cloudflare Pages. Browser HTTP decoding preserves
+the SDK manifests' original byte lengths and SHA-256 hashes. This output requires
+an HTTPS host that sends those headers and a browser with HTTP Brotli support; it
+contains one encoded representation, without an uncompressed fallback. Other
+static hosts must apply equivalent headers.
+
+Use `npm run preview` to check the built output locally; its server supplies the
+same encoding headers. VitePress's default preview ignores `_headers`. Development
+and installed SDK/public source files remain uncompressed. SDK consumers can use
+their own hosting and compression policy; no `.br` files or special host headers
+are required by the packages. Stable runtime/font filenames revalidate their
+cache instead of using immutable caching.
+
 ## Published documentation
 
 The navigation and `srcExclude` list in `.vitepress/config.mts` define the public documentation. Pages for unfinished features and internal design documents stay in the repository but are excluded from generated routes and local search. Add them back only when their features work and their examples have been verified with the published SDK. Earlier design material from mixed reference pages remains in Git history.
