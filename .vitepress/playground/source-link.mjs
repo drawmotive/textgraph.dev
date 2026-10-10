@@ -1,16 +1,7 @@
-let codec;
-
-// Load once on demand: raw decoding needs no WASM, and the homepage
-// receives precomputed links so compression never blocks its hydration.
-function loadCodec() {
-  // Node uses the package's synchronous WASM entry; browsers fetch the lazy
-  // module and its WASM asset. Native CompressionStream Brotli is not portable.
-  return codec ??= (typeof process !== 'undefined' && process.versions?.node
-    ? import('node:module').then(({ createRequire }) => createRequire(import.meta.url)('brotli-wasm'))
-    : import('brotli-wasm').then(module => module.default)).catch(error => {
-    codec = undefined;
-    throw error;
-  });
+// Use the zlib-wrapped format supported by browser streams and Node site builds.
+// No application codec or WASM download is needed for sharing.
+async function transform(bytes, stream) {
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
 }
 
 function toBase64Url(bytes) {
@@ -33,11 +24,19 @@ function fromBase64Url(payload) {
 export async function createSourceLink(href, source) {
   const bytes = new TextEncoder().encode(source);
   const raw = '0.' + toBase64Url(bytes);
-  const brotli = await loadCodec();
-  // Quality 6 balances URL size and interactive typing latency for TextGraph.
-  const compressed = '1.' + toBase64Url(brotli.compress(bytes, { quality: 6 }));
+  let selected = raw;
+  try {
+    // Older browsers can still create raw links. A decoder is also required so
+    // the creator can reopen whichever compressed link it produces.
+    if (typeof DecompressionStream === 'function') {
+      const compressed = '1.' + toBase64Url(await transform(bytes, new CompressionStream('deflate')));
+      if (compressed.length < raw.length) selected = compressed;
+    }
+  } catch {
+    // Native stream support is optional for encoding; raw always preserves text.
+  }
   const url = new URL(href);
-  url.searchParams.set('d', compressed.length < raw.length ? compressed : raw);
+  url.searchParams.set('d', selected);
   url.hash = '';
   return url.href;
 }
@@ -51,7 +50,7 @@ export async function readSourceLink(href) {
     let bytes = fromBase64Url(data.slice(2));
     if (data[0] === '1') {
       if (!bytes.length) return null;
-      bytes = (await loadCodec()).decompress(bytes);
+      bytes = await transform(bytes, new DecompressionStream('deflate'));
     }
     // Preserve a literal leading BOM along with all other source characters.
     return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);

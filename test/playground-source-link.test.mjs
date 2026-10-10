@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
+import { deflateSync, inflateSync } from 'node:zlib';
 import { readSourceLink, createSourceLink } from '../.vitepress/playground/source-link.mjs';
 
 test('source links preserve whitespace, Unicode, and URL delimiters exactly', async () => {
@@ -23,14 +23,14 @@ test('an absent source differs from an explicitly empty diagram', async () => {
   assert.equal(await readSourceLink('https://textgraph.dev/playground?d=0.'), '');
 });
 
-test('every input uses the shorter final encoding at Brotli quality 6, with raw winning ties', async () => {
-  const sources = ['', 'A', 'a'.repeat(17), 'a'.repeat(18), 'A -> B\n'.repeat(30),
+test('every input uses the shorter final native deflate encoding, with raw winning ties', async () => {
+  const sources = ['', 'A', 'a'.repeat(10), 'a'.repeat(11), 'a'.repeat(12), 'A -> B\n'.repeat(30),
     '服务 -> 数据库\n'.repeat(50), Array.from({ length: 1000 }, (_, i) => String.fromCharCode(32 + (i * i % 95))).join('')];
   const selected = new Set();
   for (const source of sources) {
     const bytes = Buffer.from(source);
     const raw = '0.' + bytes.toString('base64url');
-    const compressed = '1.' + brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 6 } }).toString('base64url');
+    const compressed = '1.' + deflateSync(bytes).toString('base64url');
     const payload = new URL(await createSourceLink('https://textgraph.dev/playground', source)).searchParams.get('d');
     assert.equal(payload, compressed.length < raw.length ? compressed : raw);
     selected.add(payload[0]);
@@ -40,8 +40,9 @@ test('every input uses the shorter final encoding at Brotli quality 6, with raw 
 
 test('both protocol versions decode independently supplied links', async () => {
   assert.equal(await readSourceLink('https://textgraph.dev/playground?d=0.QSAtPiBCCg'), 'A -> B\n');
-  // Brotli frame produced independently with node:zlib at quality 6.
-  assert.equal(await readSourceLink('https://textgraph.dev/playground?d=1.G9EAAAQccn6hgwTaVjFbJAsz9QA'), 'A -> B\n'.repeat(30));
+  const source = 'A -> B\n'.repeat(30);
+  const independent = deflateSync(Buffer.from(source), { level: 9 }).toString('base64url');
+  assert.equal(await readSourceLink('https://textgraph.dev/playground?d=1.' + independent), source);
   assert.equal(await readSourceLink('https://textgraph.dev/playground?d=0.'), '');
   for (const source of ['\uFEFFA -> B\r\n', '\uFEFF服务 -> 数据库\n'.repeat(30)]) {
     assert.equal(await readSourceLink(await createSourceLink('https://textgraph.dev/playground', source)), source);
@@ -63,9 +64,30 @@ test('damaged encodings and unsupported versions are ignored without throwing', 
   }
 });
 
-test('compressed links are readable by an independent Brotli decoder', async () => {
+test('compressed links are readable by an independent zlib decoder', async () => {
   const source = '服务 -> 数据库\n'.repeat(50);
   const payload = new URL(await createSourceLink('https://textgraph.dev/playground', source)).searchParams.get('d');
   assert.equal(payload[0], '1');
-  assert.equal(brotliDecompressSync(Buffer.from(payload.slice(2), 'base64url')).toString('utf8'), source);
+  assert.equal(inflateSync(Buffer.from(payload.slice(2), 'base64url')).toString('utf8'), source);
+});
+
+test('raw links remain usable when native compression or decompression is unavailable', async () => {
+  const source = '服务 -> 数据库\n'.repeat(50);
+  const compressed = 'https://textgraph.dev/playground?d=1.' + deflateSync(Buffer.from(source)).toString('base64url');
+  for (const api of ['CompressionStream', 'DecompressionStream']) {
+    const original = globalThis[api];
+    try {
+      globalThis[api] = undefined;
+      const link = await createSourceLink('https://textgraph.dev/playground', source);
+      assert.match(new URL(link).searchParams.get('d'), /^0\./);
+      assert.equal(await readSourceLink(link), source);
+      assert.equal(await readSourceLink(compressed), api === 'DecompressionStream' ? null : source);
+    } finally { globalThis[api] = original; }
+  }
+});
+
+test('a deflate checksum failure never returns partially decoded source', async () => {
+  const bytes = deflateSync(Buffer.from('A -> B\n'.repeat(30)));
+  bytes[bytes.length - 1] ^= 1;
+  assert.equal(await readSourceLink('https://textgraph.dev/playground?d=1.' + bytes.toString('base64url')), null);
 });

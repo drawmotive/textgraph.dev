@@ -201,7 +201,7 @@ async function updateSourceLink() {
   sourceLinkPending = true
   try {
     const href = await createSourceLink(originalHref, source.value)
-    // Codec startup can finish after an edit, navigation, or unmount. Only the
+    // Compression can finish after an edit, navigation, or unmount. Only the
     // still-current source may replace the history entry it was captured from.
     if (revision !== sourceLinkRevision || !isSourcePage() || window.location.href !== originalHref) return null
     // Preserve the router's scroll state and replace this edit's history entry.
@@ -224,7 +224,7 @@ function isSourcePage() {
 // while the editor still owns the current history entry, so Back retains edits.
 async function beforeRouteChange(...args) {
   repairSession?.invalidate()
-  // Edits can arrive while codec startup delays departure. Flush again only
+  // Edits can arrive while compression delays departure. Flush again only
   // when a newer edit invalidated the awaited write, before surrendering history.
   while (isSourcePage() && (sourceLinkTimer !== undefined || sourceLinkPending)) await updateSourceLink()
   return previousBeforeRouteChange?.(...args)
@@ -245,7 +245,7 @@ async function shareSource() {
   const link = updateSourceLink()
   try {
     if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
-      // Start within the click's user activation, before lazy codec loading.
+      // Start within the click's user activation, before compression finishes.
       // The clipboard consumes the text promise once compression finishes.
       const text = link.then(href => {
         if (!href) throw new Error('Source changed before sharing')

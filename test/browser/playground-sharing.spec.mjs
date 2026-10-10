@@ -1,18 +1,34 @@
 import { test, expect } from '@playwright/test';
 import { readSourceLink, createSourceLink } from '../../.vitepress/playground/source-link.mjs';
 
-// Hold only the real lazy codec chunk, leaving the site and renderer operational.
-async function delayCodec(page) {
-  let release;
-  let requested;
-  const gate = new Promise(resolve => { release = resolve; });
-  const started = new Promise(resolve => { requested = resolve; });
-  await page.route('**/assets/brotli_wasm_bg.*.wasm', async route => {
-    requested();
-    await gate;
-    await route.continue();
+// Hold native stream completion while exercising the real codec and renderer.
+async function delayCompression(page) {
+  await page.addInitScript(() => {
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    window.releaseCompression = release;
+    window.compressionStarted = false;
+    for (const name of ['CompressionStream', 'DecompressionStream']) {
+      const NativeStream = window[name];
+      window[name] = class extends NativeStream {
+        constructor(format) {
+          super(format);
+          const output = this.readable.pipeThrough(new TransformStream({
+            async transform(chunk, controller) {
+              window.compressionStarted = true;
+              await gate;
+              controller.enqueue(chunk);
+            },
+          }));
+          Object.defineProperty(this, 'readable', { value: output });
+        }
+      };
+    }
   });
-  return { releaseCodec: release, codecRequested: started };
+  return {
+    releaseCompression: () => page.evaluate(() => window.releaseCompression()),
+    compressionStarted: () => page.waitForFunction(() => window.compressionStarted),
+  };
 }
 
 test('a shared link restores the exact source before rendering', async ({ page }) => {
@@ -120,19 +136,19 @@ for (const [version, source] of [['0', 'A -> B'], ['1', 'A -> B\n'.repeat(30)]])
   });
 }
 
-test('slow codec startup never restores old text over a newer edit', async ({ page }) => {
-  const { releaseCodec, codecRequested } = await delayCodec(page);
+test('slow native decompression never restores old text over a newer edit', async ({ page }) => {
+  const { releaseCompression, compressionStarted } = await delayCompression(page);
   const link = new URL(await createSourceLink('https://textgraph.dev/playground', 'A -> B\n'.repeat(30)));
   await page.goto(link.pathname + link.search, { waitUntil: 'domcontentloaded' });
   try {
-    await codecRequested;
+    await compressionStarted();
     const editor = page.getByRole('textbox', { name: 'TextGraph source' });
     await editor.fill('latest -> edit');
-    releaseCodec();
+    await releaseCompression();
     await expect.poll(() => readSourceLink(page.url())).toBe('latest -> edit');
     await expect(editor).toHaveValue('latest -> edit');
     await expect(page.getByRole('status', { name: 'Render status' })).toHaveText('Preview up to date');
-  } finally { releaseCodec(); }
+  } finally { await releaseCompression(); }
 });
 
 test('query navigation and Back restore the correct source in the mounted playground', async ({ page }) => {
@@ -153,52 +169,85 @@ test('query navigation and Back restore the correct source in the mounted playgr
 
 test('Share waits for initial compressed source restoration', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const { releaseCodec, codecRequested } = await delayCodec(page);
+  const { releaseCompression, compressionStarted } = await delayCompression(page);
   const source = 'A -> B\n'.repeat(30);
   const link = new URL(await createSourceLink('https://textgraph.dev/playground', source));
   await page.goto(link.pathname + link.search, { waitUntil: 'domcontentloaded' });
   try {
-    await codecRequested;
+    await compressionStarted();
     const share = page.getByRole('button', { name: 'Share', exact: true });
     await expect(share).toBeDisabled();
-    releaseCodec();
+    await releaseCompression();
     await expect(page.getByRole('textbox', { name: 'TextGraph source' })).toHaveValue(source);
     await share.click();
     await expect(page.getByRole('status', { name: 'Share status' })).toHaveText('Link copied.');
     expect(await readSourceLink(await page.evaluate(() => navigator.clipboard.readText()))).toBe(source);
-  } finally { releaseCodec(); }
+  } finally { await releaseCompression(); }
 });
 
-test('navigation flushes edits made while codec startup delays departure', async ({ page }) => {
-  const { releaseCodec, codecRequested } = await delayCodec(page);
+test('navigation flushes edits made while native compression delays departure', async ({ page }) => {
+  const { releaseCompression, compressionStarted } = await delayCompression(page);
   await page.goto('/playground?d=0.QQ');
   const editor = page.getByRole('textbox', { name: 'TextGraph source' });
   try {
     await editor.fill('first -> edit');
     await page.getByRole('link', { name: 'Syntax reference', exact: true }).click();
-    await codecRequested;
+    await compressionStarted();
     await editor.fill('latest -> edit');
-    releaseCodec();
+    await releaseCompression();
     await expect(editor).toHaveCount(0);
     await page.goBack();
     await expect(editor).toHaveValue('latest -> edit');
-  } finally { releaseCodec(); }
+  } finally { await releaseCompression(); }
 });
 
-test('Share starts the real clipboard write before waiting for the codec', async ({ page, context }) => {
+test('Share starts the real clipboard write before waiting for native compression', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.addInitScript(() => {
     const write = navigator.clipboard.write.bind(navigator.clipboard);
     navigator.clipboard.write = items => { window.clipboardStarted = true; return write(items); };
   });
-  const { releaseCodec, codecRequested } = await delayCodec(page);
+  const { releaseCompression, compressionStarted } = await delayCompression(page);
   await page.goto('/playground?d=0.QQ');
   try {
     await page.getByRole('button', { name: 'Share', exact: true }).click();
-    await codecRequested;
+    await compressionStarted();
     expect(await page.evaluate(() => window.clipboardStarted)).toBe(true);
-    releaseCodec();
+    await releaseCompression();
     await expect(page.getByRole('status', { name: 'Share status' })).toHaveText('Link copied.');
     expect(await readSourceLink(await page.evaluate(() => navigator.clipboard.readText()))).toBe('A');
-  } finally { releaseCodec(); }
+  } finally { await releaseCompression(); }
+});
+
+test('compressed sharing uses native streams without downloading a codec WASM', async ({ page }) => {
+  const wasmRequests = [];
+  page.on('request', request => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.endsWith('.wasm')) wasmRequests.push(pathname);
+  });
+  await page.goto('/playground?d=0.QQ');
+  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+  const source = 'A -> B\n'.repeat(30);
+  await editor.fill(source);
+  await expect.poll(() => readSourceLink(page.url())).toBe(source);
+  expect(new URL(page.url()).searchParams.get('d')).toMatch(/^1\./);
+  await page.reload();
+  await expect(editor).toHaveValue(source);
+  expect(wasmRequests.length).toBeGreaterThan(0);
+  expect(wasmRequests.every(pathname => pathname.startsWith('/textgraph/wasm/'))).toBe(true);
+});
+
+test('browsers without native streams can edit, share raw source, and reopen it', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.CompressionStream = undefined;
+    window.DecompressionStream = undefined;
+  });
+  await page.goto('/playground?d=0.QQ');
+  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+  const source = 'A -> B\n'.repeat(30);
+  await editor.fill(source);
+  await expect.poll(() => readSourceLink(page.url())).toBe(source);
+  expect(new URL(page.url()).searchParams.get('d')).toMatch(/^0\./);
+  await page.reload();
+  await expect(editor).toHaveValue(source);
 });
