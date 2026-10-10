@@ -60,7 +60,7 @@ function setup(t, options = {}) {
   const app = createRepairSession({
     request(source, signal) { const item = { ...deferred(), source, signal }; requests.push(item); return item.promise; },
     createRenderer(onState) {
-      const worker = { emit: onState, update(source) { this.source = source; }, dispose() { this.disposed = true; } };
+      const worker = { emit: onState, update(source, options) { this.source = source; this.options = options; }, dispose() { this.disposed = true; } };
       renderers.push(worker); return worker;
     },
     validateResult: async () => {},
@@ -91,6 +91,7 @@ test('candidate enters review only after rendering and PNG decoding; edit invali
   h.requests[0].resolve('A -> B');
   await pending;
   assert.equal(h.state.status, 'rendering');
+  assert.deepEqual(h.renderers[0].options, { immediate: true, preview: false });
   const accepted = h.renderers[0].emit({ status: 'ready', result: { png: [1] } });
   assert.equal(h.state.status, 'rendering');
   h.app.invalidate();
@@ -112,16 +113,46 @@ test('review keeps original separate and is removed by subsequent edits', async 
   assert.equal(h.state.status, 'idle');
 });
 
-test('candidate render failure, bad PNG, unchanged source and timeout never offer review', async t => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
-  for (const kind of ['render', 'png', 'unchanged', 'timeout']) {
-    const h = setup(t, { validateResult: async () => { if (kind === 'png') throw Error('bad PNG'); }, renderTimeoutMs: 10 });
+test('candidate render failure, bad PNG and unchanged source never offer review', async t => {
+  for (const kind of ['render', 'png', 'unchanged']) {
+    const h = setup(t, { validateResult: async () => { if (kind === 'png') throw Error('bad PNG'); } });
     const pending = h.app.start('A ->');
     h.requests[0].resolve(kind === 'unchanged' ? 'A ->' : 'A -> B');
     await pending;
-    if (kind === 'timeout') t.mock.timers.tick(10);
-    else if (kind !== 'unchanged') await h.renderers[0].emit({ status: kind === 'render' ? 'error' : 'ready', result: { png: [] } });
+    if (kind !== 'unchanged') await h.renderers[0].emit({ status: kind === 'render' ? 'error' : 'ready', result: { png: [] } });
     assert.equal(h.state.status, 'error', kind);
     assert.equal(h.state.source, undefined);
   }
+});
+
+test('a valid slow local render and PNG decode keep revision ownership until review', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const decode = deferred();
+  const h = setup(t, { validateResult: () => decode.promise });
+  const pending = h.app.start('A ->');
+  h.requests[0].resolve('A -> B');
+  await pending;
+  t.mock.timers.tick(120_000);
+  assert.equal(h.state.status, 'rendering');
+  assert.equal(h.renderers[0].disposed, undefined);
+  const result = { png: [1] };
+  const accepted = h.renderers[0].emit({ status: 'ready', result });
+  t.mock.timers.tick(120_000);
+  assert.equal(h.state.status, 'rendering');
+  decode.resolve();
+  await accepted;
+  assert.deepEqual(h.state, { status: 'review', source: 'A -> B', original: 'A ->', result });
+});
+
+test('a slow local render remains cancellable and late completion cannot offer review', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const h = setup(t);
+  const pending = h.app.start('A ->');
+  h.requests[0].resolve('A -> B');
+  await pending;
+  t.mock.timers.tick(120_000);
+  h.app.invalidate();
+  assert.equal(h.renderers[0].disposed, true);
+  await h.renderers[0].emit({ status: 'ready', result: { png: [1] } });
+  assert.deepEqual(h.state, { status: 'idle' });
 });

@@ -254,6 +254,21 @@ test('font previews show immediately but only the final result completes the act
   assert.equal(app.state.result, png);
 });
 
+test('final-only requests retain their preview policy through startup and queued revisions', t => {
+  const app = setup(t);
+  app.renderer.update('candidate: 中文', { immediate: true, preview: false });
+  const worker = app.workers[0];
+  worker.receive({ type: 'ready' });
+  assert.equal(worker.requests[0].preview, false);
+  app.renderer.update('latest: 中文', { immediate: true, preview: false });
+  finish(worker);
+  assert.equal(worker.requests[1].preview, false);
+  finish(worker);
+  assert.equal(app.state.status, 'ready');
+  app.renderer.update('draft: 中文', { immediate: true });
+  assert.equal(worker.requests[2].preview, undefined);
+});
+
 test('old font previews cannot replace new input or resurrect cleared output', t => {
   const app = setup(t);
   app.renderer.update('A: 中文', { immediate: true });

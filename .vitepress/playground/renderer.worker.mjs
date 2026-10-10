@@ -11,7 +11,8 @@ try {
     if (data.type !== 'render') return;
     try {
       const result = await runtime.renderPng(data.source, { scale: 2, maxWidth: 2400,
-        onPreview: result => self.postMessage({ type: 'preview', id: data.id, result }, [result.png.buffer]),
+        onPreview: data.preview === false ? undefined
+          : result => self.postMessage({ type: 'preview', id: data.id, result }, [result.png.buffer]),
       });
       self.postMessage({ type: 'result', id: data.id, result }, result.success ? [result.png.buffer] : []);
     } catch (error) {

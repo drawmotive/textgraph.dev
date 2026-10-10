@@ -109,7 +109,7 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
   }
 
   return {
-    update(source, { immediate = false } = {}) {
+    update(source, { immediate = false, preview = true } = {}) {
       if (disposed) return;
       revision += 1;
       clearTimeout(timer);
@@ -119,7 +119,7 @@ export function createPlaygroundRenderer({ createWorker, onState, debounceMs = 3
         publish({ status: 'empty', result: null, diagnostics: [], stale: false });
         return;
       }
-      pending = { id: revision, source };
+      pending = { id: revision, source, ...(preview ? {} : { preview: false }) };
       // Pending input has no diagnostic result yet. Keep the displayed result
       // together until its replacement arrives, preserving the renderer state API.
       publish({ status: ready ? 'waiting' : 'loading', stale: Boolean(state.result) });

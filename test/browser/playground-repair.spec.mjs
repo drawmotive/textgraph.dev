@@ -189,3 +189,58 @@ test('cancel aborts a pending repair and ignores late completion', async ({ page
   await expect(editor(page)).toHaveValue(invalid);
   expect(requests).toBe(1);
 });
+
+test('slow repaired Chinese branch and merge reaches review without replacing the source', async ({ page }, testInfo) => {
+  test.setTimeout(240_000);
+  const source = String.raw`(vertical)
+
+start(stadium fill primary): 切换IM-NP功能
+step1(rect fill): IM-NP/VLA\n轨迹控车靠边
+step2(rect fill): nearly检查判断\n是否需开启泊车感知
+step3(rect fill): 泊车感知开启，\n进行寻库
+decision(diamond fill warning): 满足泊车条件？
+note(fill secondary): 条件详情：IM-NP无法靠边，且nearly曾找到好车位
+end_node(stadium fill success): 停车，IM-NP内部\n开启泊车功能
+
+start -> step1
+step1 -> decision
+step1 -> step2
+step2 -> step3
+step3 -> decision
+note -.->(dotted) decision
+decision -> end_node`;
+  const candidate = source.replace('note -.->', 'note ->');
+  await page.addInitScript(() => {
+    const NativeWorker = window.Worker;
+    window.renderRequests = [];
+    window.previewMessages = 0;
+    window.Worker = class extends NativeWorker {
+      constructor(...args) {
+        super(...args);
+        this.addEventListener('message', ({ data }) => {
+          if (data.type === 'preview') window.previewMessages += 1;
+        });
+      }
+      postMessage(message, ...rest) {
+        if (message.type === 'render') window.renderRequests.push(message);
+        return super.postMessage(message, ...rest);
+      }
+    };
+  });
+  await mockRepair(page, candidate);
+  const link = new URL(await createSourceLink('https://textgraph.dev/playground', source));
+  await page.goto(link.pathname + link.search);
+  await expect(errors(page)).toBeVisible();
+  const originalLink = page.url();
+  const started = Date.now();
+  await page.getByRole('button', { name: 'Fix It', exact: true }).click();
+  await expect(review(page)).toBeVisible({ timeout: 210_000 });
+  console.log(`Chinese repair rendered in ${Date.now() - started} ms`);
+  await expect.poll(() => preview(page).evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(editor(page)).toHaveValue(source);
+  expect(page.url()).toBe(originalLink);
+  expect(await page.evaluate(() => window.renderRequests.at(-1).preview)).toBe(false);
+  expect(await page.evaluate(() => window.previewMessages)).toBe(0);
+  await expect(page.getByRole('status', { name: 'Fix status' })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath('repaired.png'), fullPage: true });
+});

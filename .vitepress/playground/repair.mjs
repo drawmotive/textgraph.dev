@@ -70,11 +70,10 @@ export async function requestRepair(source, { endpoint = DEFAULT_FIX_API_URL, re
 // A candidate is isolated from the draft renderer and source history. Revision
 // ownership lasts through HTTP, local rendering, and PNG decoding; any edit or
 // navigation invalidates all three, even if cancellation is ignored upstream.
-export function createRepairSession({ request, createRenderer, validateResult, onState, renderTimeoutMs = 30_000 }) {
+export function createRepairSession({ request, createRenderer, validateResult, onState }) {
   let revision = 0;
   let controller;
   let renderer;
-  let timer;
   let disposed = false;
   let state = { status: 'idle' };
   const publish = next => { state = next; onState(next); };
@@ -83,7 +82,6 @@ export function createRepairSession({ request, createRenderer, validateResult, o
     controller = undefined;
     renderer?.dispose();
     renderer = undefined;
-    clearTimeout(timer);
   }
   function invalidate() {
     revision += 1;
@@ -106,7 +104,9 @@ export function createRepairSession({ request, createRenderer, validateResult, o
         if (!isCurrent()) return;
         if (candidate === source) { fail(messages.NO_FIX); return; }
         publish({ status: 'rendering' });
-        timer = setTimeout(() => fail('The repaired diagram took too long to render. Your source is unchanged.'), renderTimeoutMs);
+        // Native layout has no elapsed-time validity contract. Keep ownership until
+        // completion, a real renderer failure, or explicit cancellation/edit; a
+        // wall-clock deadline would discard valid repairs on slower devices.
         renderer = createRenderer(async next => {
           if (!isCurrent() || state.status !== 'rendering') return;
           if (next.status === 'error') { fail('The repaired diagram could not be rendered. Your source is unchanged.'); return; }
@@ -118,7 +118,9 @@ export function createRepairSession({ request, createRenderer, validateResult, o
             publish({ status: 'review', source: candidate, original: source, result: next.result });
           } catch { fail('The repaired PNG could not be displayed. Your source is unchanged.'); }
         });
-        renderer.update(candidate, { immediate: true });
+        // Review consumes only the fully font-resolved PNG. An unused provisional
+        // PNG would run the complete layout once more before loading optional fonts.
+        renderer.update(candidate, { immediate: true, preview: false });
       } catch (error) { if (isCurrent()) fail(error.message); }
     },
     dispose() { disposed = true; invalidate(); },
