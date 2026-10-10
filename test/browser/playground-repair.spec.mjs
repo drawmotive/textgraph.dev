@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createSourceLink, readSourceLink } from '../../.vitepress/playground/source-link.mjs';
 const sitePackage = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
 
@@ -190,9 +191,9 @@ test('cancel aborts a pending repair and ignores late completion', async ({ page
   expect(requests).toBe(1);
 });
 
-test('repaired Chinese branch and merge reaches review within the candidate deadline', async ({ page }, testInfo) => {
+for (const language of ['Chinese', 'English']) test(`repaired ${language} branch and merge reaches review within the candidate deadline`, async ({ page, browser, request }, testInfo) => {
   test.skip(!process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME, 'The native performance regression requires the selected local runtime; the pinned registry SDK predates this fix.');
-  const source = String.raw`(vertical)
+  let source = String.raw`(vertical)
 
 start(stadium fill primary): 切换IM-NP功能
 step1(rect fill): IM-NP/VLA\n轨迹控车靠边
@@ -209,20 +210,72 @@ step2 -> step3
 step3 -> decision
 note -.->(dotted) decision
 decision -> end_node`;
+  if (language === 'English') {
+    const translations = [
+      ['切换IM-NP功能', 'Switch IM-NP mode'],
+      ['轨迹控车靠边', 'Pull over using trajectory control'],
+      ['nearly检查判断', 'Check nearly result'],
+      ['是否需开启泊车感知', 'Enable parking perception?'],
+      ['泊车感知开启，', 'Enable parking perception,'],
+      ['进行寻库', 'search for a parking space'],
+      ['满足泊车条件？', 'Parking conditions met?'],
+      ['条件详情：IM-NP无法靠边，且nearly曾找到好车位', 'Conditions: IM-NP cannot pull over and nearly found a good space'],
+      ['停车，IM-NP内部', 'Stop and enable parking'],
+      ['开启泊车功能', 'inside IM-NP'],
+    ];
+    for (const [before, after] of translations) source = source.replace(before, after);
+  }
   const candidate = source.replace('note -.->', 'note ->');
+  const manifest = JSON.parse(await readFile(process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME + '/wasm-manifest.json', 'utf8'));
+  expect(manifest.privateSource.development).toBe(true);
+  // Verify real served bytes, not just the environment flag enabling this case.
+  for (const asset of manifest.assets) {
+    const response = await request.get('/textgraph/' + asset.path);
+    expect(response.ok()).toBe(true);
+    expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(asset.sha256);
+  }
+
   await page.addInitScript(() => {
     const NativeWorker = window.Worker;
     window.renderRequests = [];
     window.previewMessages = 0;
+    window.repairTiming = {};
+    document.addEventListener('click', event => {
+      if (event.target.closest('button')?.textContent.trim() === 'Fix It') {
+        window.repairTiming = { click: performance.now() };
+        const observer = new MutationObserver(() => {
+          if (document.querySelector('[aria-label="Repair review"]')) {
+            window.repairTiming.review = performance.now();
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    }, true);
+    const decode = HTMLImageElement.prototype.decode;
+    HTMLImageElement.prototype.decode = async function () {
+      const timing = window.repairTiming;
+      if (timing.result) timing.decodeStart = performance.now();
+      await decode.call(this);
+      if (timing.result) timing.decodeEnd = performance.now();
+    };
+
     window.Worker = class extends NativeWorker {
       constructor(...args) {
         super(...args);
+        const timing = window.repairTiming;
+        if (timing.click) { timing.worker = performance.now(); timing.workerUrl = String(args[0]); }
         this.addEventListener('message', ({ data }) => {
+          if (timing.click && data.type === 'ready') timing.ready = performance.now();
+          if (timing.click && data.type === 'result') timing.result = performance.now();
+
           if (data.type === 'preview') window.previewMessages += 1;
         });
       }
       postMessage(message, ...rest) {
         if (message.type === 'render') window.renderRequests.push(message);
+        if (message.type === 'render' && message.preview === false) window.repairTiming.render = performance.now();
+
         return super.postMessage(message, ...rest);
       }
     };
@@ -232,10 +285,40 @@ decision -> end_node`;
   await page.goto(link.pathname + link.search);
   await expect(errors(page)).toBeVisible();
   const originalLink = page.url();
-  const started = Date.now();
+  let tracing;
+  if (process.env.DRAWMOTIVE_REPAIR_TRACE) {
+    tracing = await browser.newBrowserCDPSession();
+    await tracing.send('Tracing.start', { categories: 'devtools.timeline,v8.execute,disabled-by-default-v8.cpu_profiler,blink.user_timing', transferMode: 'ReturnAsStream' });
+  }
+
   await page.getByRole('button', { name: 'Fix It', exact: true }).click();
-  await expect(review(page)).toBeVisible({ timeout: 35_000 });
-  console.log(`Chinese repair rendered in ${Date.now() - started} ms`);
+  let reviewError;
+  try { await expect(review(page)).toBeVisible({ timeout: 35_000 }); } catch (error) { reviewError = error; }
+  const timing = await page.evaluate(() => window.repairTiming);
+  const durations = { language, fingerprint: manifest.privateSource.fingerprint,
+    mockRequestMs: timing.worker - timing.click, workerStartupMs: timing.ready - timing.worker,
+    renderMs: timing.result - timing.render, pngDecodeMs: timing.decodeEnd - timing.decodeStart,
+    candidateMs: timing.review - timing.worker, totalMs: timing.review - timing.click, timing };
+  console.log('Repair timing: ' + JSON.stringify(durations));
+  await testInfo.attach('repair-timing', { body: JSON.stringify(durations, null, 2), contentType: 'application/json' });
+  const workerBundle = await (await request.get(timing.workerUrl)).text();
+  expect(workerBundle).toContain(manifest.privateSource.fingerprint);
+  if (tracing) {
+    const completed = new Promise(resolve => tracing.once('Tracing.tracingComplete', resolve));
+    await tracing.send('Tracing.end');
+    const { stream } = await completed;
+    let trace = '';
+    for (;;) {
+      const chunk = await tracing.send('IO.read', { handle: stream });
+      trace += chunk.base64Encoded ? Buffer.from(chunk.data, 'base64').toString() : chunk.data;
+      if (chunk.eof) break;
+    }
+    await tracing.send('IO.close', { handle: stream });
+    await writeFile(testInfo.outputPath('chromium-trace.json'), trace);
+    await tracing.detach();
+  }
+
+  if (reviewError) throw reviewError;
   await expect.poll(() => preview(page).evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   await expect(editor(page)).toHaveValue(source);
   expect(page.url()).toBe(originalLink);

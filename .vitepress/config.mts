@@ -12,6 +12,8 @@ const localRuntime = () => process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME && process.e
   ? localRuntimeManifestPlugin(process.env.DRAWMOTIVE_TEXTGRAPH_SDK, process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME) : null
 
 export default defineConfig(withTextGraph({
+  // Preview and browser verification must serve the same selected local build.
+  outDir: process.env.DRAWMOTIVE_SITE_OUT_DIR,
   title: "TextGraph",
   description: "Turn relationships into diagrams with readable text. Explore flowcharts, automatic layout, and a browser playground, with Markdown and VS Code integrations.",
   // Drafts stay in source until their features work. Exclude them from both
