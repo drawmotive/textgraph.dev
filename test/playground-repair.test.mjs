@@ -125,23 +125,29 @@ test('candidate render failure, bad PNG and unchanged source never offer review'
   }
 });
 
-test('a valid slow local render and PNG decode keep revision ownership until review', async t => {
+test('candidate rendering and PNG decoding share an explicit 30-second deadline', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const decode = deferred();
-  const h = setup(t, { validateResult: () => decode.promise });
-  const pending = h.app.start('A ->');
-  h.requests[0].resolve('A -> B');
-  await pending;
-  t.mock.timers.tick(120_000);
-  assert.equal(h.state.status, 'rendering');
-  assert.equal(h.renderers[0].disposed, undefined);
-  const result = { png: [1] };
-  const accepted = h.renderers[0].emit({ status: 'ready', result });
-  t.mock.timers.tick(120_000);
-  assert.equal(h.state.status, 'rendering');
-  decode.resolve();
-  await accepted;
-  assert.deepEqual(h.state, { status: 'review', source: 'A -> B', original: 'A ->', result });
+  for (const decoding of [false, true, 'failure']) {
+    const decode = deferred();
+    const h = setup(t, { validateResult: () => decode.promise });
+    const pending = h.app.start('A ->');
+    h.requests[0].resolve('A -> B');
+    await pending;
+    const accepted = decoding ? h.renderers[0].emit({ status: 'ready', result: { png: [1] } }) : undefined;
+    t.mock.timers.tick(29_999);
+    assert.equal(h.state.status, 'rendering');
+    t.mock.timers.tick(1);
+    assert.equal(h.state.status, 'error');
+    assert.match(h.state.message, /timed out after 30 seconds/);
+    assert.match(h.state.message, /source is unchanged/);
+    assert.equal(h.renderers[0].disposed, true);
+    if (decoding === 'failure') decode.reject(Error('late decode failure'));
+    else decode.resolve();
+    await accepted;
+    await h.renderers[0].emit({ status: 'ready', result: { png: [1] } });
+    assert.equal(h.state.status, 'error');
+    assert.match(h.state.message, /timed out after 30 seconds/);
+  }
 });
 
 test('a slow local render remains cancellable and late completion cannot offer review', async t => {
@@ -150,7 +156,7 @@ test('a slow local render remains cancellable and late completion cannot offer r
   const pending = h.app.start('A ->');
   h.requests[0].resolve('A -> B');
   await pending;
-  t.mock.timers.tick(120_000);
+  t.mock.timers.tick(29_999);
   h.app.invalidate();
   assert.equal(h.renderers[0].disposed, true);
   await h.renderers[0].emit({ status: 'ready', result: { png: [1] } });

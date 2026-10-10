@@ -3,6 +3,10 @@ import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress'
 import { textgraphIssuesUrl } from './support.ts'
 import { textgraphExamples } from './textgraph-examples.mjs'
 import { siteAssets } from './site-assets.mjs'
+import { localRuntimeManifestPlugin } from './local-runtime.mjs'
+
+const localRuntime = () => process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME && process.env.DRAWMOTIVE_TEXTGRAPH_SDK
+  ? localRuntimeManifestPlugin(process.env.DRAWMOTIVE_TEXTGRAPH_SDK, process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME) : null
 
 export default defineConfig(withTextGraph({
   title: "TextGraph",
@@ -17,7 +21,7 @@ export default defineConfig(withTextGraph({
     'reference/config.md', 'reference/grammar.md', 'reference/themes.md',
   ],
   markdown: { config: textgraphExamples },
-  vite: { plugins: [siteAssets()], worker: { format: 'es' } },
+  vite: { plugins: [siteAssets(), localRuntime()], worker: { format: 'es', plugins: () => [localRuntime()] } },
   themeConfig: {
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },

@@ -70,10 +70,11 @@ export async function requestRepair(source, { endpoint = DEFAULT_FIX_API_URL, re
 // A candidate is isolated from the draft renderer and source history. Revision
 // ownership lasts through HTTP, local rendering, and PNG decoding; any edit or
 // navigation invalidates all three, even if cancellation is ignored upstream.
-export function createRepairSession({ request, createRenderer, validateResult, onState }) {
+export function createRepairSession({ request, createRenderer, validateResult, onState, renderTimeoutMs = 30_000 }) {
   let revision = 0;
   let controller;
   let renderer;
+  let timer;
   let disposed = false;
   let state = { status: 'idle' };
   const publish = next => { state = next; onState(next); };
@@ -82,6 +83,7 @@ export function createRepairSession({ request, createRenderer, validateResult, o
     controller = undefined;
     renderer?.dispose();
     renderer = undefined;
+    clearTimeout(timer);
   }
   function invalidate() {
     revision += 1;
@@ -97,16 +99,16 @@ export function createRepairSession({ request, createRenderer, validateResult, o
       controller = new AbortController();
       const signal = controller.signal;
       const isCurrent = () => !disposed && current === revision;
-      const fail = message => { if (isCurrent()) { stop(); publish({ status: 'error', message }); } };
+      const fail = message => { if (isCurrent() && ['requesting', 'rendering'].includes(state.status)) { stop(); publish({ status: 'error', message }); } };
       publish({ status: 'requesting' });
       try {
         const candidate = await request(source, signal);
         if (!isCurrent()) return;
         if (candidate === source) { fail(messages.NO_FIX); return; }
         publish({ status: 'rendering' });
-        // Native layout has no elapsed-time validity contract. Keep ownership until
-        // completion, a real renderer failure, or explicit cancellation/edit; a
-        // wall-clock deadline would discard valid repairs on slower devices.
+        // Bound candidate work independently of the HTTP request. Report the
+        // elapsed-time limit explicitly instead of implying that valid DSL failed.
+        timer = setTimeout(() => fail(`The repaired diagram rendering timed out after ${renderTimeoutMs / 1000} seconds. Your source is unchanged.`), renderTimeoutMs);
         renderer = createRenderer(async next => {
           if (!isCurrent() || state.status !== 'rendering') return;
           if (next.status === 'error') { fail('The repaired diagram could not be rendered. Your source is unchanged.'); return; }

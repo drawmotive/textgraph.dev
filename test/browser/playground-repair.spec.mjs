@@ -190,8 +190,8 @@ test('cancel aborts a pending repair and ignores late completion', async ({ page
   expect(requests).toBe(1);
 });
 
-test('slow repaired Chinese branch and merge reaches review without replacing the source', async ({ page }, testInfo) => {
-  test.setTimeout(240_000);
+test('repaired Chinese branch and merge reaches review within the candidate deadline', async ({ page }, testInfo) => {
+  test.skip(!process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME, 'The native performance regression requires the selected local runtime; the pinned registry SDK predates this fix.');
   const source = String.raw`(vertical)
 
 start(stadium fill primary): 切换IM-NP功能
@@ -234,7 +234,7 @@ decision -> end_node`;
   const originalLink = page.url();
   const started = Date.now();
   await page.getByRole('button', { name: 'Fix It', exact: true }).click();
-  await expect(review(page)).toBeVisible({ timeout: 210_000 });
+  await expect(review(page)).toBeVisible({ timeout: 35_000 });
   console.log(`Chinese repair rendered in ${Date.now() - started} ms`);
   await expect.poll(() => preview(page).evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   await expect(editor(page)).toHaveValue(source);
@@ -243,4 +243,25 @@ decision -> end_node`;
   expect(await page.evaluate(() => window.previewMessages)).toBe(0);
   await expect(page.getByRole('status', { name: 'Fix status' })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath('repaired.png'), fullPage: true });
+});
+
+test('candidate timeout reports the 30 second cause and preserves the source', async ({ page }) => {
+  await page.addInitScript(() => {
+    const NativeWorker = window.Worker;
+    window.Worker = class extends NativeWorker {
+      postMessage(message, ...rest) {
+        if (message.type === 'render' && message.preview === false) return;
+        return super.postMessage(message, ...rest);
+      }
+    };
+  });
+  await mockRepair(page, repaired);
+  await openInvalid(page);
+  const originalLink = page.url();
+  await page.getByRole('button', { name: 'Fix It', exact: true }).click();
+  await expect(page.getByRole('status', { name: 'Fix status' })).toContainText(
+    'The repaired diagram rendering timed out after 30 seconds. Your source is unchanged.', { timeout: 35_000 });
+  await expect(review(page)).toHaveCount(0);
+  await expect(editor(page)).toHaveValue(invalid);
+  expect(page.url()).toBe(originalLink);
 });
