@@ -3,7 +3,11 @@ let codec;
 // Load once on demand: raw decoding needs no WASM, and the homepage
 // receives precomputed links so compression never blocks its hydration.
 function loadCodec() {
-  return codec ??= import('@hpcc-js/wasm-zstd').then(({ Zstd }) => Zstd.load()).catch(error => {
+  // Node uses the package's synchronous WASM entry; browsers fetch the lazy
+  // module and its WASM asset. Native CompressionStream Brotli is not portable.
+  return codec ??= (typeof process !== 'undefined' && process.versions?.node
+    ? import('node:module').then(({ createRequire }) => createRequire(import.meta.url)('brotli-wasm'))
+    : import('brotli-wasm').then(module => module.default)).catch(error => {
     codec = undefined;
     throw error;
   });
@@ -29,9 +33,9 @@ function fromBase64Url(payload) {
 export async function createSourceLink(href, source) {
   const bytes = new TextEncoder().encode(source);
   const raw = '0.' + toBase64Url(bytes);
-  const zstd = await loadCodec();
-  // Omit the level argument to use Zstandard's default compression level.
-  const compressed = '1.' + toBase64Url(zstd.compress(bytes));
+  const brotli = await loadCodec();
+  // Quality 6 balances URL size and interactive typing latency for TextGraph.
+  const compressed = '1.' + toBase64Url(brotli.compress(bytes, { quality: 6 }));
   const url = new URL(href);
   url.searchParams.set('d', compressed.length < raw.length ? compressed : raw);
   url.hash = '';

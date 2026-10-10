@@ -1,7 +1,8 @@
 # Dependency refresh — 2026-10-06
 
 Third-party direct dependencies use the current stable npm releases:
-Playwright 1.63.0, Peggy 5.1.0, wasm-zstd 1.16.2 and tar 7.5.22. The lockfile
+Playwright 1.63.0, Peggy 5.1.0 and tar 7.5.22. The share-link codec has since
+been replaced with brotli-wasm 3.0.1 at quality 6. The lockfile
 also refreshes transitive dependencies within their owners' compatible ranges.
 
 VitePress deliberately remains `2.0.0-alpha.19`; its stable npm `latest` tag

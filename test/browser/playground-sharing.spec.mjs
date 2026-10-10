@@ -7,7 +7,7 @@ async function delayCodec(page) {
   let requested;
   const gate = new Promise(resolve => { release = resolve; });
   const started = new Promise(resolve => { requested = resolve; });
-  await page.route('**/assets/chunks/dist.*.js', async route => {
+  await page.route('**/assets/brotli_wasm_bg.*.wasm', async route => {
     requested();
     await gate;
     await route.continue();
