@@ -54,7 +54,8 @@ homepage images and playground runtime assets are prepared by the Vite configura
 before bundling. Preparation cannot rely on npm `prebuild`/`predev` hooks: direct
 VitePress commands skip them, leaving Git-ignored assets absent in a clean checkout.
 
-The final build precompresses WASM, DLL, TTF and OTF files with Brotli quality 6
+The final build precompresses WASM, DLL and OTF files with Brotli quality 6,
+and TTF fonts with quality 11, font mode and the maximum standard window 24,
 at their original URLs. `.vitepress/dist/_headers` supplies `Content-Encoding: br`
 and the original MIME types for Cloudflare Pages. Browser HTTP decoding preserves
 the SDK manifests' original byte lengths and SHA-256 hashes. This output requires
@@ -68,6 +69,12 @@ and installed SDK/public source files remain uncompressed. SDK consumers can use
 their own hosting and compression policy; no `.br` files or special host headers
 are required by the packages. Stable runtime/font filenames revalidate their
 cache instead of using immutable caching.
+
+Monorepo builds reuse stored `.ttf.br` files generated alongside the editor's
+`static/files.json` by `npm run static:manifest`. Standalone builds cache encoded
+registry fonts by source hash under `.vitepress/cache/font-brotli`; fresh builds
+reuse those bytes unless the font or compression policy changes. Cache files
+are website build artifacts and never enter SDK distributions.
 
 ## Published documentation
 

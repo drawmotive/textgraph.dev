@@ -5,6 +5,8 @@ import { textgraphExamples } from './textgraph-examples.mjs'
 import { siteAssets } from './site-assets.mjs'
 import { localRuntimeManifestPlugin } from './local-runtime.mjs'
 import { prepareSiteBrotli } from '../scripts/site-brotli.mjs'
+import path from 'node:path'
+import { existsSync } from 'node:fs'
 
 const localRuntime = () => process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME && process.env.DRAWMOTIVE_TEXTGRAPH_SDK
   ? localRuntimeManifestPlugin(process.env.DRAWMOTIVE_TEXTGRAPH_SDK, process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME) : null
@@ -25,7 +27,15 @@ export default defineConfig(withTextGraph({
   vite: { plugins: [siteAssets(), localRuntime()], worker: { format: 'es', plugins: () => [localRuntime()] } },
   // Encode only the finished website; installed SDKs and copied public inputs
   // remain original bytes. Fetch supplies decoded bytes to their consumers.
-  buildEnd: async site => { await prepareSiteBrotli(site.outDir) },
+  buildEnd: async site => {
+    const fontsDirectory = path.resolve(site.root, '../../editor.client/wwwroot/static')
+    await prepareSiteBrotli(site.outDir, {
+      // Monorepo builds reuse committed fonts. Standalone registry builds cache
+      // quality-11 output by source hash without depending on sibling checkouts.
+      fontsDirectory: existsSync(path.join(fontsDirectory, 'files.brotli.json')) ? fontsDirectory : undefined,
+      cacheDirectory: path.join(site.root, '.vitepress/cache/font-brotli'),
+    })
+  },
   themeConfig: {
     nav: [
       { text: 'Docs', link: '/intro/what-is-textgraph' },

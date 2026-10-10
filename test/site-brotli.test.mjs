@@ -5,8 +5,9 @@ import path from 'node:path';
 import test from 'node:test';
 import { brotliCompressSync, brotliDecompressSync, constants } from 'node:zlib';
 import { prepareSiteBrotli, previewSite } from '../scripts/site-brotli.mjs';
+import { compressFont, fontCompression, fontHash } from '../scripts/font-brotli.mjs';
 
-test('only final site binaries are Brotli 6 encoded; original SDK assets and manifests remain intact', async t => {
+test('site uses Brotli 11 fonts and Brotli 6 WASM while original SDK assets and manifests remain intact', async t => {
   const root = await mkdtemp(path.join(tmpdir(), 'site-brotli-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const original = Buffer.from('Original SDK font and WASM bytes '.repeat(100));
@@ -30,9 +31,10 @@ test('only final site binaries are Brotli 6 encoded; original SDK assets and man
   assert.deepEqual(await readFile(path.join(sdk, 'font.ttf')), original);
   assert.equal(await readFile(path.join(dist, 'textgraph/wasm/manifest.json'), 'utf8'), manifest);
   const expected = brotliCompressSync(original, { params: { [constants.BROTLI_PARAM_QUALITY]: 6 } });
+  const fontEncoded = await compressFont(original);
   for (const file of ['textgraph/wasm/runtime.wasm', 'textgraph/fonts/font.ttf']) {
     const encoded = await readFile(path.join(dist, file));
-    assert.deepEqual(encoded, expected);
+    assert.deepEqual(encoded, file.endsWith('.ttf') ? fontEncoded : expected);
     assert.deepEqual(brotliDecompressSync(encoded), original);
   }
   const headers = await readFile(path.join(dist, '_headers'), 'utf8');
@@ -40,7 +42,51 @@ test('only final site binaries are Brotli 6 encoded; original SDK assets and man
   assert.ok(headers.includes('/*.wasm\n  Content-Type: application/wasm\n  Content-Encoding: br'));
   assert.ok(headers.includes('/*.ttf\n  Content-Type: font/ttf\n  Content-Encoding: br'));
   await assert.rejects(prepareSiteBrotli(dist), /already Brotli/);
-  assert.deepEqual(await readFile(path.join(dist, 'textgraph/fonts/font.ttf')), expected);
+  assert.deepEqual(await readFile(path.join(dist, 'textgraph/fonts/font.ttf')), fontEncoded);
+});
+
+test('site reuses stored maximum-compression fonts and refuses stale source or sidecar metadata', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'site-stored-font-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const source = path.join(root, 'static'), dist = path.join(root, 'dist');
+  await mkdir(source);
+  const raw = Buffer.from('Source TTF '.repeat(100)), encoded = await compressFont(raw);
+  const entry = { bytes: raw.length, sha256: fontHash(raw), compressedBytes: encoded.length, compressedSha256: fontHash(encoded) };
+  await writeFile(path.join(source, 'files.brotli.json'), JSON.stringify({ schemaVersion: 1, compression: fontCompression, fonts: { 'font.ttf': entry } }));
+  await writeFile(path.join(source, 'font.ttf.br'), encoded);
+  const rebuild = async () => {
+    await rm(dist, { recursive: true, force: true });
+    await mkdir(dist);
+    await writeFile(path.join(dist, 'font.ttf'), raw);
+  };
+  await rebuild();
+  assert.equal((await prepareSiteBrotli(dist, { fontsDirectory: source })).reusedFonts, 1);
+  assert.deepEqual(await readFile(path.join(dist, 'font.ttf')), encoded);
+  await rebuild();
+  await writeFile(path.join(dist, 'font.ttf'), 'Changed TTF');
+  await assert.rejects(prepareSiteBrotli(dist, { fontsDirectory: source }), /source changed/);
+  await rebuild();
+  await writeFile(path.join(source, 'font.ttf.br'), 'Corrupt sidecar');
+  await assert.rejects(prepareSiteBrotli(dist, { fontsDirectory: source }), /integrity mismatch/);
+});
+
+test('standalone site caches quality-11 fonts by source hash across fresh builds', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'site-cached-font-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const dist = path.join(root, 'dist'), cacheDirectory = path.join(root, 'cache');
+  const raw = Buffer.from('Registry package font '.repeat(100));
+  const rebuild = async () => {
+    await rm(dist, { recursive: true, force: true });
+    await mkdir(dist);
+    await writeFile(path.join(dist, 'font.ttf'), raw);
+    await writeFile(path.join(dist, 'duplicate.ttf'), raw);
+  };
+  await rebuild();
+  assert.equal((await prepareSiteBrotli(dist, { cacheDirectory })).reusedFonts, 1);
+  const expected = await readFile(path.join(dist, 'font.ttf'));
+  await rebuild();
+  assert.equal((await prepareSiteBrotli(dist, { cacheDirectory })).reusedFonts, 2);
+  assert.deepEqual(await readFile(path.join(dist, 'font.ttf')), expected);
 });
 
 test('preview returns HTTP-decoded binaries at original URLs, including site base and query hashes', async t => {
