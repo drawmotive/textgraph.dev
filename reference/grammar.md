@@ -6,7 +6,7 @@ Only flowcharts and directed graphs are implemented. This grammar also describes
 
 The TextGraph syntax is defined as a PEG ([Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar)) using [Peggy](https://peggyjs.org/) notation. This grammar is the canonical, unambiguous reference for what inputs are syntactically valid.
 
-Semantic rules — global names, single-group membership, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).
+Semantic rules — scoped names, unique short-name lookup, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).
 
 When the prose specification and this grammar disagree on a syntax question, the grammar takes precedence.
 
@@ -26,11 +26,11 @@ When the prose specification and this grammar disagree on a syntax question, the
 
 ## Group Endpoints
 
-A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, and comments. Grouped connection endpoints introduce node members directly.
+A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, and comments. Short grouped node endpoints introduce local members directly. Qualified references use dot-separated identifiers, such as `Backend.payment` or `platform.Backend.payment`; lookup and ambiguity are semantic rules.
 
 Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
 
-The grammar below is the executable canonical file, including its AST actions. `npm test` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and rejects dotted references and separate node decorations inside groups. Labels at the document root may contain literal braces.
+The grammar below is the executable canonical file, including its AST actions. `npm run test:grammar` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and qualified references while rejecting qualified group definitions and separate node decorations inside groups. Labels at the document root may contain literal braces.
 
 ## Grammar
 
@@ -39,8 +39,8 @@ The grammar below is the executable canonical file, including its AST actions. `
 // Version: v0.1
 //
 // This grammar is the canonical syntax reference for the TextGraph DSL.
-// It defines what inputs are syntactically valid. Semantic rules (global names,
-// single-group membership, type inference, style inheritance) are defined in the
+// It defines what inputs are syntactically valid. Semantic rules (scoped names,
+// unique short-name lookup, type inference, style inheritance) are defined in the
 // language specification.
 //
 // Notation: Peggy / PEG.js syntax
@@ -193,8 +193,8 @@ Node
   { return { ref, classes } }
 
 NamedReference
-  = id:Identifier
-  { return { type: "reference", path: [id] } }
+  = head:Identifier rest:("." Identifier)*
+  { return { type: "reference", path: [head, ...rest.map(part => part[1])] } }
 
 AnonymousNode
   = "[" _ text:AnonymousNodeText _ "]"
@@ -216,7 +216,7 @@ AnonymousNodeText
 //   a(fill primary)
 Declaration
   = !LabeledScopeStart ref:NamedReference classes:Classes? label:Label? _ EOL
-  { return { type: "declaration", id: ref.path[0], classes, label } }
+  { return { type: "declaration", id: ref.path.join("."), classes, label } }
 
 // Multi-node declaration: comma-separated identifiers sharing classes.
 // Only style classes are allowed — labels are not valid here.
@@ -224,7 +224,7 @@ Declaration
 //   x, y, z(fill primary)
 MultiNodeDeclaration
   = head:NamedReference _ "," _ rest:(NamedReference _ "," _)* last:NamedReference classes:Classes _ EOL
-  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path[0]), classes } }
+  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path.join(".")), classes } }
 
 
 // ───────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ LabeledScope
 
 // A failed labeled group must not become a node label through backtracking.
 LabeledScopeStart
-  = Identifier? _ Classes? ScopeHeaderLabel _ "{" _ Newline
+  = NamedReference? _ Classes? ScopeHeaderLabel _ "{" _ Newline
 
 ScopeEndpoint
   = id:Identifier? _ before:Classes? _ body:ScopeContents _ after:Classes?
@@ -283,8 +283,8 @@ ScopeHeaderLabel
   = _ ":" _ text:$( [^{\r\n]+ )
   { return text.trim() }
 
-// Bare members and named node endpoints of grouped connections claim this
-// group. Root connections and decorations never choose or change membership.
+// Bare members and short node endpoints create local members of this group.
+// Qualified references and root statements never choose or change membership.
 ScopeBody
   = lines:(_ !"}" line:ScopeLine { return line })*
   { return lines.filter(line => line.type !== "blank") }
@@ -371,9 +371,8 @@ ClassToken
 // ───────────────────────────────────────────────────────────────
 
 // Must start with a letter or underscore. May contain letters,
-// digits, hyphens, and underscores. Dots are NOT part of an
-// identifier and dotted references are invalid. Names identify one node
-// throughout the document. An arrow ends the identifier even without
+// digits, hyphens, and underscores. Dots separate identifiers in qualified
+// references; they are not part of an identifier. An arrow ends it even without
 // surrounding spaces: B->C is B, ->, C.
 Identifier
   = id:$( [a-zA-Z_] (!Arrow [a-zA-Z0-9_-])* )
@@ -393,6 +392,7 @@ FreeText
 // Otherwise a missing child endpoint or closing brace appears to parse.
 GraphStatementStart
   = LabeledScopeStart
+  / "." Identifier _ (Arrow / ":" / "(")
   / Identifier _ ("." / "," / ":" / "(")
   / (NamedReference / AnonymousNode) _ Classes? _ (Arrow / "{")
   / "{"

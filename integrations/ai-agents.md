@@ -39,7 +39,7 @@ Check that the preview matches your intended relationships. If the Playground re
 
 | Reference | Include it in the prompt? |
 | --- | --- |
-| [Language Specification](/reference/textgraph-spec) | Yes. It covers connections, labels, groups, global names, membership, and layout syntax. |
+| [Language Specification](/reference/textgraph-spec) | Yes. It covers connections, labels, groups, scoped names, short and qualified references, and layout syntax. |
 | [Syntax Reference](/reference/syntax) | Not needed alongside the specification; it is a shorter summary of the same syntax. |
 | [Style Classes](/reference/classes) | Include it when requesting shapes, colors, fills or line styles. The specification explains how classes bind, but delegates the available classes to this reference. |
 

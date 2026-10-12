@@ -2,8 +2,8 @@
 // Version: v0.1
 //
 // This grammar is the canonical syntax reference for the TextGraph DSL.
-// It defines what inputs are syntactically valid. Semantic rules (global names,
-// single-group membership, type inference, style inheritance) are defined in the
+// It defines what inputs are syntactically valid. Semantic rules (scoped names,
+// unique short-name lookup, type inference, style inheritance) are defined in the
 // language specification.
 //
 // Notation: Peggy / PEG.js syntax
@@ -156,8 +156,8 @@ Node
   { return { ref, classes } }
 
 NamedReference
-  = id:Identifier
-  { return { type: "reference", path: [id] } }
+  = head:Identifier rest:("." Identifier)*
+  { return { type: "reference", path: [head, ...rest.map(part => part[1])] } }
 
 AnonymousNode
   = "[" _ text:AnonymousNodeText _ "]"
@@ -179,7 +179,7 @@ AnonymousNodeText
 //   a(fill primary)
 Declaration
   = !LabeledScopeStart ref:NamedReference classes:Classes? label:Label? _ EOL
-  { return { type: "declaration", id: ref.path[0], classes, label } }
+  { return { type: "declaration", id: ref.path.join("."), classes, label } }
 
 // Multi-node declaration: comma-separated identifiers sharing classes.
 // Only style classes are allowed — labels are not valid here.
@@ -187,7 +187,7 @@ Declaration
 //   x, y, z(fill primary)
 MultiNodeDeclaration
   = head:NamedReference _ "," _ rest:(NamedReference _ "," _)* last:NamedReference classes:Classes _ EOL
-  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path[0]), classes } }
+  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path.join(".")), classes } }
 
 
 // ───────────────────────────────────────────────────────────────
@@ -232,7 +232,7 @@ LabeledScope
 
 // A failed labeled group must not become a node label through backtracking.
 LabeledScopeStart
-  = Identifier? _ Classes? ScopeHeaderLabel _ "{" _ Newline
+  = NamedReference? _ Classes? ScopeHeaderLabel _ "{" _ Newline
 
 ScopeEndpoint
   = id:Identifier? _ before:Classes? _ body:ScopeContents _ after:Classes?
@@ -246,8 +246,8 @@ ScopeHeaderLabel
   = _ ":" _ text:$( [^{\r\n]+ )
   { return text.trim() }
 
-// Bare members and named node endpoints of grouped connections claim this
-// group. Root connections and decorations never choose or change membership.
+// Bare members and short node endpoints create local members of this group.
+// Qualified references and root statements never choose or change membership.
 ScopeBody
   = lines:(_ !"}" line:ScopeLine { return line })*
   { return lines.filter(line => line.type !== "blank") }
@@ -334,9 +334,8 @@ ClassToken
 // ───────────────────────────────────────────────────────────────
 
 // Must start with a letter or underscore. May contain letters,
-// digits, hyphens, and underscores. Dots are NOT part of an
-// identifier and dotted references are invalid. Names identify one node
-// throughout the document. An arrow ends the identifier even without
+// digits, hyphens, and underscores. Dots separate identifiers in qualified
+// references; they are not part of an identifier. An arrow ends it even without
 // surrounding spaces: B->C is B, ->, C.
 Identifier
   = id:$( [a-zA-Z_] (!Arrow [a-zA-Z0-9_-])* )
@@ -356,6 +355,7 @@ FreeText
 // Otherwise a missing child endpoint or closing brace appears to parse.
 GraphStatementStart
   = LabeledScopeStart
+  / "." Identifier _ (Arrow / ":" / "(")
   / Identifier _ ("." / "," / ":" / "(")
   / (NamedReference / AnonymousNode) _ Classes? _ (Arrow / "{")
   / "{"

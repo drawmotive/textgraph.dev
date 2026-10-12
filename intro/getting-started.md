@@ -82,7 +82,7 @@ See [Style Classes](/reference/classes) for the full list of colors, shapes, bor
 
 ## Grouping
 
-Curly braces group nodes and their connections. Names are global, so cross-group connections use the same simple names as local connections. Connections inside a group introduce their node members directly; keep separate node labels and styles at the root.
+Curly braces group nodes and their connections. Connections inside a group create or reuse local node members directly. At the root, use a short name when it is unique in the diagram; add a group prefix only when names are duplicated. Keep separate node labels and styles at the root.
 
 ```textgraph example
 frontend {
@@ -108,7 +108,7 @@ db: PostgreSQL
 cache: Redis
 ```
 
-Each node can belong directly to one group. Root connections and decorations leave that membership unchanged, even when they appear before the groups.
+Different groups can each contain a node named `api`; use `frontend.api` and `backend.api` to distinguish them from the root. Inside each group, `api` always means its local node. Root connections and decorations leave membership unchanged, even when they appear before the groups.
 
 Groups map naturally to architectural tiers — frontend, backend, data — and keep the diagram organized as it grows.
 

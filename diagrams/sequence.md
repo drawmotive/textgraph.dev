@@ -730,9 +730,9 @@ cache(cylinder): Redis
 notify: Notification Service
 ```
 
-## Global Participant Names
+## Short and Qualified Participant Names
 
-The same identifier always refers to the same participant, including across groups. Grouped message connections and bare member names assign membership. Separate participant decorations and cross-group messages are root statements. Moving root statements before or after a group does not change membership.
+A short participant name inside a group identifies a local member. At the root, use a short name when it is unique in the diagram, or add a group prefix when duplicated. Grouped message connections introduce local participants directly. Separate participant decorations and cross-group messages are root statements. Moving root statements before or after a group does not change membership.
 
 ```text
 (sequence)
@@ -754,7 +754,7 @@ auth: Auth Service
 db(cylinder): PostgreSQL
 ```
 
-A participant can be a direct member of one group. Listing it in two different groups is invalid regardless of declaration order. Use distinct identifiers when different participants need the same display label. Group names are global too, and each named group is declared once. Dotted references and local shadowing are not supported.
+Different groups may each contain an `api` participant; `frontend.api` and `backend.api` distinguish them from the root. Unique short names remain sufficient at any nesting depth. Group names follow the same scope rules: different parents may reuse a name, while a named group is declared once in its parent. Declaration order never changes the meaning of a short participant name inside a group.
 
 ## Overlay Positioning
 
@@ -831,7 +831,7 @@ db(cylinder): DB
 
 ## Putting It All Together
 
-A comprehensive example: a multi-tier cloud authentication flow combining explicit declarations, shapes, colors, shared styles, groups by tier, combined fragments, global participant names, edge styles, overlay annotations, rich labels, and comments.
+A comprehensive example: a multi-tier cloud authentication flow combining explicit declarations, shapes, colors, shared styles, groups by tier, combined fragments, unique short participant names, edge styles, overlay annotations, rich labels, and comments.
 
 ```
 (sequence)

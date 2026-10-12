@@ -29,7 +29,7 @@ function captureDiagnostics(page) {
   return diagnostics;
 }
 
-test('playground resolves global members before or after containers and rejects conflicting ownership', async ({ page }) => {
+test('playground resolves unique short names and qualified duplicates independently of declaration order', async ({ page }) => {
   await page.goto('/playground');
   const editor = page.getByRole('textbox', { name: 'TextGraph source' });
   const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
@@ -38,7 +38,12 @@ test('playground resolves global members before or after containers and rejects 
   await expect(status).toHaveText('Preview up to date');
   const containers = 'Shopping { browse -> checkout }\nBackend { payment -> saved }';
   const references = 'checkout -> payment\ncheckout: Place an order\npayment(fill success): Take payment';
-  for (const source of [containers + '\n' + references, references + '\n' + containers]) {
+  const duplicateGroups = 'One { payment -> saved }\nTwo { payment -> receipt }';
+  const qualified = 'One.payment -> Two.payment\nsaved -> receipt\nOne.payment: Card payment\nTwo.payment: Cash payment';
+  const nested = 'Platform {\nFrontend { api }\nBackend { api }\n}\nFrontend.api -> Backend.api';
+  for (const source of [containers + '\n' + references, references + '\n' + containers,
+    containers + '\ncheckout -> Backend.payment', duplicateGroups, duplicateGroups + '\n' + qualified,
+    qualified + '\nTwo { payment -> receipt }\nOne { payment -> saved }', nested]) {
     const previousImage = await preview.getAttribute('src');
     await editor.fill(source);
     await expect(preview).not.toHaveAttribute('src', previousImage);
@@ -48,8 +53,9 @@ test('playground resolves global members before or after containers and rejects 
   }
   const validImage = await preview.getAttribute('src');
   for (const [source, diagnostic] of [
-    ['Shopping { checkout }\nBackend { checkout }', 'belongs to more than one group'],
-    [containers + '\ncheckout -> Backend.payment', 'Node names are global'],
+    [duplicateGroups + '\npayment -> saved', /ambiguous/i],
+    [duplicateGroups + '\npayment: Take payment', /ambiguous/i],
+    [duplicateGroups + '\npayment(ellipse)', /ambiguous/i],
     ['Shopping { checkout: Place an order }', 'standalone node labels'],
   ]) {
     await editor.fill(source);

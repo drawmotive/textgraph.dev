@@ -7,7 +7,7 @@ import test from 'node:test';
 import { copyLocalRuntime, localRuntimeManifestPlugin } from '../.vitepress/local-runtime.mjs';
 import { initializeTextGraph } from '@drawmotive/textgraph/node';
 
-test('published DSL examples satisfy native global identity and membership rules',
+test('published DSL examples satisfy native scoped identity and reference rules',
   { skip: !process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME }, async () => {
     const runtime = await initializeTextGraph();
     try {

@@ -120,15 +120,32 @@ test('external decorations use the same simple names as root connections', () =>
   assert.deepEqual(shared.ids, ['payment', 'checkout']);
 });
 
-test('qualified source references are rejected for every graph statement', () => {
-  for (const source of ['Backend.payment', 'checkout -> Backend.payment', 'Backend.payment -> checkout',
-    'Backend.payment: Take payment', 'Backend.payment(ellipse)', 'payment, Backend.saved(fill success)',
-    'Backend.payment, saved(fill success)', 'Backend { Backend.payment }']) {
-    assert.throws(() => parse(source), parser.SyntaxError, source);
-  }
+test('qualified references preserve their paths in connections and root decorations', () => {
+  const [connection, label, style, shared, nested] = parse(
+    'Frontend.api->Backend.api\nBackend.api: Service API\nBackend.api(ellipse)\nFrontend.api, Backend.api(fill success)\nPlatform { worker -> Other.services.api }');
+  assert.deepEqual(connection.head.ref.path, ['Frontend', 'api']);
+  assert.deepEqual(connection.rest[0].target.ref.path, ['Backend', 'api']);
+  assert.equal(label.id, 'Backend.api');
+  assert.equal(label.label, 'Service API');
+  assert.equal(style.id, 'Backend.api');
+  assert.deepEqual(style.classes, ['ellipse']);
+  assert.deepEqual(shared.ids, ['Frontend.api', 'Backend.api']);
+  assert.deepEqual(nested.body[0].rest[0].target.ref.path, ['Other', 'services', 'api']);
 });
 
-test('published diagrams and homepage inputs conform to the global-name grammar', async () => {
+test('group definitions use local names while qualified endpoint references remain valid', () => {
+  for (const source of ['Backend { Backend.payment }', 'Platform.Backend { payment }',
+    'Platform.Backend(primary): Services {\npayment\n}', 'Backend..payment -> checkout',
+    'Backend. -> checkout', '.payment -> checkout']) {
+    assert.throws(() => parse(source), parser.SyntaxError, source);
+  }
+  const [first, second, connection] = parse('One { api -> worker }\nTwo { api -> database }\nOne.api -> Two.api');
+  assert.deepEqual(first.body[0].head.ref.path, ['api']);
+  assert.deepEqual(second.body[0].head.ref.path, ['api']);
+  assert.deepEqual(connection.head.ref.path, ['One', 'api']);
+});
+
+test('published diagrams and homepage inputs conform to the scoped-name grammar', async () => {
   const documents = ['intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
     'reference/textgraph-spec.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',
     'integrations/ai-agents.md'];
@@ -172,7 +189,7 @@ test('compact grouped edge labels terminate at the owning brace', () => {
   assert.equal(outer.edgeLabel, 'outer');
   assert.equal(outer.rest[0].target.body[0].edgeLabel, 'inner {{value}}');
   assert.equal(decoration.label, 'Bee');
-  for (const source of ['G { B -> }', 'G { B -> C', 'G { B -> team.C }']) {
+  for (const source of ['G { B -> }', 'G { B -> C', 'G { B -> team..C }']) {
     assert.throws(() => parse(source), parser.SyntaxError, source);
   }
 });

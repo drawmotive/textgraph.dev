@@ -42,7 +42,7 @@ There are four connection types:
 
 An identifier is the reusable name for a node or group. Use a letter or underscore to begin a name, followed by letters, digits, hyphens, or underscores. For example: `a`, `myNode`, `api-server`, `_temp`.
 
-Names are global: every occurrence of an identifier refers to the same node or named group, regardless of order or containment. Use different identifiers for different nodes; their display labels may be identical. Dotted references such as `group1.m` are invalid.
+Inside a group, a short node name identifies a member of that group. Different groups may each contain a node named `api`; those nodes are distinct. At the document root, use a short name when it identifies exactly one node or group in the whole diagram. When the name is duplicated, add a group prefix such as `frontend.api`. A qualified reference is also valid when the short name is unique.
 
 Not every connection endpoint has an identifier. `[Label]` creates an **anonymous node** with the visible label `Label` but no reusable name. `{ ... }` creates an **anonymous group** with no reusable name or default title.
 
@@ -71,7 +71,7 @@ a -> b
 
 Both are equivalent. The renderer collects all declarations before laying out the diagram.
 
-Labels, styles, and connections always use the same global name. Write node decorations at the document root, including for nodes inside groups. A separate decoration line changes its label or appearance without changing its group membership. This lets you keep the structure together and put decorations at the end:
+Write node decorations at the document root, including for nodes inside groups. Use the short name when it is unique, or a group prefix when needed. A separate decoration line changes its label or appearance without changing its group membership. This lets you keep the structure together and put decorations at the end:
 
 ```textgraph example
 {
@@ -98,7 +98,7 @@ ship: Ship the package
 arrived(ellipse fill success): Package arrives
 ```
 
-Here `payment` always identifies the member of `Backend`. `checkout: Place an order` updates the member of `shopping` without changing its group. Decorations and connections may also precede the groups. Bare member lines and connection endpoints inside a group assign membership; claiming the same node in a second group is an error.
+Here `payment` identifies the only node with that name, the member of `Backend`. `checkout: Place an order` updates the member of `shopping` without changing its group. Decorations and root connections may also precede the groups. Bare member lines and short node endpoints inside each group create that group’s local members.
 
 ### Anonymous Nodes
 
@@ -312,7 +312,7 @@ api: API Gateway
 worker(fill success): Worker
 ```
 
-A grouped connection needs no bare predeclarations. Every named node endpoint claims the group containing that connection. Repeating a node in connections in the same group reuses it. Edge labels and inline endpoint or arrow styles work inside groups too:
+A grouped connection needs no bare predeclarations. Each short node endpoint creates or reuses a member of the containing group. It never captures a node from another group, even when that node was declared first. Edge labels and inline endpoint or arrow styles work inside groups too:
 
 ```text
 Left(vertical) {
@@ -325,21 +325,21 @@ C: Review
 D: Rejected
 ```
 
-A root connection may refer to any of these nodes without changing its group. Connecting nodes from different groups belongs at the root. A named group used as an endpoint references that existing group and never changes its parent; inline group endpoints declare nested groups with their own members. Anonymous node occurrences in grouped connections belong to the containing group.
+A root connection may refer to any of these nodes without changing its group. Write cross-group connections at the root; qualified endpoints also let a grouped connection explicitly reference an existing node elsewhere. A short endpoint matching a declared local group refers to that group; if no local member matches, it may also refer to a uniquely named declared group elsewhere. Duplicated external group names need a prefix. Group references never change their parent. Inline group endpoints declare nested groups with their own members. Anonymous node occurrences in grouped connections belong to the containing group.
 
-A node can be a direct member of one group. It is also visually inside that group’s ancestors. Mentioning a member at the document root does not remove it from its group. Membership does not depend on whether the connection, label, or group appeared first.
+A node is a direct member of the group where its local name is introduced. It is also visually inside that group’s ancestors. Root references and qualified references never change that membership. Reordering groups or moving root references before them does not change which nodes exist or where they belong.
 
-Listing the same node twice in one group still identifies one member. Listing it in two different groups is invalid; declaration order never selects an owner. If two different nodes need the same display text, give them different identifiers:
+Repeating a name in one group identifies the same member. Using that name in another group creates a distinct member. Outside those groups, qualify the duplicated name:
 
 ```text
-frontend { frontend_api }
-backend { backend_api }
-frontend_api -> backend_api
-frontend_api: API
-backend_api: API
+frontend { api -> browser }
+backend { api -> worker }
+frontend.api -> backend.api
+frontend.api: Browser API
+backend.api: Service API
 ```
 
-Named group identifiers are global too. Declare each named group once, then reuse its name in root connections or decorations. A node and a group cannot use the same name. A named group uses its identifier as the default title; use a header such as `backend(primary): Services {` or a separate root declaration `backend: Services` to change it.
+Named groups follow the same scope rules: different parents may contain groups with the same name. Declare a named group once within its parent. A node and a group cannot share a name in the same parent. Use a short group reference when unique, or qualify it when duplicated. A named group uses its identifier as the default title; use a header such as `backend(primary): Services {` or a separate root declaration `backend: Services` to change it.
 
 An anonymous group omits the identifier: `{ member }`. It has no default title or reusable name. Every separate anonymous group occurrence creates a distinct group. Empty named and anonymous groups are valid.
 
@@ -358,9 +358,9 @@ Both outer edges attach to the boundary of one `services` group. The grouped con
 
 Whitespace around braces and arrows is optional: `A->{B}->D` is valid. Put multiple members on separate lines. `A -> {} -> {}` contains two distinct empty anonymous groups. Nested groups may also appear inside an inline group body.
 
-### Global References
+### Short and Qualified References
 
-Use a node’s simple name everywhere. There is no local lookup, shadowing, or parent-path syntax:
+At the document root, a unique short name reaches a node or group at any depth. The renderer collects group members before resolving root references, so these connections and decorations may precede the groups:
 
 ```text
 checkout -> payment
@@ -374,4 +374,8 @@ Backend {
 }
 ```
 
-Moving the root connections and decorations before or after the groups leaves node identity and membership unchanged. Dotted references such as `Backend.payment` are invalid. If a node is not introduced by a bare member line or connection in any group, it belongs to the document root.
+`payment` and `Backend.payment` both reference the same member here. If no node or group has a root short reference’s name, that reference introduces an ungrouped node. A qualified reference must identify an existing node or group; it never creates a missing path.
+
+When several subjects have the same short name, a root reference using only that name is ambiguous. Add enough trailing group names to identify one subject. For example, when `platform` contains `frontend { api }` and `backend { api }`, use `frontend.api` and `backend.api`; the full paths `platform.frontend.api` and `platform.backend.api` also work. If `frontend` itself appears under multiple parents, include the next parent name as needed.
+
+Inside a group, short node names always refer to that group’s local members. `Group1 { node1 }` followed by `Group2 { node1 -> node2 }` creates `Group1.node1`, `Group2.node1`, and `Group2.node2`, in either declaration order. Use `Group1.node1` explicitly when a grouped connection should reach the other node. Group declaration headers and bare member lines use simple local identifiers, not qualified paths.

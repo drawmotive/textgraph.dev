@@ -6,7 +6,7 @@ Bare identifiers denote nodes, arrows denote relationships, parentheses apply st
 
 ## Identifiers
 
-Node and group names must start with a letter or underscore, and may contain letters, digits, hyphens, and underscores. Each name identifies one object throughout the diagram. Use different names for different objects, even when their display labels match. Dotted references are invalid. Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
+Node and group names must start with a letter or underscore, and may contain letters, digits, hyphens, and underscores. Names inside a group identify local members. Different groups may contain different objects with the same name. Outside the groups, a unique short name is enough; duplicated names need a group prefix such as `Backend.api`. Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
 
 ## Connections
 
@@ -115,9 +115,9 @@ checkout: Place an order
 payment(fill success): Take payment
 ```
 
-A grouped connection needs no bare predeclarations: its named node endpoints claim the containing group. Referencing a named group as an endpoint reuses that group without moving it. Inline endpoint and edge styles remain valid; separate node decorations stay at the root.
+A grouped connection needs no bare predeclarations: each short node endpoint creates or reuses a local member of the containing group. Declared group endpoints can also use a unique short name; prefer a local member when present. Qualified endpoints explicitly reference existing nodes or groups without moving them. Inline endpoint and edge styles remain valid; separate node decorations stay at the root.
 
-Each node has one global name and can be a direct member of one group. A root connection or decoration always refers to that same node and leaves its membership unchanged. Connections and decorations may appear before or after the groups. Listing one node in two different groups is an error, regardless of order.
+The same name in two groups creates two distinct nodes. Root connections and decorations resolve a unique short name across the whole diagram, or a qualified name when the short name is duplicated. They leave membership unchanged and may appear before or after the groups. Group order never changes the meaning of a short name inside a group.
 
 Groups may nest:
 
@@ -131,7 +131,7 @@ api: API
 worker: Worker
 ```
 
-Named groups use their names as default titles. Group names are global and each named group is declared once. A separate root declaration such as `services: Services` changes the title. A node and a group cannot share a name.
+Named groups use their names as default titles. Different parents may contain groups with the same name; declare each named group once in its parent. A separate root declaration such as `services: Services` changes the title when that name is unique. A node and a group cannot share a name in the same parent.
 
 An anonymous `{ B }` group has no name or default title. Each anonymous group occurrence is distinct. Empty groups are valid: `A -> {}` connects to an empty anonymous group. Multiple members must be on separate lines.
 
@@ -145,19 +145,19 @@ A -> {
 
 Both outer edges attach to one group boundary. The grouped `B -> C` connection introduces and connects its children. Use a named group when it needs to be reused by another statement.
 
-## Global References
+## Short and Qualified References
 
-Use a simple name to connect or decorate any named node, including members of deeply nested groups. There is no local lookup or shadowing, and dotted references such as `Backend.payment` are invalid.
-
-To give different nodes the same visible label, use different identifiers:
+Use a short name to connect or decorate a node or group when the name is unique across the diagram. `payment` and `Backend.payment` can both refer to the only `payment` node. With duplicated names, add a group prefix:
 
 ```text
-Frontend { frontend_api }
-Backend { backend_api }
-frontend_api -> backend_api
-frontend_api: API
-backend_api: API
+Frontend { api -> browser }
+Backend { api -> worker }
+Frontend.api -> Backend.api
+Frontend.api: Browser API
+Backend.api: Service API
 ```
+
+Use the shortest unique trailing group path for nested members, such as `services.api` or `platform.services.api`. Inside a group, an unqualified node name always creates or reuses a local member; use a qualified endpoint to refer elsewhere. A qualified reference must already exist. If no subject has a root short reference’s name, that root statement introduces an ungrouped node.
 
 A node not introduced by any group body belongs to the document root.
 

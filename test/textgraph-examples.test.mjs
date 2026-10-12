@@ -68,7 +68,7 @@ test('the published Connection Types example renders all mixed edge operators', 
   }
 });
 
-test('the published grouped shopping example accepts trailing decorations and global names', async () => {
+test('the published grouped shopping example accepts trailing decorations and unique short names', async () => {
   const document = await readFile(new URL('../reference/textgraph-spec.md', import.meta.url), 'utf8');
   const source = document.split('```textgraph example\n')[1]?.split('\n```')[0];
   assert.ok(source?.includes('checkout -> payment'));
@@ -80,21 +80,63 @@ test('the published grouped shopping example accepts trailing decorations and gl
     const result = await runtime.renderPng(source);
     assert.equal(result.success, true, JSON.stringify(result.diagnostics));
     assert.deepEqual(Array.from(result.png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
-    for (const groups of ['One { payment }\nTwo { payment }', 'Two { payment }\nOne { payment }',
-      'One { payment -> saved }\nTwo { payment }', 'Two { payment }\nOne { payment -> saved }']) {
-      const conflict = await runtime.validate(groups + '\npayment: Take payment');
-      assert.equal(conflict.valid, false);
-      assert.ok(conflict.diagnostics.some(diagnostic => diagnostic.severity === 'error'));
-    }
     const grouped = await runtime.validate('Backend { payment -> saved : stored }\ncheckout -> payment');
     assert.equal(grouped.valid, true);
     const namedGroupEndpoint = await runtime.validate('One { worker -> Two }\nTwo { payment }');
     assert.equal(namedGroupEndpoint.valid, true);
     const reordered = source.split('\n\n');
     assert.equal((await runtime.validate([...reordered.slice(3), ...reordered.slice(0, 3)].join('\n\n'))).valid, true);
-    for (const invalid of ['Backend.payment -> checkout', 'Backend { payment: Take payment }',
+    assert.equal((await runtime.validate(source + '\nBackend.payment -> checkout')).valid, true);
+    for (const invalid of ['Backend { payment: Take payment }',
       'Backend { payment(ellipse) }']) {
       assert.equal((await runtime.validate(invalid)).valid, false, invalid);
+    }
+  } finally { await runtime.dispose(); }
+});
+
+test('duplicated member names use prefixes while unique root references remain short', async () => {
+  const runtime = await initializeTextGraph();
+  try {
+    const groups = ['One { payment -> saved }', 'Two { payment -> receipt }'];
+    const references = 'One.payment -> Two.payment\nsaved -> receipt\nOne.payment: Card payment\nTwo.payment(fill success): Cash payment';
+    for (const order of [groups, groups.toReversed()]) {
+      const definitions = order.join('\n');
+      for (const source of [definitions, definitions + '\n' + references, references + '\n' + definitions]) {
+        const validation = await runtime.validate(source);
+        assert.equal(validation.valid, true, source + '\n' + JSON.stringify(validation.diagnostics));
+      }
+      for (const reference of ['payment -> saved', 'payment: Take payment', 'payment(ellipse)',
+        'payment, saved(fill success)']) {
+        const ambiguous = await runtime.validate(definitions + '\n' + reference);
+        assert.equal(ambiguous.valid, false, reference);
+        assert.ok(ambiguous.diagnostics.some(diagnostic => diagnostic.severity === 'error'
+          && /ambiguous/i.test(diagnostic.message)));
+      }
+    }
+    const rendered = await runtime.renderPng(groups.join('\n') + '\n' + references);
+    assert.equal(rendered.success, true, JSON.stringify(rendered.diagnostics));
+    const qualifiedUnique = await runtime.validate('Backend { payment }\nBackend.payment -> checkout\npayment: Take payment');
+    assert.equal(qualifiedUnique.valid, true);
+    const groupedReference = await runtime.validate('One { worker -> Two.payment }\nTwo { payment }');
+    assert.equal(groupedReference.valid, true);
+    const unknown = await runtime.validate('Backend { payment }\nBackend.missing -> checkout');
+    assert.equal(unknown.valid, false);
+  } finally { await runtime.dispose(); }
+});
+
+test('nested member and group references accept the shortest unique trailing path', async () => {
+  const runtime = await initializeTextGraph();
+  try {
+    for (const source of [
+      'Platform {\nFrontend { api }\nBackend { api }\n}\nFrontend.api -> Backend.api\nPlatform.Frontend.api: Browser API',
+      'One { services { api } }\nTwo { services { api } }\nOne.services -> Two.services\nOne.services.api -> Two.services.api',
+    ]) {
+      const validation = await runtime.validate(source);
+      assert.equal(validation.valid, true, source + '\n' + JSON.stringify(validation.diagnostics));
+    }
+    for (const reference of ['services -> finish', 'services.api -> finish']) {
+      const validation = await runtime.validate('One { services { api } }\nTwo { services { api } }\n' + reference);
+      assert.equal(validation.valid, false, reference);
     }
   } finally { await runtime.dispose(); }
 });

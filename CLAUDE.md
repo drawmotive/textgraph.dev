@@ -26,11 +26,13 @@ npm run preview # Preview built site
 
 The public language contract is in `reference/textgraph-spec.md` and `reference/syntax.md`. The executable PEG in `reference/grammar.peg` is mirrored in `reference/grammar.md`; update them together and run `npm run test:grammar`.
 
-- Each name identifies one node or named group throughout a diagram.
-- A node can be a direct member of one group. Root mentions never change membership.
+- Short node names inside a group create or reuse local members. The same name in different groups identifies distinct nodes.
+- Root references resolve unique short names across the diagram, or qualified paths when names are duplicated. They never change membership.
 - Group bodies contain connections, bare member names, nested group blocks, and comments.
 - Connections inside groups introduce their node members. Cross-group connections and separate node decorations belong at the document root.
-- Declare each named group once. Use simple global references; dotted paths and shadowing are invalid.
+- A grouped endpoint can reference a declared local group or a uniquely named external group; explicit qualified endpoints can reference other existing subjects.
+- Declare each named group once within its parent. Different parents may reuse a group name.
+- Qualified references may use the shortest unique trailing group path and must identify an existing node or group. Group headers and bare member lines use simple local names.
 - Distinct identifiers may have identical display labels. Anonymous nodes and groups remain distinct occurrences.
 
 Only flowcharts and directed graphs are available. Sequence diagrams, mind maps, and slides remain excluded feature drafts. Preserve historical execution evidence under `docs/superpowers/` and research under `design/`.

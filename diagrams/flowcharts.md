@@ -275,7 +275,7 @@ Render it with the [Markdown & VitePress plugin](/integrations/markdown) or prev
 
 ## Groups and Scopes
 
-Curly braces declare group membership. Every name identifies one node throughout the diagram. Group bodies contain connections, bare member names, nested groups, and comments. A connection inside a group introduces its node members directly; put cross-group connections and separate node decorations at the document root.
+Curly braces declare group membership. Group bodies contain connections, bare member names, nested groups, and comments. A connection inside a group creates or reuses local node members directly; put cross-group connections and separate node decorations at the document root.
 
 ```textgraph example
 frontend {
@@ -302,7 +302,7 @@ db: PostgreSQL
 cache: Redis
 ```
 
-Connections use simple names, including across group boundaries. Moving a connection or decoration before or after the groups leaves membership unchanged.
+At the root, connections use short names when they are unique across the diagram. Add a group prefix only when needed to distinguish duplicated names. Moving a root connection or decoration before or after the groups leaves membership unchanged.
 
 ### Named and Styled Groups
 
@@ -334,7 +334,7 @@ browser: Browser
 cdn: CDN
 ```
 
-Group names are global, and each named group is declared once. Reuse its simple name in root connections or decorations. A node and a group cannot share a name.
+Declare each named group once in its parent. Different parents may contain groups with the same name. Use a unique short name or a qualified path in root connections or decorations. A node and a group cannot share a name in the same parent.
 
 ### Anonymous Groups
 
@@ -391,7 +391,7 @@ In the last example, `bold` styles the edge because it follows the arrow; `horiz
 
 ### Nested Groups
 
-Groups can nest. Each group has independent layout, while names remain global:
+Groups can nest. Each group has independent layout. Unique short names still work from the root, even for deeply nested members:
 
 ```textgraph example
 platform {
@@ -458,23 +458,25 @@ lat: Latency
 err: Error Rate
 ```
 
-## Global Node Names
+## Short and Qualified Names
 
-Connections and decorations always reuse the same named node, whether it is grouped or at the root. A node can be a direct member of one group; listing it in two different groups is an error in either declaration order. Root mentions never choose or change a group.
+Inside a group, a short node name always identifies a local member. Another group may use the same name for a distinct node. At the root, use the short name when it is unique, or qualify it when duplicated. Root references never choose or change a group.
 
-For two distinct nodes with the same visible label, choose different identifiers:
+Two groups can each contain an `api` node without extra declarations:
 
 ```textgraph example
 frontend {
-  frontend_api
+  api -> browser
 }
 backend {
-  backend_api
+  api -> worker
 }
 
-frontend_api -> backend_api
-frontend_api: API
-backend_api: API
+frontend.api -> backend.api
+frontend.api: Browser API
+backend.api: Service API
 ```
 
-There is no local lookup or shadowing. Dotted references such as `frontend.api` are invalid; use the node’s global identifier. Connections and decorations may appear before or after group declarations.
+`api` alone is ambiguous at the root in this example; `frontend.api` and `backend.api` identify the two nodes. `browser` and `worker` are unique, so their short names remain sufficient. Qualified references also work for unique names. For nested nodes, include only enough trailing group names to make the path unique, such as `backend.api` instead of `platform.backend.api`.
+
+Reversing the two group declarations produces the same nodes and membership. Root connections and decorations may precede the groups too. A grouped connection can explicitly reach another group with a qualified endpoint, such as `browser -> backend.api`; that reference does not move `backend.api`.

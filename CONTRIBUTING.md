@@ -42,7 +42,7 @@ version, URL and integrity together; do not use developer-local packages as
 public release inputs. Run `npm run build:release` for coordinated version
 and installed-dependency validation before a release build.
 
-For syntax and documentation changes, run `npm run test:grammar` to check the executable PEG and published diagram inputs. `npm run test:dsl` also verifies source links and homepage analytics for those inputs. Group bodies contain connections, bare member names, nested groups, and comments. Separate node decorations and cross-group connections belong at the root. Names are global, each named group is declared once, and each node can be a direct member of one group.
+For syntax and documentation changes, run `npm run test:grammar` to check the executable PEG and published diagram inputs. `npm run test:dsl` also verifies source links and homepage analytics for those inputs. Group bodies contain connections, bare local member names, nested groups, and comments. Separate node decorations and cross-group connections belong at the root. Short node names inside a group are local; root references use unique short names or group-qualified paths when names are duplicated. Declare a named group once within its parent.
 
 Keep pull requests focused and report checks actually run. Verify new examples
 with the pinned SDK; invalid published diagrams fail the build. Update

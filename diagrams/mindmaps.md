@@ -242,7 +242,7 @@ net: Network
 
 ## Nested Groups Inside a Mind Map
 
-Ordinary `{}` groups contain connections and bare member names and have independent layout. A grouped connection introduces its node members directly. Put separate node decorations and cross-group connections at the document root, using the same global identifiers.
+Ordinary `{}` groups contain connections and bare member names and have independent layout. A grouped connection creates or reuses local node members directly. Put separate node decorations and cross-group connections at the document root, using short names when unique and group prefixes when duplicated.
 
 ```
 platform(mindmap) {
@@ -270,7 +270,7 @@ auth: Auth Service
 worker: Worker
 ```
 
-Each `{}` group arranges its members independently. Node names are global, and a node can be a direct member of one group. Dotted references and local shadowing are not supported.
+Each `{}` group arranges its members independently. Short node names inside a group always identify its local members. Different groups may reuse a name; root references then need a group prefix such as `backend.api`. A unique short name works from the root at any nesting depth.
 
 ## Explicit Connections Alongside the Tree
 

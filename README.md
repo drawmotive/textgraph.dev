@@ -80,7 +80,7 @@ are website build artifacts and never enter SDK distributions.
 
 The navigation and `srcExclude` list in `.vitepress/config.mts` define the public documentation. Pages for unfinished features and internal design documents stay in the repository but are excluded from generated routes and local search. Add them back only when their features work and their examples have been verified with the published SDK. Earlier design material from mixed reference pages remains in Git history.
 
-Markdown integrations use fenced `textgraph` code blocks. The public syntax and language references describe current usage. The unpublished PEG grammar also retains feature drafts, while its graph rules enforce global names and membership claimed by group members and connections. Run `npm run test:grammar` to verify the grammar and published diagram inputs without building the site or renderer.
+Markdown integrations use fenced `textgraph` code blocks. The public syntax and language references describe current usage. The unpublished PEG grammar also retains feature drafts, while its graph rules support local members and short or group-qualified references. Run `npm run test:grammar` to verify the grammar and published diagram inputs without building the site or renderer.
 
 The sidebar follows **Learn TextGraph → Use TextGraph → Build applications → Reference**. The editor extends the language into visual editing after the renderer SDK. Runnable demos belong to their integration guides and the **SDK demos** menu, rather than independent sidebar chapters; the Playground is the everyday text authoring tool. This keeps learning topics, authoring tools and implementation samples from competing at the same level. Existing routes remain stable.
 
