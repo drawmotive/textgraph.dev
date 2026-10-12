@@ -378,4 +378,6 @@ Backend {
 
 When several subjects have the same short name, a root reference using only that name is ambiguous. Add enough trailing group names to identify one subject. For example, when `platform` contains `frontend { api }` and `backend { api }`, use `frontend.api` and `backend.api`; the full paths `platform.frontend.api` and `platform.backend.api` also work. If `frontend` itself appears under multiple parents, include the next parent name as needed.
 
+A qualified reference first matches a complete path from the document root, then tries unique trailing paths. With `Left { A }` and `Outer { Left { A } }`, `Left.A` selects the top-level member and `Outer.Left.A` selects the nested member. The short names `A` and `Left` remain ambiguous at the root.
+
 Inside a group, short node names always refer to that group’s local members. `Group1 { node1 }` followed by `Group2 { node1 -> node2 }` creates `Group1.node1`, `Group2.node1`, and `Group2.node2`, in either declaration order. Use `Group1.node1` explicitly when a grouped connection should reach the other node. Group declaration headers and bare member lines use simple local identifiers, not qualified paths.

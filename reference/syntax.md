@@ -159,6 +159,8 @@ Backend.api: Service API
 
 Use the shortest unique trailing group path for nested members, such as `services.api` or `platform.services.api`. Inside a group, an unqualified node name always creates or reuses a local member; use a qualified endpoint to refer elsewhere. A qualified reference must already exist. If no subject has a root short reference’s name, that root statement introduces an ungrouped node.
 
+A complete qualified path from the document root takes precedence over a trailing-path match. If both `Left.A` and `Outer.Left.A` exist, `Left.A` selects the top-level node; short `A` and `Left` references remain ambiguous.
+
 A node not introduced by any group body belongs to the document root.
 
 ## `[]` — Anonymous Node

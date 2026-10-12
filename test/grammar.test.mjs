@@ -145,6 +145,14 @@ test('group definitions use local names while qualified endpoint references rema
   assert.deepEqual(connection.head.ref.path, ['One', 'api']);
 });
 
+test('complete and trailing group paths preserve distinct qualified references', () => {
+  const [left, outer, connection] = parse('Left { A }\nOuter { Left { A } }\nLeft.A -> Outer.Left.A');
+  assert.equal(left.id, 'Left');
+  assert.equal(outer.body[0].id, 'Left');
+  assert.deepEqual(connection.head.ref.path, ['Left', 'A']);
+  assert.deepEqual(connection.rest[0].target.ref.path, ['Outer', 'Left', 'A']);
+});
+
 test('published diagrams and homepage inputs conform to the scoped-name grammar', async () => {
   const documents = ['intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
     'reference/textgraph-spec.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',

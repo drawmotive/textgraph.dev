@@ -140,3 +140,24 @@ test('nested member and group references accept the shortest unique trailing pat
     }
   } finally { await runtime.dispose(); }
 });
+
+test('complete qualified paths take precedence while duplicated short names remain ambiguous', async () => {
+  const runtime = await initializeTextGraph();
+  try {
+    const groups = ['Left { A }', 'Outer { Left { A } }'];
+    const references = 'Left.A -> Outer.Left.A\nLeft.A: Top-level member\nOuter.Left.A: Nested member';
+    for (const order of [groups, groups.toReversed()]) {
+      const definitions = order.join('\n');
+      for (const source of [definitions + '\n' + references, references + '\n' + definitions]) {
+        const validation = await runtime.validate(source);
+        assert.equal(validation.valid, true, source + '\n' + JSON.stringify(validation.diagnostics));
+      }
+      for (const reference of ['A -> finish', 'Left -> finish']) {
+        const validation = await runtime.validate(definitions + '\n' + reference);
+        assert.equal(validation.valid, false, reference);
+        assert.ok(validation.diagnostics.some(diagnostic => diagnostic.severity === 'error'
+          && /ambiguous/i.test(diagnostic.message)));
+      }
+    }
+  } finally { await runtime.dispose(); }
+});

@@ -8,6 +8,8 @@ The TextGraph syntax is defined as a PEG ([Parsing Expression Grammar](https://e
 
 Semantic rules — scoped names, unique short-name lookup, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).
 
+Qualified lookup prefers a complete path from the document root before matching a unique trailing path. This precedence and short-name ambiguity are semantic rules, not grammar choices.
+
 When the prose specification and this grammar disagree on a syntax question, the grammar takes precedence.
 
 ## Notation
