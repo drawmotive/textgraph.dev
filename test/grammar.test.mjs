@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import peggy from 'peggy';
+import { homeExamples } from '../.vitepress/home/examples.mjs';
 
 const grammar = await readFile(new URL('../reference/grammar.peg', import.meta.url), 'utf8');
 const parser = peggy.generate(grammar);
@@ -15,32 +16,29 @@ test('the published grammar is the executable canonical grammar', async () => {
   assert.equal(published, grammar.replace(/\r\n/g, '\n').trimEnd());
 });
 
-test('inline empty groups and compact nested chains are structural endpoints', () => {
+test('inline empty groups and compact nested membership are structural endpoints', () => {
   const [empty] = parse('A->{}');
   assert.equal(empty.type, 'connection');
-  assert.equal(empty.rest[0].target.type, 'scope');
   assert.equal(empty.rest[0].target.id, null);
   assert.deepEqual(empty.rest[0].target.body, []);
 
-  const [chain] = parse('A->{B->{C->D}}->E');
+  const [chain] = parse('A->{B{C}}->D');
   assert.equal(chain.rest.length, 2);
-  const group = chain.rest[0].target;
-  assert.equal(group.body[0].type, 'connection');
-  assert.equal(group.body[0].head.ref.path[0], 'B');
-  assert.equal(group.body[0].rest[0].target.body[0].head.ref.path[0], 'C');
-  assert.equal(chain.rest[1].target.ref.path[0], 'E');
+  assert.equal(chain.rest[0].target.body[0].id, 'B');
+  assert.equal(chain.rest[0].target.body[0].body[0].id, 'C');
+  assert.deepEqual(chain.rest[1].target.ref.path, ['D']);
 });
 
-test('groups support source, named target, nesting and multiline body positions', () => {
-  const [connection] = parse('{B->C}->D{E->F}->{}');
+test('groups support source, named target, nesting and multiline membership', () => {
+  const [connection] = parse('{B}->D{C}->{}');
   assert.equal(connection.head.type, 'scope');
   assert.equal(connection.rest[0].target.id, 'D');
+  assert.equal(connection.rest[0].target.body[0].id, 'C');
   assert.equal(connection.rest[1].target.id, null);
-  assert.equal(connection.rest[0].target.body[0].rest[0].target.ref.path[0], 'F');
 
-  const [multiline] = parse('A -> {\n  B -> C\n  D { E -> F }\n} -> G\n');
+  const [multiline] = parse('A -> {\n  B\n  C { D }\n} -> E\n');
   assert.equal(multiline.rest[0].target.body.length, 2);
-  assert.equal(multiline.rest[0].target.body[1].id, 'D');
+  assert.equal(multiline.rest[0].target.body[1].id, 'C');
 });
 
 test('class binding distinguishes arrows, named groups and anonymous groups', () => {
@@ -55,71 +53,92 @@ test('class binding distinguishes arrows, named groups and anonymous groups', ()
   assert.equal(anonymous.rest[0].target.classes, null);
 });
 
-test('scope labels stop at their closing brace and outer edge labels stay outside', () => {
-  const [connection] = parse('A->{B: Bee}->C: outer');
-  assert.equal(connection.rest[0].target.body[0].label, 'Bee');
+test('root decorations preserve literal braces and edge labels stay outside groups', () => {
+  const [connection, label] = parse('A->{B}->C: outer\nB: {{value}}');
   assert.equal(connection.edgeLabel, 'outer');
-  const [nested] = parse('A->{B->C: inner}->D: outer');
-  assert.equal(nested.rest[0].target.body[0].edgeLabel, 'inner');
-  assert.equal(nested.edgeLabel, 'outer');
-  const [literal] = parse('A: {{value}}');
-  assert.equal(literal.label, '{{value}}');
-  const [containedLiteral] = parse('{B: {{value}}}->A');
-  assert.equal(containedLiteral.head.body[0].label, '{{value}}');
+  assert.equal(label.label, '{{value}}');
 });
 
 test('every arrow operator separates compact identifiers and group endpoints', () => {
   for (const [operator, arrow] of [['->', 'forward'], ['<-', 'backward'], ['<->', 'bidi'], ['--', 'undirected']]) {
-    const [connection] = parse(`A${operator}{B${operator}C}`);
-    assert.equal(connection.type, 'connection');
-    assert.equal(connection.head.ref.path[0], 'A');
+    const [connection] = parse('A' + operator + '{B}');
+    assert.deepEqual(connection.head.ref.path, ['A']);
     assert.equal(connection.rest[0].arrow, arrow);
-    assert.equal(connection.rest[0].target.body[0].rest[0].arrow, arrow);
+    assert.equal(connection.rest[0].target.body[0].id, 'B');
   }
   const [chain] = parse('A->{}->{}');
   assert.equal(chain.rest.length, 2);
   assert.notEqual(chain.rest[0].target, chain.rest[1].target);
 });
 
+test('group bodies reject connections, node decorations, shared styles and free text', () => {
+  for (const statement of ['B -> C', 'B: Bee', 'B(ellipse)', 'B, C(fill primary)', '(horizontal)', '[Bee]', 'plain text']) {
+    for (const source of ['G {\n' + statement + '\n}', 'G(info): Group {\n' + statement + '\n}', 'A -> {\n' + statement + '\n}']) {
+      assert.throws(() => parse(source), parser.SyntaxError, source);
+    }
+  }
+});
+
 test('missing endpoints and unmatched group braces cannot fall back to free text', () => {
-  for (const source of ['A->{B->}', 'A->{B->{}', 'A->{}}', 'A->{B->C', '{B->C}->']) {
+  for (const source of ['A->{B', 'A->{B{C}', 'A->{}}', '{B}->']) {
     assert.throws(() => parse(source), parser.SyntaxError, source);
   }
 });
 
-test('existing named groups, references and anonymous node literals remain valid', () => {
-  const [scope, title, connection] = parse('D { B->C }\nD: Services\nD->team.api->[Label](dashed)\n');
-  assert.equal(scope.id, 'D');
+test('named groups, root references and anonymous node literals remain valid', () => {
+  const [group, title, connection] = parse('D { B }\nD: Services\nD->B->[Label](dashed)\n');
+  assert.equal(group.id, 'D');
   assert.equal(title.label, 'Services');
-  assert.deepEqual(connection.rest[0].target.ref.path, ['team', 'api']);
+  assert.deepEqual(connection.rest[0].target.ref.path, ['B']);
   assert.equal(connection.rest[1].target.ref.label, 'Label');
   assert.deepEqual(connection.rest[1].target.classes, ['dashed']);
-  const [header] = parse('D(horizontal): Services {\nB->C\n}');
+  const [header] = parse('D(horizontal): Services {\nB\n}');
   assert.equal(header.label, 'Services');
-  assert.equal(header.body[0].type, 'connection');
-  const [literal] = parse('D: Services { B->C }');
-  assert.equal(literal.type, 'declaration');
-  assert.equal(literal.label, 'Services { B->C }');
+  assert.equal(header.body[0].id, 'B');
+  const [literal] = parse('D: Services { literal text }');
+  assert.equal(literal.label, 'Services { literal text }');
 });
 
-test('standalone and nested groups share endpoint postfix style syntax', () => {
-  const [anonymous, named, nested] = parse('{B}(horizontal)\nD{C}(vertical)\n{ {E}(dashed) }');
-  assert.equal(anonymous.type, 'scope');
+test('standalone and nested groups share endpoint postfix style syntax and comments', () => {
+  const [anonymous, named, nested] = parse('{B}(horizontal)\nD{C}(vertical)\n{\n<!-- members -->\n{E}(dashed)\n}');
   assert.deepEqual(anonymous.classes, ['horizontal']);
   assert.equal(named.id, 'D');
   assert.deepEqual(named.classes, ['vertical']);
-  assert.deepEqual(nested.body[0].classes, ['dashed']);
+  assert.equal(nested.body[0].type, 'comment');
+  assert.deepEqual(nested.body[1].classes, ['dashed']);
 });
 
-test('external decorations accept bare names and qualified references', () => {
+test('external decorations use the same simple names as root connections', () => {
   const [group, connection, label, style, shared] = parse(
-    'Backend { payment }\ncheckout -> payment\npayment: Take payment\nBackend.payment(ellipse)\nBackend.payment, checkout(fill success)');
+    'Backend { payment }\ncheckout -> payment\npayment: Take payment\npayment(ellipse)\npayment, checkout(fill success)');
   assert.equal(group.body[0].id, 'payment');
   assert.deepEqual(connection.rest[0].target.ref.path, ['payment']);
   assert.equal(label.id, 'payment');
   assert.equal(label.label, 'Take payment');
-  assert.equal(style.id, 'Backend.payment');
+  assert.equal(style.id, 'payment');
   assert.deepEqual(style.classes, ['ellipse']);
-  assert.deepEqual(shared.ids, ['Backend.payment', 'checkout']);
-  assert.deepEqual(shared.classes, ['fill', 'success']);
+  assert.deepEqual(shared.ids, ['payment', 'checkout']);
+});
+
+test('qualified source references are rejected for every graph statement', () => {
+  for (const source of ['Backend.payment', 'checkout -> Backend.payment', 'Backend.payment -> checkout',
+    'Backend.payment: Take payment', 'Backend.payment(ellipse)', 'payment, Backend.saved(fill success)',
+    'Backend.payment, saved(fill success)', 'Backend { Backend.payment }']) {
+    assert.throws(() => parse(source), parser.SyntaxError, source);
+  }
+});
+
+test('published diagrams and homepage inputs conform to the membership-only grammar', async () => {
+  const documents = ['intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
+    'reference/textgraph-spec.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',
+    'integrations/ai-agents.md'];
+  for (const document of documents) {
+    const content = await readFile(new URL('../' + document, import.meta.url), 'utf8');
+    for (const [, source] of content.matchAll(/```textgraph(?: example)?\r?\n([\s\S]*?)\r?\n```/g)) {
+      assert.doesNotThrow(() => parse(source), document + ': ' + source);
+    }
+  }
+  for (const example of homeExamples) {
+    assert.doesNotThrow(() => parse(example.source), example.id);
+  }
 });

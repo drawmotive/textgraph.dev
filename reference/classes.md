@@ -7,9 +7,11 @@ api(fill primary): API Server
 api ->(bold dashed) worker
 worker(circle): Worker
 services(horizontal) {
-  cache: Cache
-  database: Database
+  cache
+  database
 }
+cache: Cache
+database: Database
 ```
 
 See [Styling](/reference/textgraph-spec#styling) for the syntax rules.
@@ -78,9 +80,11 @@ Set diagram direction with a root declaration, or set a group’s layout on its 
 (horizontal)
 client -> services
 services(vertical) {
-  api: API
-  worker: Worker
+  api
+  worker
 }
+api: API
+worker: Worker
 ```
 
 | Class | Effect |
@@ -96,11 +100,15 @@ Column layouts apply to groups containing nodes directly:
 
 ```text
 services(layout-2-col) {
-  api: API
-  worker: Worker
-  cache: Cache
-  database: Database
+  api
+  worker
+  cache
+  database
 }
+api: API
+worker: Worker
+cache: Cache
+database: Database
 ```
 
 Without an explicit layout class, the diagram is arranged automatically from its connections.

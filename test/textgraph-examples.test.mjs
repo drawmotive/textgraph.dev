@@ -68,7 +68,7 @@ test('the published Connection Types example renders all mixed edge operators', 
   }
 });
 
-test('the published grouped shopping example accepts trailing decorations and unique bare names', async () => {
+test('the published grouped shopping example accepts trailing decorations and global names', async () => {
   const document = await readFile(new URL('../reference/textgraph-spec.md', import.meta.url), 'utf8');
   const source = document.split('```textgraph example\n')[1]?.split('\n```')[0];
   assert.ok(source?.includes('checkout -> payment'));
@@ -80,8 +80,16 @@ test('the published grouped shopping example accepts trailing decorations and un
     const result = await runtime.renderPng(source);
     assert.equal(result.success, true, JSON.stringify(result.diagnostics));
     assert.deepEqual(Array.from(result.png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
-    const ambiguous = await runtime.validate('One { payment }\nTwo { payment }\npayment: Take payment');
-    assert.equal(ambiguous.valid, false);
-    assert.ok(ambiguous.diagnostics.some(diagnostic => diagnostic.message.includes("Ambiguous reference 'payment'")));
+    for (const groups of ['One { payment }\nTwo { payment }', 'Two { payment }\nOne { payment }']) {
+      const conflict = await runtime.validate(groups + '\npayment: Take payment');
+      assert.equal(conflict.valid, false);
+      assert.ok(conflict.diagnostics.some(diagnostic => diagnostic.severity === 'error'));
+    }
+    const reordered = source.split('\n\n');
+    assert.equal((await runtime.validate([...reordered.slice(3), ...reordered.slice(0, 3)].join('\n\n'))).valid, true);
+    for (const invalid of ['Backend.payment -> checkout', 'Backend { payment: Take payment }',
+      'Backend { payment -> saved }', 'Backend { payment(ellipse) }']) {
+      assert.equal((await runtime.validate(invalid)).valid, false, invalid);
+    }
   } finally { await runtime.dispose(); }
 });

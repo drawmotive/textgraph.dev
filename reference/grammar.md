@@ -6,7 +6,7 @@ Only flowcharts and directed graphs are implemented. This grammar also describes
 
 The TextGraph syntax is defined as a PEG ([Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar)) using [Peggy](https://peggyjs.org/) notation. This grammar is the canonical, unambiguous reference for what inputs are syntactically valid.
 
-Semantic rules — scope resolution, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).
+Semantic rules — global names, single-group membership, type inference, style inheritance, and rendering behavior — are defined in the [Language Specification](/reference/textgraph-spec).
 
 When the prose specification and this grammar disagree on a syntax question, the grammar takes precedence.
 
@@ -26,11 +26,11 @@ When the prose specification and this grammar disagree on a syntax question, the
 
 ## Group Endpoints
 
-A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous scope. `A->{B->C}`, `A->{}`, `{B->C}->D`, and `A->D{B->C}->E` are valid. Each scope occurrence represents one compound node; a middle occurrence is reused by both adjacent edges. Connections attach to its boundary, not its children.
+A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain only bare member names, nested groups, and comments.
 
 Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
 
-The grammar below is the executable canonical file, including its AST actions. `npm test` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. A closing brace terminates a child statement while balanced braces in a label remain literal text.
+The grammar below is the executable canonical file, including its AST actions. `npm test` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It rejects dotted references, connections inside groups, and node decorations inside groups. Labels at the document root may contain literal braces.
 
 ## Grammar
 
@@ -39,8 +39,8 @@ The grammar below is the executable canonical file, including its AST actions. `
 // Version: v0.1
 //
 // This grammar is the canonical syntax reference for the TextGraph DSL.
-// It defines what inputs are syntactically valid. Semantic rules (scope
-// resolution, type inference, style inheritance) are defined in the
+// It defines what inputs are syntactically valid. Semantic rules (global names,
+// single-group membership, type inference, style inheritance) are defined in the
 // language specification.
 //
 // Notation: Peggy / PEG.js syntax
@@ -190,12 +190,12 @@ Endpoint
   / Node
 
 Node
-  = ref:( QualifiedIdentifier / AnonymousNode ) _ classes:Classes?
+  = ref:( NamedReference / AnonymousNode ) _ classes:Classes?
   { return { ref, classes } }
 
-QualifiedIdentifier
-  = head:Identifier tail:("." Identifier)*
-  { return { type: "reference", path: [head, ...tail.map(t => t[1])] } }
+NamedReference
+  = id:Identifier
+  { return { type: "reference", path: [id] } }
 
 AnonymousNode
   = "[" _ text:AnonymousNodeText _ "]"
@@ -211,29 +211,29 @@ AnonymousNodeText
 // ───────────────────────────────────────────────────────────────
 
 // A declaration line has no arrow. The colon sets a display label.
-// Classes and label can appear in either order:
+// Classes precede the optional label:
 //   a(fill primary): Agent
 //   a: Agent
 //   a(fill primary)
 Declaration
-  = ref:QualifiedIdentifier classes:Classes? label:Label? _ EOL
-  { return { type: "declaration", id: ref.path.join("."), classes, label } }
+  = !LabeledScopeStart ref:NamedReference classes:Classes? label:Label? _ EOL
+  { return { type: "declaration", id: ref.path[0], classes, label } }
 
 // Multi-node declaration: comma-separated identifiers sharing classes.
 // Only style classes are allowed — labels are not valid here.
 // To label individual nodes, use separate declaration lines.
 //   x, y, z(fill primary)
 MultiNodeDeclaration
-  = head:QualifiedIdentifier _ "," _ rest:(QualifiedIdentifier _ "," _)* last:QualifiedIdentifier classes:Classes _ EOL
-  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path.join(".")), classes } }
+  = head:NamedReference _ "," _ rest:(NamedReference _ "," _)* last:NamedReference classes:Classes _ EOL
+  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path[0]), classes } }
 
 
 // ───────────────────────────────────────────────────────────────
 // Scope-Level Styles
 // ───────────────────────────────────────────────────────────────
 
-// Classes at the start of a line with no preceding identifier
-// apply to the enclosing scope.
+// Classes at the document root with no preceding identifier
+// apply to the diagram. Group styles belong in group headers.
 //   (fill primary)
 //   (horizontal)
 //   (vertical justify-between)
@@ -268,6 +268,10 @@ LabeledScope
     body:ScopeBody _ "}"
   { return { type: "scope", id, classes, label, body } }
 
+// A failed labeled group must not become a node label through backtracking.
+LabeledScopeStart
+  = Identifier? _ Classes? ScopeHeaderLabel _ "{" _ Newline
+
 ScopeEndpoint
   = id:Identifier? _ before:Classes? _ body:ScopeContents _ after:Classes?
   { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label: null, body } }
@@ -280,9 +284,8 @@ ScopeHeaderLabel
   = _ ":" _ text:$( [^{\r\n]+ )
   { return text.trim() }
 
-// A closing brace is a statement boundary only within its owning scope.
-// These rules keep root labels such as "A: {{value}}" literal, without
-// mutable nesting state that could leak through PEG backtracking.
+// Group bodies declare membership only. Connections and node decorations
+// are root statements, so membership never depends on reference order.
 ScopeBody
   = lines:(_ !"}" line:ScopeLine { return line })*
   { return lines.filter(line => line.type !== "blank") }
@@ -290,32 +293,10 @@ ScopeBody
 ScopeLine
   = BlankLine
   / Comment
-  / FencedBlock
-  / connection:ConnectionExpression edgeLabel:ScopeLabel? _ ScopeEnd
-    { return { type: "connection", ...connection, edgeLabel } }
   / scope:(LabeledScope / ScopeEndpoint) _ ScopeEnd
     { return scope }
-  / head:Identifier _ "," _ rest:(Identifier _ "," _)* last:Identifier classes:Classes _ ScopeEnd
-    { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last], classes } }
-  / &"(" classes:Classes label:ScopeLabel? _ ScopeEnd
-    { return { type: "scope-style", classes, label } }
-  / SpeakerNotes
-  / id:Identifier classes:Classes? label:ScopeLabel? _ ScopeEnd
-    { return { type: "declaration", id, classes, label } }
-  / MindmapNode
-  / !GraphStatementStart text:$( [^}\r\n]+ ) ScopeEnd
-    { return { type: "free-text", text: text.trim() } }
-
-ScopeLabel
-  = _ ":" _ label:ResourceLabel
-    { return label }
-  / _ ":" _ text:$( (LabelBraces / [^{}\r\n])+ )
-  { return text.trim() }
-
-// Balanced braces in label text are literal content. An unmatched closing
-// brace terminates the statement in the containing scope.
-LabelBraces
-  = "{" (LabelBraces / [^{}\r\n])* "}"
+  / id:Identifier _ ScopeEnd
+    { return { type: "declaration", id, classes: null, label: null } }
 
 ScopeEnd
   = Newline / &"}"
@@ -390,7 +371,7 @@ InlineText
 // Parenthesized, space-separated class tokens.
 // Binds to the immediately preceding token (identifier,
 // anonymous node literal, or arrow),
-// or to the enclosing scope when at the start of a line.
+// or to the diagram at the document root. Group styles use group headers.
 Classes
   = "(" _ tokens:ClassToken+ _ ")"
   { return tokens }
@@ -406,8 +387,9 @@ ClassToken
 
 // Must start with a letter or underscore. May contain letters,
 // digits, hyphens, and underscores. Dots are NOT part of an
-// identifier — they are the cross-scope operator. An arrow ends the
-// identifier even without surrounding spaces: B->C is B, ->, C.
+// identifier and dotted references are invalid. Names identify one node
+// throughout the document. An arrow ends the identifier even without
+// surrounding spaces: B->C is B, ->, C.
 Identifier
   = id:$( [a-zA-Z_] (!Arrow [a-zA-Z0-9_-])* )
   { return id }
@@ -425,7 +407,9 @@ FreeText
 // A failed graph statement must not become free text after PEG backtracking.
 // Otherwise a missing child endpoint or closing brace appears to parse.
 GraphStatementStart
-  = (QualifiedIdentifier / AnonymousNode) _ Classes? _ (Arrow / "{")
+  = LabeledScopeStart
+  / Identifier _ ("." / "," / ":" / "(")
+  / (NamedReference / AnonymousNode) _ Classes? _ (Arrow / "{")
   / "{"
   / Classes _ "{"
 

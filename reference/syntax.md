@@ -6,7 +6,7 @@ Bare identifiers denote nodes, arrows denote relationships, parentheses apply st
 
 ## Identifiers
 
-Node and scope names must start with a letter or underscore, and can contain letters, digits, hyphens, and underscores. Dots are not part of a name — they qualify a reference with group names when disambiguation is needed (see [`.` — Cross-Scope Reference](#-cross-scope-reference)). Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
+Node and group names must start with a letter or underscore, and may contain letters, digits, hyphens, and underscores. Each name identifies one object throughout the diagram. Use different names for different objects, even when their display labels match. Dotted references are invalid. Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
 
 ## Connections
 
@@ -33,10 +33,10 @@ C -> [B]
 Groups can also be endpoints, including empty, nested, named, and anonymous groups:
 
 ```text
-A -> { B -> C }
+A -> { B }
 A -> {}
-{ B -> C } -> D
-A -> D { B -> C } -> E
+{ B } -> D
+A -> D { B } -> E
 ```
 
 Each outer arrow connects to the **group boundary**. It does not connect to, or fan out across, the children. Spaces are optional: `A->{B->C}` is valid.
@@ -71,18 +71,18 @@ a: Agent
 b: Bias
 ```
 
-A group body has its own statements, so `A -> { B: Bee }: outer` is valid: `Bee` labels the child `B`, while `outer` labels the edge from `A` to the group. The closing brace terminates the child statement. For named group endpoints, use `A -> D { B -> C }` with a separate `D: Services` declaration.
+Group bodies contain only bare member names, nested group blocks, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
 
 ## `()` — Style Classes
 
 Parentheses apply style classes to a node, edge, or group. After a token, `()` binds to that token. With no preceding token, it styles the following anonymous group. A standalone direction class sets the root layout:
 
-- After a node or scope token → styles on that token: `a(fill primary dashed): Agent`, `group1(horizontal) { a -> b }`, `[B](dashed)`, and `{ B -> C }(horizontal)`
+- After a node or group token → styles on that token: `a(fill primary dashed): Agent`, `group1(horizontal) { a }`, `[B](dashed)`, and `{ B }(horizontal)`
 - After an arrow → edge styles: `a ->(bold) b`
-- Before an anonymous group → styles on that group: `(horizontal) { B -> C } -> A`
+- Before an anonymous group → styles on that group: `(horizontal) { B } -> A`
 - Start of line with no group body → root layout direction: `(horizontal)`
 
-Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B -> C }`. Style the target group after its closing brace, as in `A -> { B -> C }(horizontal)`, or after its name, as in `A -> D(horizontal) { B -> C }`.
+Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B }`. Style the target group after its closing brace, as in `A -> { B }(horizontal)`, or after its name, as in `A -> D(horizontal) { B }`.
 
 ```text
 a(fill primary dashed): Agent
@@ -99,76 +99,70 @@ a(fill primary): Agent
 
 ## `{}` — Containment and Groups
 
-Curly braces give a node children and an independent layout scope. A named group follows ordinary node labeling: `D { B -> C }` has identifier and default visible title `D`; a separate `D: Services` declaration changes the title without changing the identifier. An anonymous `{ B -> C }` has no default title. Internal generated identifiers are never displayed.
-
-An empty `{}` is still a group, so `A -> {}` is a valid connection to an empty anonymous group. To request a group with no name or default title, omit the identifier.
-
-Content inside a group is arranged independently:
+Group bodies list membership. A member is a bare identifier, a nested group, or a comment. Connections and node decorations always stay at the document root:
 
 ```text
-group1 {
-  a -> b
-}
-```
-
-Scopes can be nested:
-
-```text
-group1 {
-  group2(horizontal) {
-    a -> b
-  }
-}
-```
-
-A group occurrence in a chain is reused by both adjacent arrows:
-
-```text
-A -> { B -> C } -> D
-```
-
-This creates one anonymous group between `A` and `D`, plus the child connection `B -> C`. Separate `{ ... }` occurrences create separate anonymous groups. Use a named group when it needs to be referenced from another statement.
-
-## `.` — Cross-Scope Reference
-
-Bare node names are global by default. A reference first checks the current scope, then each parent scope outward, and if still unresolved continues through the rest of the document. If that search finds exactly one node, the bare name is valid even when the node lives in another group:
-
-```text
-group1 {
-  m: Inner
-}
-
-a -> m
-```
-
-The same lookup applies to labels and styles. Put decorations after the main structure, outside the group, to update the existing node while preserving its containment:
-
-```text
-Shopping {
-  browse -> checkout
+Shopping(info): Shopping {
+  browse
+  checkout
 }
 Backend {
   payment
 }
-checkout -> payment
 
+browse -> checkout -> payment
 browse(ellipse): Browse the shop
 checkout: Place an order
 payment(fill success): Take payment
 ```
 
-`payment` is the same node as `Backend.payment`. `checkout` stays inside `Shopping` when its label is declared outside. Decorations may also appear before the structure.
+Each node has one global name and can be a direct member of one group. A root connection or decoration always refers to that same node and leaves its membership unchanged. Connections and decorations may appear before or after the groups. Listing one node in two different groups is an error, regardless of order.
 
-Use dot notation only to disambiguate multiple nodes with the same name. Add the shortest group prefix that makes the target unique:
+Groups may nest:
 
 ```text
-a -> team1.m
-a -> regionA.payments.api
+platform {
+  services(horizontal) {
+    api
+    worker
+  }
+}
+api -> worker
+api: API
+worker: Worker
 ```
 
-If a bare name or dotted name still matches multiple candidates, it is an ambiguous reference and must be qualified further.
+Named groups use their names as default titles. Group names are global and each named group is declared once. A separate root declaration such as `services: Services` changes the title. A node and a group cannot share a name.
 
-To introduce separate nodes with the same name, declare the bare name in each owning group. Local references select their nearest declaration; external connections and decorations need a qualifier when multiple candidates remain.
+An anonymous `{ B }` group has no name or default title. Each anonymous group occurrence is distinct. Empty groups are valid: `A -> {}` connects to an empty anonymous group. Multiple members must be on separate lines.
+
+A group occurrence in a chain is reused by both adjacent arrows:
+
+```text
+A -> {
+  B
+  C
+} -> D
+B -> C
+```
+
+Both outer edges attach to one group boundary. The root `B -> C` connection connects the children. Use a named group when it needs to be reused by another statement.
+
+## Global References
+
+Use a simple name to connect or decorate any named node, including members of deeply nested groups. There is no local lookup or shadowing, and dotted references such as `Backend.payment` are invalid.
+
+To give different nodes the same visible label, use different identifiers:
+
+```text
+Frontend { frontend_api }
+Backend { backend_api }
+frontend_api -> backend_api
+frontend_api: API
+backend_api: API
+```
+
+A node omitted from all group bodies belongs to the document root.
 
 ## `[]` — Anonymous Node
 

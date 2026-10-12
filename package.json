@@ -15,6 +15,8 @@
     "build": "vitepress build",
     "preview": "node scripts/preview-site.mjs",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "test:grammar": "node --test --test-concurrency=1 test/grammar.test.mjs",
+    "test:dsl": "node --test --test-concurrency=1 test/grammar.test.mjs test/analytics.test.mjs test/playground-source-link.test.mjs",
     "test:browser": "playwright test",
     "release:check": "node .release/check.cjs --ready",
     "build:release": "node .release/check.cjs --installed && npm run build",

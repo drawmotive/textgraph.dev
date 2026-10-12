@@ -275,73 +275,89 @@ Render it with the [Markdown & VitePress plugin](/integrations/markdown) or prev
 
 ## Groups and Scopes
 
-Curly braces express containment: a group is a node with children and its own layout scope. Nodes inside a group are arranged independently from the rest of the diagram.
+Curly braces declare group membership. Every name identifies one node throughout the diagram. Group bodies contain only bare member names, nested groups, and comments; connections and node decorations belong at the document root.
 
 ```textgraph example
 frontend {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
 }
-
 backend {
-  api -> auth
-  api -> worker
-  api: API Gateway
-  auth: Auth Service
-  worker: Worker
+  api
+  auth
+  worker
 }
-
 data {
-  db -- cache
-  db: PostgreSQL
-  cache: Redis
+  db
+  cache
 }
 
-frontend.cdn -> backend.api
-backend.api -> data.db
-backend.api -> data.cache
+browser -> cdn -> api
+api -> auth
+api -> worker
+api -> db
+api -> cache
+db -- cache
+
+browser: Browser
+cdn: CDN
+api: API Gateway
+auth: Auth Service
+worker: Worker
+db: PostgreSQL
+cache: Redis
 ```
+
+Connections use simple names, including across group boundaries. Moving a connection or decoration before or after the groups leaves membership unchanged.
 
 ### Named and Styled Groups
 
-Groups follow the same rules as nodes — styles and labels can be combined. A named group uses its identifier as the default title: `D { B -> C }` displays `D`. A separate `D: Services` declaration changes its title to `Services` while keeping the identifier `D`.
+A named group uses its identifier as its default title. Combine a group’s styles and title in its header:
 
 ```textgraph example
 frontend(fill info): Frontend {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
+}
+backend(fill primary): Backend {
+  api
+  worker
 }
 
-backend(fill primary): Backend {
-  api -> worker
-  api: API Server
-  worker: Worker
-}
+browser -> cdn -> api -> worker
+browser: Browser
+cdn: CDN
+api: API Server
+worker: Worker
 ```
 
-A group can also have its title declared separately:
+A group can also have its title declared separately at the root:
 
 ```textgraph example
-frontend: Frontend
 frontend(fill info) {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
 }
+browser -> cdn
+frontend: Frontend
+browser: Browser
+cdn: CDN
 ```
+
+Group names are global, and each named group is declared once. Reuse its simple name in root connections or decorations. A node and a group cannot share a name.
 
 ### Anonymous Groups
 
-An unnamed `{}` creates a scope without a default visible group label. Omit the identifier when a group should be anonymous; generated internal identities are never displayed. Empty anonymous groups are valid too.
+Omit the group name for an anonymous group with no default visible title. Separate anonymous group occurrences create distinct groups. Empty groups are valid too.
 
 ```textgraph example
 {
-  a -> b
-  a: Service A
-  b: Service B
+  a
+  b
 }
+a -> b
+a: Service A
+b: Service B
 ```
 
 ### Groups in Connections
@@ -349,66 +365,74 @@ An unnamed `{}` creates a scope without a default visible group label. Omit the 
 Define a group directly at either end of an arrow, including an empty group:
 
 ```textgraph example
-A -> { B -> C }
+A -> { B }
 A -> {}
-{ B -> C } -> D
+{ C } -> D
 ```
 
-The outer connection attaches to the **group boundary**. It does not expand into arrows to the children. Spaces are optional: `A->{B->C}` is valid.
+The outer connection attaches to the **group boundary**. A member never becomes a list of external targets. Spaces are optional: `A->{B}` is valid. Put multiple members on separate lines.
 
 Groups can be named or chained:
 
 ```textgraph example
-A -> D { B -> C } -> E
-D: Services
+A -> services {
+  B
+  C
+} -> D
+B -> C
+services: Services
 
-F -> { G -> H } -> I
+E -> { F } -> G
 ```
 
-The first chain uses the named group `D`, titled `Services`. The second uses one anonymous group between `F` and `I`. Separate brace occurrences create distinct anonymous groups.
+The first chain uses one named group, titled `Services`, for both outer arrows. The separate root connection connects `B` to `C` inside it. The second chain uses one anonymous group between `E` and `G`.
 
 Use parentheses for styles as usual:
 
 ```textgraph example
-(horizontal) { B -> C } -> A
+(horizontal) { B } -> A
 ```
 
 ```textgraph example
-A -> D(horizontal) { B -> C }
+A -> services(horizontal) { B }
 ```
 
 ```textgraph example
-A ->(bold) { B -> C }(horizontal)
+A ->(bold) { B }(horizontal)
 ```
 
 In the last example, `bold` styles the edge because it follows the arrow; `horizontal` styles the group because it follows the closing brace.
 
-### Nested Scopes
+### Nested Groups
 
-Groups can nest. Each scope has independent layout.
+Groups can nest. Each group has independent layout, while names remain global:
 
 ```textgraph example
 platform {
-  frontend.app -> backend.api
-
   frontend {
-    app: Web App
+    app
   }
   backend {
-    api -> services.auth
-    api -> services.billing
-    api: API
+    api
     services {
-      auth: Auth
-      billing: Billing
+      auth
+      billing
     }
   }
 }
+
+app -> api
+api -> auth
+api -> billing
+app: Web App
+api: API
+auth: Auth
+billing: Billing
 ```
 
 ## Layout Control
 
-Layout classes control how children are arranged within a scope.
+Layout classes control how children are arranged within a group.
 
 | Class | Effect |
 |-------|--------|
@@ -419,12 +443,15 @@ Layout classes control how children are arranged within a scope.
 | `layout-4-col` | Four-column grid |
 | `layout-6-col` | Six-column grid |
 
-Set the direction on the group header:
+Set direction on the group header:
 
 ```textgraph example
 services(horizontal) {
-  api -> auth -> worker
+  api
+  auth
+  worker
 }
+api -> auth -> worker
 ```
 
 For the whole diagram, place `(horizontal)` or `(vertical)` at the start of the source.
@@ -433,72 +460,38 @@ Use a column grid on a group of nodes:
 
 ```textgraph example
 metrics(layout-3-col) {
-  cpu: CPU Usage
-  mem: Memory
-  disk: Disk I/O
-  net: Network
-  lat: Latency
-  err: Error Rate
+  cpu
+  mem
+  disk
+  net
+  lat
+  err
 }
+cpu: CPU Usage
+mem: Memory
+disk: Disk I/O
+net: Network
+lat: Latency
+err: Error Rate
 ```
 
-## Cross-Scope Connections and Identifier Scoping
+## Global Node Names
 
-### Dot Notation
+Connections and decorations always reuse the same named node, whether it is grouped or at the root. A node can be a direct member of one group; listing it in two different groups is an error in either declaration order. Root mentions never choose or change a group.
 
-Connect nodes across scopes using dot notation: `group.node`.
+For two distinct nodes with the same visible label, choose different identifiers:
 
 ```textgraph example
 frontend {
-  browser: Browser
+  frontend_api
 }
-
 backend {
-  gateway -> auth
-  gateway: API Gateway
-  auth: Auth Service
+  backend_api
 }
 
-data {
-  db: PostgreSQL
-}
-
-frontend.browser -> backend.gateway
-backend.auth -> data.db
+frontend_api -> backend_api
+frontend_api: API
+backend_api: API
 ```
 
-Dot notation chains for deeply nested targets:
-
-```textgraph example
-platform {
-  backend {
-    gateway: API Gateway
-  }
-  data {
-    db: Database
-  }
-}
-
-platform.backend.gateway -> platform.data.db
-```
-
-### Identifier Resolution
-
-References first check the current scope, then parent scopes, then the rest of the document. A unique name can be used across groups. Use a group-qualified name when several nodes share an identifier.
-
-```textgraph example
-frontend {
-  api -> cdn
-  api: Frontend API
-  cdn: CDN
-  <!-- "api" here resolves to "Frontend API" -->
-}
-
-api -> db
-<!-- "api" here resolves to "External API" -->
-
-api: External API
-db: Database
-```
-
-Use the shortest group prefix that makes the reference unique, such as `frontend.api` or `platform.backend.gateway`.
+There is no local lookup or shadowing. Dotted references such as `frontend.api` are invalid; use the node’s global identifier. Connections and decorations may appear before or after group declarations.

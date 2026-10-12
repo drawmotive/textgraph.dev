@@ -1,7 +1,7 @@
 # Sequence Diagrams
 
 ::: warning Not implemented
-Sequence diagrams are not available yet. This page describes planned syntax and behavior; its examples will not render as sequence diagrams. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+Sequence diagrams are not available yet. This page describes planned syntax and behavior. Combined-fragment bodies are proposals that still need a design compatible with membership-only groups. These examples will not render as sequence diagrams. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
 :::
 
 Sequence diagrams model interactions between participants over time. Unlike flowcharts, sequence diagrams require an explicit type declaration — add `(sequence)` as a scope-level style at the top of your diagram.
@@ -273,7 +273,7 @@ billing: Billing
 
 ### Scope-Level Style
 
-Style classes without an identifier apply to the current scope.
+Style classes without an identifier apply at the document root. Put group styles in their opening headers.
 
 ```
 (sequence)
@@ -283,7 +283,7 @@ a: Service A
 b: Service B
 ```
 
-This sets the scope background to filled primary.
+This sets the diagram background to filled primary.
 
 ### Reset and Special Classes
 
@@ -467,33 +467,41 @@ If the file contains only one diagram, the closing `@textgraph` is optional.
 
 ## Groups and Scopes
 
-Curly braces define a layout scope. Participants inside a group are arranged independently from the rest of the diagram.
+Curly braces list group membership. A group body contains bare participant names, nested groups, and comments. Put message connections and participant decorations at the document root.
 
 ```
 (sequence)
 clients {
-  browser -> mobile
-  browser: Browser
-  mobile: Mobile App
+  browser
+  mobile
 }
 
 platform {
-  gw -> auth
-  gw -> worker
-  gw: API Gateway
-  auth: Auth Service
-  worker: Worker
+  gw
+  auth
+  worker
 }
 
 data {
-  db -- cache
-  db(cylinder): PostgreSQL
-  cache(cylinder): Redis
+  db
+  cache
 }
 
-clients.browser -> platform.gw
-platform.auth -> data.db
-platform.worker -> data.cache
+browser -> gw
+auth -> db
+worker -> cache
+
+browser -> mobile
+gw -> auth
+gw -> worker
+db -- cache
+browser: Browser
+mobile: Mobile App
+gw: API Gateway
+auth: Auth Service
+worker: Worker
+db(cylinder): PostgreSQL
+cache(cylinder): Redis
 ```
 
 ### Named and Styled Groups
@@ -504,17 +512,22 @@ Groups follow the same rules as participants — styles and labels can be combin
 (sequence)
 clients(fill info): Client Tier
 clients {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
 }
 
 platform(fill primary): Platform
 platform {
-  gw -> worker
-  gw: API Gateway
-  worker: Worker
+  gw
+  worker
 }
+
+browser -> cdn
+gw -> worker
+browser: Browser
+cdn: CDN
+gw: API Gateway
+worker: Worker
 ```
 
 Or combined on one line:
@@ -522,10 +535,13 @@ Or combined on one line:
 ```
 (sequence)
 clients(fill info): Client Tier {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
 }
+
+browser -> cdn
+browser: Browser
+cdn: CDN
 ```
 
 ### Anonymous Groups
@@ -535,10 +551,13 @@ An unnamed `{}` creates a scope without a visible group label.
 ```
 (sequence)
 {
-  a -> b
-  a: Service A
-  b: Service B
+  a
+  b
 }
+
+a -> b
+a: Service A
+b: Service B
 ```
 
 ### Nested Scopes
@@ -548,21 +567,25 @@ Groups can nest. Each scope has independent layout.
 ```
 (sequence)
 platform {
-  frontend.app -> backend.api
-
   frontend {
-    app: Web App
+    app
   }
   backend {
-    api -> services.auth
-    api -> services.billing
-    api: API
+    api
     services {
-      auth: Auth
-      billing: Billing
+      auth
+      billing
     }
   }
 }
+
+app -> api
+api -> auth
+api -> billing
+app: Web App
+api: API
+auth: Auth
+billing: Billing
 ```
 
 ## Combined Fragments
@@ -722,60 +745,33 @@ cache(cylinder): Redis
 notify: Notification Service
 ```
 
-## Cross-Scope Connections and Identifier Scoping
+## Global Participant Names
 
-### Dot Notation
+The same identifier always refers to the same participant, including across groups. Group bodies list membership; message connections and participant decorations are root statements. Moving root statements before or after a group does not change membership.
 
-Connect participants across scopes using dot notation: `group.participant`.
-
-```
+```text
 (sequence)
 clients {
-  browser: Browser
+  browser
 }
-
 platform {
-  gw -> auth
-  gw: API Gateway
-  auth: Auth Service
+  gateway
+  auth
 }
-
 data {
-  db(cylinder): PostgreSQL
+  db
 }
 
-clients.browser -> platform.gw
-platform.auth -> data.db
+browser -> gateway
+gateway -> auth
+auth -> db
+browser: Browser
+gateway: API Gateway
+auth: Auth Service
+db(cylinder): PostgreSQL
 ```
 
-Dot notation chains for deeply nested targets:
-
-```
-(sequence)
-platform.backend.gw -> platform.data.db
-```
-
-### Identifier Resolution
-
-Identifiers resolve from the current scope outward. The first match wins. An inner declaration shadows an outer one with the same name.
-
-```
-(sequence)
-platform {
-  api -> cache
-  api: Platform API
-  cache: Platform Cache
-  <!-- "api" here resolves to "Platform API" -->
-}
-
-api -> db
-<!-- "api" here resolves to "External API" -->
-
-api: External API
-db(cylinder): Database
-```
-
-No special syntax is needed to reference an outer scope — if an identifier is not found locally, lookup continues through enclosing scopes automatically. Dot notation is only necessary to reach inward, from an outer scope into a named group.
+A participant can be a direct member of one group. Listing it in two different groups is invalid regardless of declaration order. Use distinct identifiers when different participants need the same display label. Group names are global too, and each named group is declared once. Dotted references and local shadowing are not supported.
 
 ## Overlay Positioning
 
@@ -803,12 +799,16 @@ A small status indicator anchored to a corner of a group.
 ```
 (sequence)
 services {
-  api -> db
-  api: API Server
-  db(cylinder): Database
+  api
+  db
 
-  status(overlay-top-right circle success fill): ✓
+  status
 }
+
+api -> db
+api: API Server
+db(cylinder): Database
+status(overlay-top-right circle success fill): ✓
 ```
 
 ### Annotation Callout
@@ -818,14 +818,18 @@ A floating note connected to a specific participant.
 ```
 (sequence)
 main {
-  client -> gw -> auth
-  client: Browser
-  gw: API Gateway
-  auth: Auth Service
+  client
+  gw
+  auth
 }
 
 tip(overlay-top-right callout warning): Latency spike — check connection pool
-tip -> main.gw
+tip -> gw
+
+client -> gw -> auth
+client: Browser
+gw: API Gateway
+auth: Auth Service
 ```
 
 Overlay elements can have connections to flow elements — the renderer routes edges between layers.
@@ -837,17 +841,21 @@ Use `overlay-cover` for a watermark or translucent background layer.
 ```
 (sequence)
 services {
-  api -> db
-  api: API
-  db(cylinder): DB
+  api
+  db
 
-  (overlay-cover no-border): STAGING
+  watermark
 }
+watermark(overlay-cover no-border): STAGING
+
+api -> db
+api: API
+db(cylinder): DB
 ```
 
 ## Putting It All Together
 
-A comprehensive example: a multi-tier cloud authentication flow combining explicit declarations, shapes, colors, shared styles, groups by tier, combined fragments, cross-scope dot notation, edge styles, overlay annotations, rich labels, and comments.
+A comprehensive example: a multi-tier cloud authentication flow combining explicit declarations, shapes, colors, shared styles, groups by tier, combined fragments, global participant names, edge styles, overlay annotations, rich labels, and comments.
 
 ```
 (sequence)
@@ -856,47 +864,47 @@ header(title): # Cloud Auth Flow
 
 <!-- client tier -->
 clients(fill info): Client Tier {
-  user(circle): End User
-  browser: Browser Client
+  user
+  browser
 }
 
 <!-- platform tier -->
 platform(fill primary): Platform Services {
-  gw(bold): API Gateway
-  auth: Auth Service
-  billing: Billing
-  notify: Notification Service
+  gw
+  auth
+  billing
+  notify
 
-  <!-- shared style for internal services -->
-  auth, billing, notify(fill)
 }
+<!-- shared style for internal services -->
+auth, billing, notify(fill)
 
 <!-- data tier -->
 data(fill secondary): Data Layer {
-  db(cylinder): PostgreSQL
-  cache(cylinder): Redis
-  queue(cylinder): Message Queue
+  db
+  cache
+  queue
 }
 
 <!-- initial request flow -->
-clients.user -> clients.browser : open app
-clients.browser ->(bold primary) platform.gw : HTTPS login
+user -> browser : open app
+browser ->(bold primary) gw : HTTPS login
 
 <!-- auth with retry loop -->
 retry(loop) {
   max 3 attempts
-  platform.gw -> platform.auth : credentials
-  platform.auth -> data.db : SELECT user
+  gw -> auth : credentials
+  auth -> db : SELECT user
 
   result(alt) {
     valid credentials
-    data.db -> platform.auth : user record
-    platform.auth -> platform.gw : JWT token
+    db -> auth : user record
+    auth -> gw : JWT token
 
     denied(opt) {
       invalid
-      platform.auth -> platform.gw : 401
-      platform.gw -> clients.browser : retry prompt
+      auth -> gw : 401
+      gw -> browser : retry prompt
     }
   }
 }
@@ -904,35 +912,45 @@ retry(loop) {
 <!-- post-login parallel tasks -->
 postlogin(par) {
   post-authentication
-  platform.gw -> data.cache : store session
-  platform.gw ->(dashed info) data.queue : audit event
-  platform.gw -> platform.notify : welcome email
+  gw -> cache : store session
+  gw ->(dashed info) queue : audit event
+  gw -> notify : welcome email
 }
 
 <!-- final response -->
-platform.gw ->(bold success) clients.browser : 200 OK + dashboard
+gw ->(bold success) browser : 200 OK + dashboard
 
 <!-- self-message: internal processing -->
-platform.auth -> platform.auth : validate token signature
+auth -> auth : validate token signature
 
 <!-- monitoring overlay -->
 monitor(overlay-bottom-right callout warning): p99 latency\n> 200ms
-monitor ->(dotted danger) platform.gw
+monitor ->(dotted danger) gw
 
 health(overlay-top-right circle success fill): ✓
+
+user(circle): End User
+browser: Browser Client
+gw(bold): API Gateway
+auth: Auth Service
+billing: Billing
+notify: Notification Service
+db(cylinder): PostgreSQL
+cache(cylinder): Redis
+queue(cylinder): Message Queue
 ```
 
 ## Tips
 
 1. **Use `circle` for human actors, `cylinder` for databases.** Shape conventions help readers identify participant roles instantly without reading labels.
 
-2. **Declare participant labels at the top of the scope.** Group all `id: Label` lines together before the message flow. This separates naming from interaction logic.
+2. **Declare participant labels at the document root.** Group all `id: Label` lines together before the message flow. This separates naming from interaction logic.
 
 3. **Use `dashed` for async messages, `dotted` for deprecated.** Consistent line styles create a visual language across your diagrams — `gw ->(dashed info) queue : async`.
 
 4. **Keep fragment condition labels concise.** The first line of text inside a `loop`, `alt`, `opt`, or `par` scope becomes the condition label. One short phrase works best.
 
-5. **Group participants by tier with named scopes.** Separate client, platform, and data layers into named groups. This mirrors real architecture and enables cross-scope connections with dot notation.
+5. **Group participants by tier with named scopes.** Separate client, platform, and data layers into named groups. This mirrors real architecture and keeps membership separate from message connections.
 
 6. **Use overlays sparingly — one annotation + one badge max.** A single `callout` note and a single `circle` status badge are usually enough. More than that clutters the diagram.
 

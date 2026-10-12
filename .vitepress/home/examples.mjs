@@ -17,7 +17,7 @@ export const homeExamples = [
   { id: 'labels', title: 'Add useful detail', source: request,
     alt: 'The load balancer is highlighted and the two application replicas are labeled App server 1 and App server 2. Both access a shared database.' },
   { id: 'service-boundary', title: 'Group the application tier',
-    source: relationships + '\n\n' + balancer + '\nservers {\n  app1: App server 1\n  app2: App server 2\n}',
+    source: 'servers {\n  app1\n  app2\n}\n\n' + request,
     alt: 'Two application replicas are grouped inside a servers boundary, between an external load balancer and a shared database. Arrows show request direction.' },
   { id: 'cache-flow', title: 'Make room for a cache',
     source: request + '\n\napp1 -> cache\napp2 -> cache',

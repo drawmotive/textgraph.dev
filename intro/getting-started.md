@@ -82,43 +82,51 @@ See [Style Classes](/reference/classes) for the full list of colors, shapes, bor
 
 ## Grouping
 
-Curly braces define a named scope. Nodes inside a group are laid out independently. Connect across groups using dot notation.
+Curly braces list group members. Names are global, so connections between groups use the same simple names as every other connection. Keep node labels, styles, and arrows outside the groups.
 
 ```textgraph example
 frontend {
-  browser -> cdn
-  browser: Browser
-  cdn: CDN
+  browser
+  cdn
 }
-
 backend {
-  api -> auth
-  api: API Gateway
-  auth: Auth Service
+  api
+  auth
 }
-
 data {
-  db: PostgreSQL
-  cache: Redis
+  db
+  cache
 }
 
-frontend.cdn -> backend.api
-backend.api -> data.db
-backend.api -> data.cache
+browser -> cdn -> api -> auth
+api -> db
+api -> cache
+
+browser: Browser
+cdn: CDN
+api: API Gateway
+auth: Auth Service
+db: PostgreSQL
+cache: Redis
 ```
+
+Each node can belong directly to one group. Root connections and decorations leave that membership unchanged, even when they appear before the groups.
 
 Groups map naturally to architectural tiers — frontend, backend, data — and keep the diagram organized as it grows.
 
-See [Flowcharts — Groups](/diagrams/flowcharts#groups-and-scopes) for named groups, nested scopes, and anonymous groups.
+See [Flowcharts — Groups](/diagrams/flowcharts#groups-and-scopes) for named, nested, and anonymous groups.
 
 ## Layout
 
-Apply the `horizontal` class to a scope to arrange its children left to right instead of the default top to bottom.
+Apply the `horizontal` class to a group to arrange its children left to right instead of the default top to bottom.
 
 ```textgraph example
 services(horizontal) {
-  api -> auth -> worker
+  api
+  auth
+  worker
 }
+api -> auth -> worker
 ```
 
 Put the direction class on the group header. For the whole diagram, place `(horizontal)` at the start of the source.

@@ -42,6 +42,8 @@ version, URL and integrity together; do not use developer-local packages as
 public release inputs. Run `npm run build:release` for coordinated version
 and installed-dependency validation before a release build.
 
+For syntax and documentation changes, run `npm run test:grammar` to check the executable PEG and published diagram inputs. `npm run test:dsl` also verifies source links and homepage analytics for those inputs. Group bodies list bare member names, nested groups, and comments; put arrows and node decorations at the root. Names are global, each named group is declared once, and each node can be a direct member of one group.
+
 Keep pull requests focused and report checks actually run. Verify new examples
 with the pinned SDK; invalid published diagrams fail the build. Update
 navigation and exclusions deliberately and review links in changed pages.

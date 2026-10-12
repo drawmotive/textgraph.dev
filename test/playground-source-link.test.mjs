@@ -4,7 +4,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { readSourceLink, createSourceLink } from '../.vitepress/playground/source-link.mjs';
 
 test('source links preserve whitespace, Unicode, and URL delimiters exactly', async () => {
-  const sources = ['', ' \t\n\n', 'group {\n  A ->\n}', 'A: 服务 café 🚀 + 100% & # ? = / :~: "quoted"\n'];
+  const sources = ['', ' \t\n\n', 'group {\n  A\n}\nA ->', 'A: 服务 café 🚀 + 100% & # ? = / :~: "quoted"\n'];
   for (const source of sources) {
     const link = await createSourceLink('https://textgraph.dev/base/playground?from=docs#old', source);
     assert.equal(await readSourceLink(link), source);

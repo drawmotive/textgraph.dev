@@ -56,7 +56,7 @@ test('local playground renders, reports errors, recovers, and fits a phone', asy
   await expect.poll(() => diagnostics.filter(message => message.type === 'warning').length).toBeGreaterThan(0);
   await expect(page.getByRole('region', { name: 'Diagram errors' })).toHaveCount(0);
   const validImage = await preview.getAttribute('src');
-  await editor.fill('group {\n  A ->\n}');
+  await editor.fill('group {\n  A\n}\nA ->');
   await expect(status).toHaveText('Could not render the diagram');
   await expect.poll(() => diagnostics.filter(message => message.type === 'error').length).toBeGreaterThan(0);
   await expect(page.getByRole('region', { name: 'Diagram errors' })).toBeVisible();
@@ -139,7 +139,7 @@ test('splitter adjusts panes with pointer and keyboard while tall previews stay 
     expect(sizes.contained).toBe(true);
   };
   await assertFits();
-  await editor.fill('group {\n  A ->\n}');
+  await editor.fill('group {\n  A\n}\nA ->');
   await expect(status).toHaveText('Could not render the diagram');
   await assertFits();
   await page.setViewportSize({ width: 900, height: 750 });

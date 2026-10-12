@@ -22,26 +22,21 @@ npm run preview # Preview built site
 - **Content**: Markdown files at root level, organized into sections: `intro/`, `tour/`, `diagrams/`, `slides/`, `integrations/`, `reference/`
 - **Temp design docs**: `design/` — internal language spec and DSL research, not linked in site nav
 
-## Content State
+## Language and Content
 
-Most pages are stubs with `<!-- CONTENT TO ADD: ... -->` comment blocks. Only pages with real content:
-- `index.md` — homepage hero + features
-- `intro/what-is-textgraph.md` — the intro essay
+The public language contract is in `reference/textgraph-spec.md` and `reference/syntax.md`. The executable PEG in `reference/grammar.peg` is mirrored in `reference/grammar.md`; update them together and run `npm run test:grammar`.
 
-## TextGraph DSL (from design docs)
+- Each name identifies one node or named group throughout a diagram.
+- A node can be a direct member of one group. Root mentions never change membership.
+- Group bodies contain only bare member names, nested group blocks, and comments.
+- Connections and node decorations belong at the document root.
+- Declare each named group once. Use simple global references; dotted paths and shadowing are invalid.
+- Distinct identifiers may have identical display labels. Anonymous nodes and groups remain distinct occurrences.
 
-Core principles:
-1. **Human- and LLM-friendly** — reads like structured English, minimal punctuation
-2. **Resilient** — partial rendering on error; invalid sections produce error nodes, not blank output
-3. **Style-separated** — diagram content is distinct from theme/visual directives
+Only flowcharts and directed graphs are available. Sequence diagrams, mind maps, and slides remain excluded feature drafts. Preserve historical execution evidence under `docs/superpowers/` and research under `design/`.
 
-Single unified grammar covers: flowcharts, sequence, architecture, class, ER, mindmaps, Gantt charts. Diagram type is inferred from content or declared explicitly.
+The navigation and route exclusions in `.vitepress/config.mts` define published content. Do not expose a draft until its examples work in the renderer.
 
-## Sidebar Structure (defined in config.mts)
+## Public Repository Language
 
-- Introduction → `intro/`
-- Language Tour → `tour/`
-- Diagram Types → `diagrams/`
-- Slides → `slides/`
-- Integrations → `integrations/`
-- Reference → `reference/`
+Write authored documentation, comments, interface text, diagnostics, test names, scripts, and agent instructions in English. Preserve intentional multilingual fixtures, upstream notices, attributed quotations, and third-party data in their original form.

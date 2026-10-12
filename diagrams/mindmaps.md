@@ -1,7 +1,7 @@
 # Mind Maps
 
 ::: warning Not implemented
-Mind maps are not available yet. This page describes planned syntax and behavior; its examples will not render as mind maps. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+Mind maps are not available yet. This page describes planned syntax and behavior. Indentation-based hierarchy remains a proposal separate from membership-only diagram groups. These examples will not render as mind maps. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
 :::
 
 Mind maps use the `mindmap` class on a group scope. Hierarchy comes from indentation — each level of indent defines a parent-child relationship, no `->` arrows needed.
@@ -55,8 +55,9 @@ cloud(mindmap) {
   AWS Services
     Compute
     Storage
-  Compute -> Storage
 }
+
+Compute -> Storage
 ```
 
 To add explicit connections, assign identifiers first — see the next section.
@@ -74,8 +75,9 @@ cloud(mindmap) {
     storage: Storage Services
       s3: S3 Buckets
       ebs: EBS Volumes
-  lambda -> s3 : reads assets
 }
+
+lambda -> s3 : reads assets
 ```
 
 The indentation creates the tree structure as before. The `lambda -> s3` line adds an explicit cross-tree edge on top of the implicit hierarchy. Only nodes with explicit identifiers can participate in `->` connections.
@@ -167,10 +169,11 @@ cloud(mindmap) {
     queue: Message Queue
     legacy: Legacy Service
     db: Database
-  api ->(bold primary) db : sync read
-  api ->(dashed info) queue : async publish
-  api ->(dotted danger) legacy : deprecated
 }
+
+api ->(bold primary) db : sync read
+api ->(dashed info) queue : async publish
+api ->(dotted danger) legacy : deprecated
 ```
 
 Use consistent edge styles to create a visual language: `bold` for critical synchronous paths, `dashed` for async messaging, `dotted` for deprecated connections.
@@ -210,53 +213,70 @@ Use layout classes on nested groups inside a mindmap to control their internal a
 ```
 platform(mindmap) {
   Cloud Platform
-    services: Core Services
-    monitoring: Monitoring
+    services
+    monitoring
 
   services(horizontal) {
-    api: API
-    auth: Auth
-    worker: Worker
+    api
+    auth
+    worker
   }
 
   monitoring(layout-2-col) {
-    cpu: CPU
-    mem: Memory
-    disk: Disk
-    net: Network
+    cpu
+    mem
+    disk
+    net
   }
 }
+
+services: Core Services
+monitoring: Monitoring
+api: API
+auth: Auth
+worker: Worker
+cpu: CPU
+mem: Memory
+disk: Disk
+net: Network
 ```
 
 ## Nested Groups Inside a Mind Map
 
-Use `{}` groups within a mindmap scope for sub-diagrams with independent layout and internal `->` connections. Cross-scope connections use dot notation.
+Ordinary `{}` groups list members and have independent layout. Put explicit connections and node decorations at the document root, using the same global identifiers.
 
 ```
 platform(mindmap) {
   Cloud Architecture
-    frontend: Frontend
-    backend: Backend
+    frontend
+    backend
 
   frontend {
-    cdn -> app
-    cdn: CDN
-    app: Web App
+    cdn
+    app
   }
 
   backend {
-    api -> auth
-    api -> worker
-    api: API Gateway
-    auth: Auth Service
-    worker: Worker
+    api
+    auth
+    worker
   }
-
-  frontend.app -> backend.api
 }
+
+frontend: Frontend
+backend: Backend
+cdn -> app
+api -> auth
+api -> worker
+app -> api
+cdn: CDN
+app: Web App
+api: API Gateway
+auth: Auth Service
+worker: Worker
 ```
 
-Each `{}` group arranges its nodes independently. Connections inside a group use local identifiers; connections between groups use dot notation.
+Each `{}` group arranges its members independently. Node names are global, and a node can be a direct member of one group. Dotted references and local shadowing are not supported.
 
 ## Explicit Connections Alongside the Tree
 
@@ -275,11 +295,12 @@ cloud(mindmap) {
       rds: RDS PostgreSQL
       dynamo: DynamoDB
 
-  lambda -> s3 : writes output
-  ec2 -> rds : queries
-  lambda ->(dashed info) dynamo : event stream
-  ec2 ->(dotted danger) ebs : deprecated mount
 }
+
+lambda -> s3 : writes output
+ec2 -> rds : queries
+lambda ->(dashed info) dynamo : event stream
+ec2 ->(dotted danger) ebs : deprecated mount
 ```
 
 Edge labels and styles work the same as in flowcharts. Only nodes with explicit identifiers can participate in `->` connections — bare-text nodes cannot be referenced:
@@ -290,8 +311,9 @@ cloud(mindmap) {
   Platform
     Compute
     Storage
-  Compute -> Storage
 }
+
+Compute -> Storage
 ```
 
 Assign identifiers with `id: Label` if you need to add cross-tree edges.
@@ -327,8 +349,9 @@ cloud(mindmap) {
     db: Database
 
   tip(overlay-bottom-right callout warning): Scale horizontally
-  tip -> api
 }
+
+tip -> api
 ```
 
 Overlay elements can have connections to flow elements — the renderer routes edges between layers.
@@ -375,28 +398,30 @@ cloud(mindmap dark fill) {
       dynamo(cylinder fill success): DynamoDB
       cache(cylinder fill warning): ElastiCache\nMemory 85%
 
-  lambda ->(dashed info) s3 : writes output
-  ec2 ->(bold primary) rds : sync query
-  lambda ->(dashed info) dynamo : event stream
-  ec2 ->(dotted danger) ebs : legacy mount
-
   compute, storage, data(bold)
 
   services: Shared Services
 
   services(horizontal) {
-    api(stadium fill primary): API Gateway
-    auth(fill success): Auth Service
-    queue(hexagon fill secondary): Message Queue
+    api
+    auth
+    queue
   }
-
-  services.api -> data.rds : read/write
-  services.auth -> data.cache : session lookup
 
   health(overlay-top-right fill success no-border): PASS
   alert(overlay-bottom-right callout danger): Cache memory high\nScale before 90%
-  alert -> cache
 }
+
+lambda ->(dashed info) s3 : writes output
+ec2 ->(bold primary) rds : sync query
+lambda ->(dashed info) dynamo : event stream
+ec2 ->(dotted danger) ebs : legacy mount
+api -> rds : read/write
+auth -> cache : session lookup
+alert -> cache
+api(stadium fill primary): API Gateway
+auth(fill success): Auth Service
+queue(hexagon fill secondary): Message Queue
 ````
 
 ## Tips
