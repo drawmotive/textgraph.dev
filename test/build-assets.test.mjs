@@ -53,7 +53,7 @@ test('direct VitePress configuration prepares assets in a clean checkout without
     }
 
     const sdkRoot = fileURLToPath(new URL('../../', import.meta.resolve('@drawmotive/textgraph/browser')));
-    const runtimeRoot = path.join(sdkRoot, 'generated');
+    const runtimeRoot = process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME ?? path.join(sdkRoot, 'generated');
     const manifest = JSON.parse(await readFile(path.join(runtimeRoot, 'wasm-manifest.json'), 'utf8'));
     for (const asset of manifest.assets) {
       assert.deepEqual(
@@ -63,9 +63,11 @@ test('direct VitePress configuration prepares assets in a clean checkout without
       );
     }
     for (const file of ['src/platform/browser.js', 'src/index.js', 'generated/wasm-manifest.js', 'LICENSE']) {
+      const selectedSource = file === 'generated/wasm-manifest.js'
+        ? path.join(runtimeRoot, 'wasm-manifest.js') : path.join(sdkRoot, file);
       assert.deepEqual(
         await readFile(path.join(root, 'public/textgraph/sdk', file)),
-        await readFile(path.join(sdkRoot, file)),
+        await readFile(selectedSource),
         file,
       );
     }

@@ -141,6 +141,24 @@ group1 {
 a -> m
 ```
 
+The same lookup applies to labels and styles. Put decorations after the main structure, outside the group, to update the existing node while preserving its containment:
+
+```text
+Shopping {
+  browse -> checkout
+}
+Backend {
+  payment
+}
+checkout -> payment
+
+browse(ellipse): Browse the shop
+checkout: Place an order
+payment(fill success): Take payment
+```
+
+`payment` is the same node as `Backend.payment`. `checkout` stays inside `Shopping` when its label is declared outside. Decorations may also appear before the structure.
+
 Use dot notation only to disambiguate multiple nodes with the same name. Add the shortest group prefix that makes the target unique:
 
 ```text
@@ -149,6 +167,8 @@ a -> regionA.payments.api
 ```
 
 If a bare name or dotted name still matches multiple candidates, it is an ambiguous reference and must be qualified further.
+
+To introduce separate nodes with the same name, declare the bare name in each owning group. Local references select their nearest declaration; external connections and decorations need a qualifier when multiple candidates remain.
 
 ## `[]` — Anonymous Node
 

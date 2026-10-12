@@ -3,6 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createMarkdownRenderer, disposeMdItInstance } from 'vitepress';
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress';
+import { initializeTextGraph } from '@drawmotive/textgraph/node';
 
 test('example fences retain escaped, copyable DSL alongside the rendered PNG', async () => {
   const { textgraphExamples } = await import('../.vitepress/textgraph-examples.mjs');
@@ -65,4 +66,22 @@ test('the published Connection Types example renders all mixed edge operators', 
     await config.buildEnd({});
     await disposeMdItInstance();
   }
+});
+
+test('the published grouped shopping example accepts trailing decorations and unique bare names', async () => {
+  const document = await readFile(new URL('../reference/textgraph-spec.md', import.meta.url), 'utf8');
+  const source = document.split('```textgraph example\n')[1]?.split('\n```')[0];
+  assert.ok(source?.includes('checkout -> payment'));
+  assert.ok(source.includes('saved -> pack'));
+  assert.ok(source.indexOf('checkout: Place an order') > source.indexOf('saved -> pack'));
+  const runtime = await initializeTextGraph();
+  try {
+    assert.equal((await runtime.validate(source)).valid, true);
+    const result = await runtime.renderPng(source);
+    assert.equal(result.success, true, JSON.stringify(result.diagnostics));
+    assert.deepEqual(Array.from(result.png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
+    const ambiguous = await runtime.validate('One { payment }\nTwo { payment }\npayment: Take payment');
+    assert.equal(ambiguous.valid, false);
+    assert.ok(ambiguous.diagnostics.some(diagnostic => diagnostic.message.includes("Ambiguous reference 'payment'")));
+  } finally { await runtime.dispose(); }
 });

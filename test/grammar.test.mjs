@@ -110,3 +110,16 @@ test('standalone and nested groups share endpoint postfix style syntax', () => {
   assert.deepEqual(named.classes, ['vertical']);
   assert.deepEqual(nested.body[0].classes, ['dashed']);
 });
+
+test('external decorations accept bare names and qualified references', () => {
+  const [group, connection, label, style, shared] = parse(
+    'Backend { payment }\ncheckout -> payment\npayment: Take payment\nBackend.payment(ellipse)\nBackend.payment, checkout(fill success)');
+  assert.equal(group.body[0].id, 'payment');
+  assert.deepEqual(connection.rest[0].target.ref.path, ['payment']);
+  assert.equal(label.id, 'payment');
+  assert.equal(label.label, 'Take payment');
+  assert.equal(style.id, 'Backend.payment');
+  assert.deepEqual(style.classes, ['ellipse']);
+  assert.deepEqual(shared.ids, ['Backend.payment', 'checkout']);
+  assert.deepEqual(shared.classes, ['fill', 'success']);
+});

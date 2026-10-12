@@ -216,16 +216,16 @@ AnonymousNodeText
 //   a: Agent
 //   a(fill primary)
 Declaration
-  = id:Identifier classes:Classes? label:Label? _ EOL
-  { return { type: "declaration", id, classes, label } }
+  = ref:QualifiedIdentifier classes:Classes? label:Label? _ EOL
+  { return { type: "declaration", id: ref.path.join("."), classes, label } }
 
 // Multi-node declaration: comma-separated identifiers sharing classes.
 // Only style classes are allowed — labels are not valid here.
 // To label individual nodes, use separate declaration lines.
 //   x, y, z(fill primary)
 MultiNodeDeclaration
-  = head:Identifier _ "," _ rest:(Identifier _ "," _)* last:Identifier classes:Classes _ EOL
-  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last], classes } }
+  = head:QualifiedIdentifier _ "," _ rest:(QualifiedIdentifier _ "," _)* last:QualifiedIdentifier classes:Classes _ EOL
+  { return { type: "multi-declaration", ids: [head, ...rest.map(r => r[0]), last].map(ref => ref.path.join(".")), classes } }
 
 
 // ───────────────────────────────────────────────────────────────

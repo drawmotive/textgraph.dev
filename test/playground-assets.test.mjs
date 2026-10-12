@@ -56,11 +56,13 @@ test('site asset preparation rejects a stale installed renderer before generatin
   }));
   await mkdir(path.join(installed, 'src/platform'), { recursive: true });
   await writeFile(path.join(installed, 'src/platform/worker.js'), 'export {};');
-  assert.throws(() => siteAssets(root).config(), error => {
+  assert.throws(() => verifySiteRenderer(root, null), error => {
     assert.ok(error.message.includes(`TextGraph 0.2.1 does not match ${abiManifest.packageVersion}`));
     assert.match(error.message, /npm ci/);
     return true;
   });
+  assert.throws(() => siteAssets(root).config(), process.env.DRAWMOTIVE_TEXTGRAPH_SDK
+    ? /selected local TextGraph SDK/ : /TextGraph 0.2.1 does not match/);
   assert.doesNotThrow(() => verifySiteRenderer(root, installed));
   assert.throws(() => verifySiteRenderer(root, root), /selected local TextGraph SDK/);
 });

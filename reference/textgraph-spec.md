@@ -71,6 +71,35 @@ a -> b
 
 Both are equivalent. The renderer collects all declarations before laying out the diagram.
 
+Labels and styles use the same name lookup as connections. When a node name is unique in the whole document, its bare name always refers to that node, including from outside its group. A separate decoration line changes its label or appearance without changing its group membership. This lets you keep the structure together and put decorations at the end:
+
+```textgraph example
+{
+  shopping(info): Shopping {
+    browse -> checkout
+  }
+  delivery(success): Delivery {
+    pack -> ship -> arrived
+  }
+}
+
+Backend {
+  payment
+  saved
+}
+
+checkout -> payment
+saved -> pack
+
+browse(ellipse): Browse the shop
+checkout: Place an order
+pack: Prepare the package
+ship: Ship the package
+arrived(ellipse fill success): Package arrives
+```
+
+Here `payment` and `Backend.payment` identify the same node. `checkout: Place an order` updates the node inside `shopping`; it does not create a root node. Decoration lines can also precede the structure. If repeated names make a decoration ambiguous, qualify it in the same way as a connection.
+
 ### Anonymous Nodes
 
 To create a fresh node inline inside a connection, wrap its label in square brackets:
@@ -345,21 +374,25 @@ Here `m` resolves to the node inside `group1` even though the connection is decl
 
 ### Identifier Scoping
 
-Bare node references are resolved by searching in this order:
+Connections, labels, and targeted styles share the same lookup. A unique name identifies the same node throughout the document, regardless of where its decorations appear. Containment comes from the structural declaration or connection that introduces the node, rather than from an external decoration.
+
+When names are duplicated, bare references are resolved by searching in this order:
 
 1. The **current scope**
 2. Then each **parent scope outward** to the root
 3. If still unresolved, the **rest of the document**, including nested child scopes in other branches
 
-The nearest unique match wins. This means an inner declaration shadows an outer one with the same name:
+The nearest match wins. To declare distinct nodes with the same name, put a standalone bare declaration in each owning scope; decorations then update those nodes:
 
 ```text
-a: Outer A
+a
 group1 {
+  a
   a: Inner A
   <!-- resolves to Inner A -->
   a -> b
 }
+a: Outer A
 <!-- resolves to Outer A -->
 a -> c
 ```
