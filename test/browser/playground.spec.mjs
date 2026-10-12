@@ -36,7 +36,7 @@ test('playground resolves global members before or after containers and rejects 
   const status = page.getByRole('status', { name: 'Render status' });
   const errors = page.getByRole('region', { name: 'Diagram errors' });
   await expect(status).toHaveText('Preview up to date');
-  const containers = 'Shopping { checkout }\nBackend { payment }';
+  const containers = 'Shopping { browse -> checkout }\nBackend { payment -> saved }';
   const references = 'checkout -> payment\ncheckout: Place an order\npayment(fill success): Take payment';
   for (const source of [containers + '\n' + references, references + '\n' + containers]) {
     const previousImage = await preview.getAttribute('src');
@@ -50,7 +50,7 @@ test('playground resolves global members before or after containers and rejects 
   for (const [source, diagnostic] of [
     ['Shopping { checkout }\nBackend { checkout }', 'belongs to more than one group'],
     [containers + '\ncheckout -> Backend.payment', 'Node names are global'],
-    ['Shopping { checkout -> payment }', 'Groups contain only member names'],
+    ['Shopping { checkout: Place an order }', 'standalone node labels'],
   ]) {
     await editor.fill(source);
     await expect(status).toHaveText('Could not render the diagram');
