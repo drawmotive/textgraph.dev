@@ -35,11 +35,11 @@ Groups can also be endpoints, including empty, nested, named, and anonymous grou
 ```text
 A -> { B }
 A -> {}
-{ B } -> D
-A -> D { B } -> E
+{ C } -> D
+A -> services { F } -> E
 ```
 
-Each outer arrow connects to the **group boundary**. It does not connect to, or fan out across, the children. Spaces are optional: `A->{B->C}` is valid.
+Each outer arrow connects to the **group boundary**. It does not connect to, or fan out across, the children. Spaces are optional: `A->{B}->C` is valid.
 
 ## `:` — Label and Name Declaration
 

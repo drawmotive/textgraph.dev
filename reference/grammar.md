@@ -129,7 +129,6 @@ Line
     / ScopeLevelStyle
     / SpeakerNotes
     / Declaration
-    / MindmapNode
     / FreeText
   ) { return line }
 
@@ -300,31 +299,6 @@ ScopeLine
 
 ScopeEnd
   = Newline / &"}"
-
-
-// ───────────────────────────────────────────────────────────────
-// Mindmap Nodes
-// ───────────────────────────────────────────────────────────────
-
-// Inside a mindmap scope, indentation defines hierarchy.
-// A mindmap node is an indented line that is either:
-//   - bare text (label = identifier)
-//   - id: Label
-//   - id(classes): Label
-MindmapNode
-  = indent:Indent content:(
-      id:Identifier classes:Classes? label:Label? { return { id, classes, label } }
-    / text:BareText { return { id: null, classes: null, label: text } }
-    ) _ EOL
-  { return { type: "mindmap-node", indent: indent.length, ...content } }
-
-Indent
-  = spaces:[ \t]+
-  { return spaces }
-
-BareText
-  = text:$( (!EOL !"```" !"{" !"}" !"<!--" .)+ )
-  { return text.trim() }
 
 
 // ───────────────────────────────────────────────────────────────

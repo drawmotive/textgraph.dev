@@ -5,6 +5,24 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { copyLocalRuntime, localRuntimeManifestPlugin } from '../.vitepress/local-runtime.mjs';
+import { initializeTextGraph } from '@drawmotive/textgraph/node';
+
+test('published DSL examples satisfy native global identity and membership rules',
+  { skip: !process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME }, async () => {
+    const runtime = await initializeTextGraph();
+    try {
+      const documents = ['reference/textgraph-spec.md', 'reference/syntax.md', 'reference/classes.md',
+        'intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
+        'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md'];
+      for (const document of documents) {
+        const content = await readFile(new URL('../' + document, import.meta.url), 'utf8');
+        for (const [, source] of content.matchAll(/```(?:text|textgraph)(?: example)?\r?\n([\s\S]*?)\r?\n```/g)) {
+          const validation = await runtime.validate(source);
+          assert.equal(validation.valid, true, document + '\n' + source + '\n' + JSON.stringify(validation.diagnostics));
+        }
+      }
+    } finally { await runtime.dispose(); }
+  });
 
 test('local site copies verified selected bytes and resolves the same manifest in main and Worker bundles', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'textgraph-site-runtime-'));

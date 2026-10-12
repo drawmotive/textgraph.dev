@@ -29,6 +29,40 @@ function captureDiagnostics(page) {
   return diagnostics;
 }
 
+test('playground resolves global members before or after containers and rejects conflicting ownership', async ({ page }) => {
+  await page.goto('/playground');
+  const editor = page.getByRole('textbox', { name: 'TextGraph source' });
+  const preview = page.getByRole('img', { name: 'Rendered TextGraph diagram' });
+  const status = page.getByRole('status', { name: 'Render status' });
+  const errors = page.getByRole('region', { name: 'Diagram errors' });
+  await expect(status).toHaveText('Preview up to date');
+  const containers = 'Shopping { checkout }\nBackend { payment }';
+  const references = 'checkout -> payment\ncheckout: Place an order\npayment(fill success): Take payment';
+  for (const source of [containers + '\n' + references, references + '\n' + containers]) {
+    const previousImage = await preview.getAttribute('src');
+    await editor.fill(source);
+    await expect(preview).not.toHaveAttribute('src', previousImage);
+    await expect(status).toHaveText('Preview up to date');
+    await expect(errors).toHaveCount(0);
+    await expect(preview).toBeVisible();
+  }
+  const validImage = await preview.getAttribute('src');
+  for (const [source, diagnostic] of [
+    ['Shopping { checkout }\nBackend { checkout }', 'belongs to more than one group'],
+    [containers + '\ncheckout -> Backend.payment', 'Node names are global'],
+    ['Shopping { checkout -> payment }', 'Groups contain only member names'],
+  ]) {
+    await editor.fill(source);
+    await expect(status).toHaveText('Could not render the diagram');
+    await expect(errors).toBeVisible();
+    await expect(errors).toContainText(diagnostic);
+    await expect(preview).toHaveAttribute('src', validImage);
+  }
+  await editor.fill(containers + '\n' + references);
+  await expect(status).toHaveText('Preview up to date');
+  await expect(errors).toHaveCount(0);
+});
+
 test('local playground renders, reports errors, recovers, and fits a phone', async ({ page }) => {
   const failures = [];
   const diagnostics = captureDiagnostics(page);
