@@ -82,23 +82,21 @@ See [Style Classes](/reference/classes) for the full list of colors, shapes, bor
 
 ## Grouping
 
-Curly braces list group members. Names are global, so connections between groups use the same simple names as every other connection. Keep node labels, styles, and arrows outside the groups.
+Curly braces group nodes and their connections. Names are global, so cross-group connections use the same simple names as local connections. Connections inside a group introduce their node members directly; keep separate node labels and styles at the root.
 
 ```textgraph example
 frontend {
-  browser
-  cdn
+  browser -> cdn
 }
 backend {
-  api
-  auth
+  api -> auth
 }
 data {
   db
   cache
 }
 
-browser -> cdn -> api -> auth
+cdn -> api
 api -> db
 api -> cache
 
@@ -122,11 +120,8 @@ Apply the `horizontal` class to a group to arrange its children left to right in
 
 ```textgraph example
 services(horizontal) {
-  api
-  auth
-  worker
+  api -> auth -> worker
 }
-api -> auth -> worker
 ```
 
 Put the direction class on the group header. For the whole diagram, place `(horizontal)` at the start of the source.

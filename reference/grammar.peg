@@ -246,8 +246,8 @@ ScopeHeaderLabel
   = _ ":" _ text:$( [^{\r\n]+ )
   { return text.trim() }
 
-// Group bodies declare membership only. Connections and node decorations
-// are root statements, so membership never depends on reference order.
+// Bare members and named node endpoints of grouped connections claim this
+// group. Root connections and decorations never choose or change membership.
 ScopeBody
   = lines:(_ !"}" line:ScopeLine { return line })*
   { return lines.filter(line => line.type !== "blank") }
@@ -255,10 +255,21 @@ ScopeBody
 ScopeLine
   = BlankLine
   / Comment
+  / connection:ConnectionExpression edgeLabel:ScopeEdgeLabel? _ ScopeEnd
+    { return { type: "connection", ...connection, edgeLabel } }
   / scope:(LabeledScope / ScopeEndpoint) _ ScopeEnd
     { return scope }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }
+
+// Balanced braces are literal edge-label content; an owning closing brace
+// terminates a compact group statement without becoming part of its label.
+ScopeEdgeLabel
+  = _ ":" _ text:$( (LabelBraces / [^{}\r\n])+ )
+  { return text.trim() }
+
+LabelBraces
+  = "{" (LabelBraces / [^{}\r\n])* "}"
 
 ScopeEnd
   = Newline / &"}"

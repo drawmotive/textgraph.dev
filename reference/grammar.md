@@ -26,11 +26,11 @@ When the prose specification and this grammar disagree on a syntax question, the
 
 ## Group Endpoints
 
-A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain only bare member names, nested groups, and comments.
+A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, and comments. Grouped connection endpoints introduce node members directly.
 
 Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
 
-The grammar below is the executable canonical file, including its AST actions. `npm test` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It rejects dotted references, connections inside groups, and node decorations inside groups. Labels at the document root may contain literal braces.
+The grammar below is the executable canonical file, including its AST actions. `npm test` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and rejects dotted references and separate node decorations inside groups. Labels at the document root may contain literal braces.
 
 ## Grammar
 
@@ -283,8 +283,8 @@ ScopeHeaderLabel
   = _ ":" _ text:$( [^{\r\n]+ )
   { return text.trim() }
 
-// Group bodies declare membership only. Connections and node decorations
-// are root statements, so membership never depends on reference order.
+// Bare members and named node endpoints of grouped connections claim this
+// group. Root connections and decorations never choose or change membership.
 ScopeBody
   = lines:(_ !"}" line:ScopeLine { return line })*
   { return lines.filter(line => line.type !== "blank") }
@@ -292,10 +292,21 @@ ScopeBody
 ScopeLine
   = BlankLine
   / Comment
+  / connection:ConnectionExpression edgeLabel:ScopeEdgeLabel? _ ScopeEnd
+    { return { type: "connection", ...connection, edgeLabel } }
   / scope:(LabeledScope / ScopeEndpoint) _ ScopeEnd
     { return scope }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }
+
+// Balanced braces are literal edge-label content; an owning closing brace
+// terminates a compact group statement without becoming part of its label.
+ScopeEdgeLabel
+  = _ ":" _ text:$( (LabelBraces / [^{}\r\n])+ )
+  { return text.trim() }
+
+LabelBraces
+  = "{" (LabelBraces / [^{}\r\n])* "}"
 
 ScopeEnd
   = Newline / &"}"

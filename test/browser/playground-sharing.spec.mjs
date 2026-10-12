@@ -45,7 +45,7 @@ test('edits update the link without adding history, including invalid and empty 
   const editor = page.getByRole('textbox', { name: 'TextGraph source' });
   await expect(editor).toBeVisible();
   const historyLength = await page.evaluate(() => history.length);
-  for (const source of ['group {\n  A\n}\nA ->', '  A -> B\n\n', '']) {
+  for (const source of ['group {\n  A ->\n}', '  A -> B\n\n', '']) {
     await editor.fill(source);
     await expect.poll(() => readSourceLink(page.url())).toBe(source);
     expect(new URL(page.url()).searchParams.get('from')).toBe('share');

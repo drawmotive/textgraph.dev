@@ -23,7 +23,7 @@ export const homeExamples = [
     source: request + '\n\napp1 -> cache\napp2 -> cache',
     alt: 'A load balancer routes requests to two application replicas. Both replicas access the shared database and a shared cache.' },
   { id: 'release-process', title: 'From commit to release',
-    source: 'commit -> tests -> release\ncommit -> review -> release\n\ntests: Run tests\nreview: Code review\nrelease(fill primary): Publish package',
+    source: 'process {\n  commit -> tests -> release\n  commit -> review -> release\n}\n\ntests: Run tests\nreview: Code review\nrelease(fill primary): Publish package',
     alt: 'A commit starts automated tests and code review. Publishing the package requires passing tests and an approved review. Arrows show prerequisites.' },
   { id: 'dependencies', title: 'A shared client library',
     source: 'web -> client -> transport\ncli -> client\n\nweb: Web app\ncli: Admin CLI\nclient(fill primary): API client\ntransport: HTTP transport',

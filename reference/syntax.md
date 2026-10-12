@@ -71,7 +71,7 @@ a: Agent
 b: Bias
 ```
 
-Group bodies contain only bare member names, nested group blocks, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
+Group bodies contain connections, bare member names, nested group blocks, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
 
 ## `()` — Style Classes
 
@@ -99,22 +99,23 @@ a(fill primary): Agent
 
 ## `{}` — Containment and Groups
 
-Group bodies list membership. A member is a bare identifier, a nested group, or a comment. Connections and node decorations always stay at the document root:
+Group bodies declare members directly with connections or bare identifiers. Nested groups and comments are also allowed. Separate node decorations and cross-group connections stay at the document root:
 
 ```text
 Shopping(info): Shopping {
-  browse
-  checkout
+  browse -> checkout
 }
 Backend {
   payment
 }
 
-browse -> checkout -> payment
+checkout -> payment
 browse(ellipse): Browse the shop
 checkout: Place an order
 payment(fill success): Take payment
 ```
+
+A grouped connection needs no bare predeclarations: its named node endpoints claim the containing group. Referencing a named group as an endpoint reuses that group without moving it. Inline endpoint and edge styles remain valid; separate node decorations stay at the root.
 
 Each node has one global name and can be a direct member of one group. A root connection or decoration always refers to that same node and leaves its membership unchanged. Connections and decorations may appear before or after the groups. Listing one node in two different groups is an error, regardless of order.
 
@@ -123,11 +124,9 @@ Groups may nest:
 ```text
 platform {
   services(horizontal) {
-    api
-    worker
+    api -> worker
   }
 }
-api -> worker
 api: API
 worker: Worker
 ```
@@ -140,13 +139,11 @@ A group occurrence in a chain is reused by both adjacent arrows:
 
 ```text
 A -> {
-  B
-  C
+  B -> C
 } -> D
-B -> C
 ```
 
-Both outer edges attach to one group boundary. The root `B -> C` connection connects the children. Use a named group when it needs to be reused by another statement.
+Both outer edges attach to one group boundary. The grouped `B -> C` connection introduces and connects its children. Use a named group when it needs to be reused by another statement.
 
 ## Global References
 
@@ -162,7 +159,7 @@ frontend_api: API
 backend_api: API
 ```
 
-A node omitted from all group bodies belongs to the document root.
+A node not introduced by any group body belongs to the document root.
 
 ## `[]` — Anonymous Node
 

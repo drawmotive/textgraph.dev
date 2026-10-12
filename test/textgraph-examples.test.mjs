@@ -80,15 +80,20 @@ test('the published grouped shopping example accepts trailing decorations and gl
     const result = await runtime.renderPng(source);
     assert.equal(result.success, true, JSON.stringify(result.diagnostics));
     assert.deepEqual(Array.from(result.png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
-    for (const groups of ['One { payment }\nTwo { payment }', 'Two { payment }\nOne { payment }']) {
+    for (const groups of ['One { payment }\nTwo { payment }', 'Two { payment }\nOne { payment }',
+      'One { payment -> saved }\nTwo { payment }', 'Two { payment }\nOne { payment -> saved }']) {
       const conflict = await runtime.validate(groups + '\npayment: Take payment');
       assert.equal(conflict.valid, false);
       assert.ok(conflict.diagnostics.some(diagnostic => diagnostic.severity === 'error'));
     }
+    const grouped = await runtime.validate('Backend { payment -> saved : stored }\ncheckout -> payment');
+    assert.equal(grouped.valid, true);
+    const namedGroupEndpoint = await runtime.validate('One { worker -> Two }\nTwo { payment }');
+    assert.equal(namedGroupEndpoint.valid, true);
     const reordered = source.split('\n\n');
     assert.equal((await runtime.validate([...reordered.slice(3), ...reordered.slice(0, 3)].join('\n\n'))).valid, true);
     for (const invalid of ['Backend.payment -> checkout', 'Backend { payment: Take payment }',
-      'Backend { payment -> saved }', 'Backend { payment(ellipse) }']) {
+      'Backend { payment(ellipse) }']) {
       assert.equal((await runtime.validate(invalid)).valid, false, invalid);
     }
   } finally { await runtime.dispose(); }

@@ -28,8 +28,8 @@ The public language contract is in `reference/textgraph-spec.md` and `reference/
 
 - Each name identifies one node or named group throughout a diagram.
 - A node can be a direct member of one group. Root mentions never change membership.
-- Group bodies contain only bare member names, nested group blocks, and comments.
-- Connections and node decorations belong at the document root.
+- Group bodies contain connections, bare member names, nested group blocks, and comments.
+- Connections inside groups introduce their node members. Cross-group connections and separate node decorations belong at the document root.
 - Declare each named group once. Use simple global references; dotted paths and shadowing are invalid.
 - Distinct identifiers may have identical display labels. Anonymous nodes and groups remain distinct occurrences.
 

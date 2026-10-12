@@ -71,8 +71,8 @@ test('every arrow operator separates compact identifiers and group endpoints', (
   assert.notEqual(chain.rest[0].target, chain.rest[1].target);
 });
 
-test('group bodies reject connections, node decorations, shared styles and free text', () => {
-  for (const statement of ['B -> C', 'B: Bee', 'B(ellipse)', 'B, C(fill primary)', '(horizontal)', '[Bee]', 'plain text']) {
+test('group bodies reject separate node decorations, shared styles and free text', () => {
+  for (const statement of ['B: Bee', 'B(ellipse)', 'B, C(fill primary)', '(horizontal)', '[Bee]', 'plain text']) {
     for (const source of ['G {\n' + statement + '\n}', 'G(info): Group {\n' + statement + '\n}', 'A -> {\n' + statement + '\n}']) {
       assert.throws(() => parse(source), parser.SyntaxError, source);
     }
@@ -128,7 +128,7 @@ test('qualified source references are rejected for every graph statement', () =>
   }
 });
 
-test('published diagrams and homepage inputs conform to the membership-only grammar', async () => {
+test('published diagrams and homepage inputs conform to the global-name grammar', async () => {
   const documents = ['intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
     'reference/textgraph-spec.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',
     'integrations/ai-agents.md'];
@@ -140,5 +140,39 @@ test('published diagrams and homepage inputs conform to the membership-only gram
   }
   for (const example of homeExamples) {
     assert.doesNotThrow(() => parse(example.source), example.id);
+  }
+});
+
+test('grouped connections introduce members without bare predeclarations', () => {
+  const [left] = parse('Left(vertical) {\nA -> B : approval label\nC -> D : rejection label\n}');
+  assert.equal(left.body.length, 2);
+  assert.deepEqual(left.body[0].head.ref.path, ['A']);
+  assert.deepEqual(left.body[0].rest[0].target.ref.path, ['B']);
+  assert.equal(left.body[0].edgeLabel, 'approval label');
+  assert.equal(left.body[1].edgeLabel, 'rejection label');
+  for (const operator of ['->', '<-', '<->', '--']) {
+    const [group] = parse('G { A' + operator + 'B }');
+    assert.equal(group.body[0].type, 'connection');
+  }
+});
+
+test('grouped connections support inline styles, anonymous nodes and nested endpoints', () => {
+  const [group] = parse('G {\nA(ellipse) ->(bold) [New](dashed) -> H { B -> C }\n}');
+  const connection = group.body[0];
+  assert.deepEqual(connection.head.classes, ['ellipse']);
+  assert.deepEqual(connection.rest[0].classes, ['bold']);
+  assert.equal(connection.rest[0].target.ref.label, 'New');
+  assert.deepEqual(connection.rest[0].target.classes, ['dashed']);
+  assert.equal(connection.rest[1].target.id, 'H');
+  assert.equal(connection.rest[1].target.body[0].type, 'connection');
+});
+
+test('compact grouped edge labels terminate at the owning brace', () => {
+  const [outer, decoration] = parse('A -> { B -> C : inner {{value}} } -> D : outer\nB: Bee');
+  assert.equal(outer.edgeLabel, 'outer');
+  assert.equal(outer.rest[0].target.body[0].edgeLabel, 'inner {{value}}');
+  assert.equal(decoration.label, 'Bee');
+  for (const source of ['G { B -> }', 'G { B -> C', 'G { B -> team.C }']) {
+    assert.throws(() => parse(source), parser.SyntaxError, source);
   }
 });

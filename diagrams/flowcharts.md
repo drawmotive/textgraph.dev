@@ -275,29 +275,23 @@ Render it with the [Markdown & VitePress plugin](/integrations/markdown) or prev
 
 ## Groups and Scopes
 
-Curly braces declare group membership. Every name identifies one node throughout the diagram. Group bodies contain only bare member names, nested groups, and comments; connections and node decorations belong at the document root.
+Curly braces declare group membership. Every name identifies one node throughout the diagram. Group bodies contain connections, bare member names, nested groups, and comments. A connection inside a group introduces its node members directly; put cross-group connections and separate node decorations at the document root.
 
 ```textgraph example
 frontend {
-  browser
-  cdn
+  browser -> cdn
 }
 backend {
-  api
-  auth
-  worker
+  api -> auth
+  api -> worker
 }
 data {
-  db
-  cache
+  db -- cache
 }
 
-browser -> cdn -> api
-api -> auth
-api -> worker
+cdn -> api
 api -> db
 api -> cache
-db -- cache
 
 browser: Browser
 cdn: CDN
@@ -316,15 +310,13 @@ A named group uses its identifier as its default title. Combine a group’s styl
 
 ```textgraph example
 frontend(fill info): Frontend {
-  browser
-  cdn
+  browser -> cdn
 }
 backend(fill primary): Backend {
-  api
-  worker
+  api -> worker
 }
 
-browser -> cdn -> api -> worker
+cdn -> api
 browser: Browser
 cdn: CDN
 api: API Server
@@ -335,10 +327,8 @@ A group can also have its title declared separately at the root:
 
 ```textgraph example
 frontend(fill info) {
-  browser
-  cdn
+  browser -> cdn
 }
-browser -> cdn
 frontend: Frontend
 browser: Browser
 cdn: CDN
@@ -352,10 +342,8 @@ Omit the group name for an anonymous group with no default visible title. Separa
 
 ```textgraph example
 {
-  a
-  b
+  a -> b
 }
-a -> b
 a: Service A
 b: Service B
 ```
@@ -376,16 +364,14 @@ Groups can be named or chained:
 
 ```textgraph example
 A -> services {
-  B
-  C
+  B -> C
 } -> D
-B -> C
 services: Services
 
 E -> { F } -> G
 ```
 
-The first chain uses one named group, titled `Services`, for both outer arrows. The separate root connection connects `B` to `C` inside it. The second chain uses one anonymous group between `E` and `G`.
+The first chain uses one named group, titled `Services`, for both outer arrows. The grouped connection introduces `B` and `C` and connects them inside it. The second chain uses one anonymous group between `E` and `G`.
 
 Use parentheses for styles as usual:
 
@@ -447,11 +433,8 @@ Set direction on the group header:
 
 ```textgraph example
 services(horizontal) {
-  api
-  auth
-  worker
+  api -> auth -> worker
 }
-api -> auth -> worker
 ```
 
 For the whole diagram, place `(horizontal)` or `(vertical)` at the start of the source.

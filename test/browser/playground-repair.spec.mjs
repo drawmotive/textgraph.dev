@@ -4,8 +4,8 @@ import { createHash } from 'node:crypto';
 import { createSourceLink, readSourceLink } from '../../.vitepress/playground/source-link.mjs';
 const sitePackage = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
 
-const invalid = 'group {\n  A\n}\nA ->';
-const repaired = 'group {\n  A\n  B\n}\nA -> B';
+const invalid = 'group {\n  A ->\n}';
+const repaired = 'group {\n  A -> B\n}';
 const api = '**/api/textgraph/fix';
 const editor = page => page.getByRole('textbox', { name: 'TextGraph source' });
 const preview = page => page.getByRole('img', { name: 'Rendered TextGraph diagram' });
@@ -55,8 +55,8 @@ test('error overlay covers the empty image viewport and repaired PNG requires re
   await expect(editor(page)).toHaveValue(invalid);
   expect(page.url()).toBe(originalLink);
   await page.getByText('Review source changes', { exact: true }).click();
-  await expect(page.getByLabel('Source changes')).toContainText('− A ->');
-  await expect(page.getByLabel('Source changes')).toContainText('+ A -> B');
+  await expect(page.getByLabel('Source changes')).toContainText('−   A ->');
+  await expect(page.getByLabel('Source changes')).toContainText('+   A -> B');
   await page.getByRole('button', { name: 'Replace original DSL' }).click();
   await expect(editor(page)).toHaveValue(repaired);
   await expect(review(page)).toHaveCount(0);

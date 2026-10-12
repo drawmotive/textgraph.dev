@@ -76,13 +76,10 @@ Labels, styles, and connections always use the same global name. Write node deco
 ```textgraph example
 {
   shopping(info): Shopping {
-    browse
-    checkout
+    browse -> checkout
   }
   delivery(success): Delivery {
-    pack
-    ship
-    arrived
+    pack -> ship -> arrived
   }
 }
 
@@ -91,8 +88,6 @@ Backend {
   saved
 }
 
-browse -> checkout
-pack -> ship -> arrived
 checkout -> payment
 saved -> pack
 
@@ -103,7 +98,7 @@ ship: Ship the package
 arrived(ellipse fill success): Package arrives
 ```
 
-Here `payment` always identifies the member of `Backend`. `checkout: Place an order` updates the member of `shopping` without changing its group. Decorations and connections may also precede the groups. The group body alone assigns membership; placing the same node in a second group is an error.
+Here `payment` always identifies the member of `Backend`. `checkout: Place an order` updates the member of `shopping` without changing its group. Decorations and connections may also precede the groups. Bare member lines and connection endpoints inside a group assign membership; claiming the same node in a second group is an error.
 
 ### Anonymous Nodes
 
@@ -245,7 +240,7 @@ Group endpoints follow the same occurrence rule. `A -> { B } -> D` creates one g
 
 ### Line Types
 
-At the document root, arrows (`->`, `<-`, `<->`, or `--`) distinguish connections from declarations. Group bodies contain only bare member identifiers, nested group blocks, and comments. Connections, node labels, and node styles belong at the document root.
+At the document root, arrows (`->`, `<-`, `<->`, or `--`) distinguish connections from declarations. Group bodies contain connections, bare member identifiers, nested group blocks, and comments. Connections introduce node members directly. Separate node labels and styles belong at the document root.
 
 **Declaration line** — no arrow. The colon sets a display label:
 
@@ -280,10 +275,8 @@ Set diagram direction at the document root, or set a group’s layout in its hea
 ```text
 (horizontal)
 services(vertical): Services {
-  api
-  worker
+  api -> worker
 }
-api -> worker
 api: API Server
 worker: Worker
 ```
@@ -301,7 +294,7 @@ Column layouts apply to groups containing nodes directly. Without an explicit la
 
 ### Membership
 
-Curly braces declare containment. A group body contains only bare member identifiers, nested groups, and comments. Put every connection and node decoration at the document root:
+Curly braces declare containment. A group body contains connections, bare member identifiers, nested groups, and comments. Connections introduce their node members directly; separate node decorations belong at the document root:
 
 ```text
 platform {
@@ -309,16 +302,30 @@ platform {
     browser
   }
   backend(primary): Backend {
-    api
-    worker
+    api -> worker
   }
 }
 
-browser -> api -> worker
+browser -> api
 browser: Browser
 api: API Gateway
 worker(fill success): Worker
 ```
+
+A grouped connection needs no bare predeclarations. Every named node endpoint claims the group containing that connection. Repeating a node in connections in the same group reuses it. Edge labels and inline endpoint or arrow styles work inside groups too:
+
+```text
+Left(vertical) {
+  A -> B : approval label
+  C -> D : rejection label
+}
+A(ellipse): Request
+B: Approved
+C: Review
+D: Rejected
+```
+
+A root connection may refer to any of these nodes without changing its group. Connecting nodes from different groups belongs at the root. A named group used as an endpoint references that existing group and never changes its parent; inline group endpoints declare nested groups with their own members. Anonymous node occurrences in grouped connections belong to the containing group.
 
 A node can be a direct member of one group. It is also visually inside that group’s ancestors. Mentioning a member at the document root does not remove it from its group. Membership does not depend on whether the connection, label, or group appeared first.
 
@@ -338,18 +345,16 @@ An anonymous group omits the identifier: `{ member }`. It has no default title o
 
 ### Groups as Connection Endpoints
 
-Groups can be sources, targets, or intermediate endpoints. Their bodies follow the same membership-only rule:
+Groups can be sources, targets, or intermediate endpoints. Their bodies support the same grouped connections and member declarations:
 
 ```text
 A -> services {
-  B
-  C
+  B -> C
 } -> D
-B -> C
 services: Services
 ```
 
-Both outer edges attach to the boundary of one `services` group. The separate root connection `B -> C` connects its children. A group endpoint never expands into external arrows to each member.
+Both outer edges attach to the boundary of one `services` group. The grouped connection `B -> C` introduces and connects its children. A group endpoint never expands into external arrows to each member.
 
 Whitespace around braces and arrows is optional: `A->{B}->D` is valid. Put multiple members on separate lines. `A -> {} -> {}` contains two distinct empty anonymous groups. Nested groups may also appear inside an inline group body.
 
@@ -369,4 +374,4 @@ Backend {
 }
 ```
 
-Moving the root connections and decorations before or after the groups leaves node identity and membership unchanged. Dotted references such as `Backend.payment` are invalid. If a node is not listed in any group, it belongs to the document root.
+Moving the root connections and decorations before or after the groups leaves node identity and membership unchanged. Dotted references such as `Backend.payment` are invalid. If a node is not introduced by a bare member line or connection in any group, it belongs to the document root.

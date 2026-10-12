@@ -1,7 +1,7 @@
 # Sequence Diagrams
 
 ::: warning Not implemented
-Sequence diagrams are not available yet. This page describes planned syntax and behavior. Combined-fragment bodies are proposals that still need a design compatible with membership-only groups. These examples will not render as sequence diagrams. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+Sequence diagrams are not available yet. This page describes planned syntax and behavior. Combined-fragment condition text remains a proposal separate from ordinary diagram groups. These examples will not render as sequence diagrams. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
 :::
 
 Sequence diagrams model interactions between participants over time. Unlike flowcharts, sequence diagrams require an explicit type declaration — add `(sequence)` as a scope-level style at the top of your diagram.
@@ -467,34 +467,27 @@ If the file contains only one diagram, the closing `@textgraph` is optional.
 
 ## Groups and Scopes
 
-Curly braces list group membership. A group body contains bare participant names, nested groups, and comments. Put message connections and participant decorations at the document root.
+Curly braces group participants and messages. Message connections inside a group introduce its participants directly. Bare participant names, nested groups, and comments are also allowed. Separate participant decorations and cross-group messages belong at the document root.
 
 ```
 (sequence)
 clients {
-  browser
-  mobile
+  browser -> mobile
 }
 
 platform {
-  gw
-  auth
-  worker
+  gw -> auth
+  gw -> worker
 }
 
 data {
-  db
-  cache
+  db -- cache
 }
 
 browser -> gw
 auth -> db
 worker -> cache
 
-browser -> mobile
-gw -> auth
-gw -> worker
-db -- cache
 browser: Browser
 mobile: Mobile App
 gw: API Gateway
@@ -512,18 +505,14 @@ Groups follow the same rules as participants — styles and labels can be combin
 (sequence)
 clients(fill info): Client Tier
 clients {
-  browser
-  cdn
+  browser -> cdn
 }
 
 platform(fill primary): Platform
 platform {
-  gw
-  worker
+  gw -> worker
 }
 
-browser -> cdn
-gw -> worker
 browser: Browser
 cdn: CDN
 gw: API Gateway
@@ -535,11 +524,9 @@ Or combined on one line:
 ```
 (sequence)
 clients(fill info): Client Tier {
-  browser
-  cdn
+  browser -> cdn
 }
 
-browser -> cdn
 browser: Browser
 cdn: CDN
 ```
@@ -551,11 +538,9 @@ An unnamed `{}` creates a scope without a visible group label.
 ```
 (sequence)
 {
-  a
-  b
+  a -> b
 }
 
-a -> b
 a: Service A
 b: Service B
 ```
@@ -747,7 +732,7 @@ notify: Notification Service
 
 ## Global Participant Names
 
-The same identifier always refers to the same participant, including across groups. Group bodies list membership; message connections and participant decorations are root statements. Moving root statements before or after a group does not change membership.
+The same identifier always refers to the same participant, including across groups. Grouped message connections and bare member names assign membership. Separate participant decorations and cross-group messages are root statements. Moving root statements before or after a group does not change membership.
 
 ```text
 (sequence)
@@ -755,15 +740,13 @@ clients {
   browser
 }
 platform {
-  gateway
-  auth
+  gateway -> auth
 }
 data {
   db
 }
 
 browser -> gateway
-gateway -> auth
 auth -> db
 browser: Browser
 gateway: API Gateway
@@ -799,13 +782,11 @@ A small status indicator anchored to a corner of a group.
 ```
 (sequence)
 services {
-  api
-  db
+  api -> db
 
   status
 }
 
-api -> db
 api: API Server
 db(cylinder): Database
 status(overlay-top-right circle success fill): ✓
@@ -818,15 +799,12 @@ A floating note connected to a specific participant.
 ```
 (sequence)
 main {
-  client
-  gw
-  auth
+  client -> gw -> auth
 }
 
 tip(overlay-top-right callout warning): Latency spike — check connection pool
 tip -> gw
 
-client -> gw -> auth
 client: Browser
 gw: API Gateway
 auth: Auth Service
@@ -841,14 +819,12 @@ Use `overlay-cover` for a watermark or translucent background layer.
 ```
 (sequence)
 services {
-  api
-  db
+  api -> db
 
   watermark
 }
 watermark(overlay-cover no-border): STAGING
 
-api -> db
 api: API
 db(cylinder): DB
 ```
@@ -864,14 +840,13 @@ header(title): # Cloud Auth Flow
 
 <!-- client tier -->
 clients(fill info): Client Tier {
-  user
-  browser
+  user -> browser : open app
 }
 
 <!-- platform tier -->
 platform(fill primary): Platform Services {
+  auth -> auth : validate token signature
   gw
-  auth
   billing
   notify
 
@@ -887,7 +862,6 @@ data(fill secondary): Data Layer {
 }
 
 <!-- initial request flow -->
-user -> browser : open app
 browser ->(bold primary) gw : HTTPS login
 
 <!-- auth with retry loop -->
@@ -919,9 +893,6 @@ postlogin(par) {
 
 <!-- final response -->
 gw ->(bold success) browser : 200 OK + dashboard
-
-<!-- self-message: internal processing -->
-auth -> auth : validate token signature
 
 <!-- monitoring overlay -->
 monitor(overlay-bottom-right callout warning): p99 latency\n> 200ms

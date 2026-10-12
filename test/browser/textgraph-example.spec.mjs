@@ -37,7 +37,7 @@ test('standalone browser example renders, edits, downloads, and fits a phone', a
   const previewBytes = await preview.evaluate(async image => Array.from(new Uint8Array(await (await fetch(image.src)).arrayBuffer())));
   expect([...bytes]).toEqual(previewBytes);
 
-  await editor.fill('group {\n  A\n}\nA ->');
+  await editor.fill('group {\n  A ->\n}');
   await render.click();
   await expect(status).toContainText('Could not render');
   await expect(page.getByRole('alert')).toContainText('error:');

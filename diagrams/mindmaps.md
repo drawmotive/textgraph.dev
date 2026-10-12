@@ -1,7 +1,7 @@
 # Mind Maps
 
 ::: warning Not implemented
-Mind maps are not available yet. This page describes planned syntax and behavior. Indentation-based hierarchy remains a proposal separate from membership-only diagram groups. These examples will not render as mind maps. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
+Mind maps are not available yet. This page describes planned syntax and behavior. Indentation-based hierarchy remains a proposal separate from ordinary diagram groups. These examples will not render as mind maps. For working diagrams, see [Flowcharts](/diagrams/flowcharts).
 :::
 
 Mind maps use the `mindmap` class on a group scope. Hierarchy comes from indentation — each level of indent defines a parent-child relationship, no `->` arrows needed.
@@ -56,7 +56,6 @@ cloud(mindmap) {
     Compute
     Storage
 }
-
 Compute -> Storage
 ```
 
@@ -243,7 +242,7 @@ net: Network
 
 ## Nested Groups Inside a Mind Map
 
-Ordinary `{}` groups list members and have independent layout. Put explicit connections and node decorations at the document root, using the same global identifiers.
+Ordinary `{}` groups contain connections and bare member names and have independent layout. A grouped connection introduces its node members directly. Put separate node decorations and cross-group connections at the document root, using the same global identifiers.
 
 ```
 platform(mindmap) {
@@ -252,22 +251,17 @@ platform(mindmap) {
     backend
 
   frontend {
-    cdn
-    app
+    cdn -> app
   }
 
   backend {
-    api
-    auth
-    worker
+    api -> auth
+    api -> worker
   }
 }
 
 frontend: Frontend
 backend: Backend
-cdn -> app
-api -> auth
-api -> worker
 app -> api
 cdn: CDN
 app: Web App
@@ -312,7 +306,6 @@ cloud(mindmap) {
     Compute
     Storage
 }
-
 Compute -> Storage
 ```
 
