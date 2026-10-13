@@ -24,7 +24,7 @@ npm run preview # Preview built site
 
 ## Language and Content
 
-The public language contract is in `reference/textgraph-spec.md` and `reference/syntax.md`. The executable PEG in `reference/grammar.peg` is mirrored in `reference/grammar.md`; update them together and run `npm run test:grammar`.
+The public language contract is in `reference/textgraph-spec.md` and `reference/syntax.md`. The executable PEG in `reference/grammar.peg` is mirrored in `reference/grammar.md`; update them together. Run `npm run test:dsl` to verify grammar, runtime semantics, and PNG rendering. In the DrawMotive workspace, run the root `npm run test:dsl` against both local C# WASM and isolated locked registry packages; `-- local` and `-- release` select one. A local pass does not establish release compatibility. Keep site documentation compatible with the pinned released runtime before integration.
 
 - Short node names inside a group create or reuse local members. The same name in different groups identifies distinct nodes.
 - Root references resolve unique short names across the diagram, or qualified paths when names are duplicated. They never change membership.

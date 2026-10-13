@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createMarkdownRenderer, disposeMdItInstance } from 'vitepress';
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress';
 import { initializeTextGraph } from '@drawmotive/textgraph/node';
@@ -106,7 +107,8 @@ test('adjacent scope styles render like separate statements and preserve anonymo
       const actual = await runtime.renderPng(adjacent);
       assert.equal(expected.success, true, JSON.stringify(expected.diagnostics));
       assert.equal(actual.success, true, JSON.stringify(actual.diagnostics));
-      assert.deepEqual(actual.png, expected.png);
+      assert.equal(createHash('sha256').update(actual.png).digest('hex'),
+        createHash('sha256').update(expected.png).digest('hex'));
     }
   } finally { await runtime.dispose(); }
 });

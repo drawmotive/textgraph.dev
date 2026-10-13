@@ -42,7 +42,11 @@ version, URL and integrity together; do not use developer-local packages as
 public release inputs. Run `npm run build:release` for coordinated version
 and installed-dependency validation before a release build.
 
-For syntax and documentation changes, run `npm run test:grammar` to check the executable PEG and published diagram inputs. `npm run test:dsl` also verifies source links and homepage analytics for those inputs. Group bodies contain connections, bare local member names, nested groups, and comments. Separate node decorations and cross-group connections belong at the root. Short node names inside a group are local; root references use unique short names or group-qualified paths when names are duplicated. Declare a named group once within its parent.
+For syntax and documentation changes, run `npm run test:grammar` to check the executable PEG and published diagram inputs. Run `npm run test:dsl` to also check runtime semantics, PNG rendering of every published TextGraph fence, homepage examples, source links, and analytics. Validation success alone does not prove that a diagram can be laid out and rendered.
+
+In the DrawMotive workspace, run the root `npm run test:dsl` to check both current local C# WASM and the site's locked registry release, serially. Use `npm run test:dsl -- local` or `npm run test:dsl -- release` to select one. Local mode builds the native runtime and restores dependency links when finished. Release mode copies current site edits into an isolated snapshot, installs the committed package lock, and clears local runtime overrides. It includes uncommitted and new files, so run it before committing. A local pass with a release failure means the site is not ready for its pinned public packages. Publish compatible runtime packages and update the site's exact pins and lock before integrating documentation that depends on new behavior.
+
+Group bodies contain connections, bare local member names, nested groups, standalone scope styles, and comments. Separate node decorations and cross-group connections belong at the root. Short node names inside a group are local; root references use unique short names or group-qualified paths when names are duplicated. Declare a named group once within its parent.
 
 Keep pull requests focused and report checks actually run. Verify new examples
 with the pinned SDK; invalid published diagrams fail the build. Update
