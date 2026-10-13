@@ -158,12 +158,12 @@ The space-separated tokens select the node’s fill, color, and line style. See 
 
 ### Token Binding Rule
 
-After a token, parentheses bind to that token. With no preceding token, they style the following anonymous group or set the root layout direction:
+After a token, parentheses bind to that token. Before an anonymous group, they style that group. As a standalone statement, they style the containing scope:
 
 - After a node or group token → styles on that token, as in `a -> b(dashed)`, `group1(horizontal) { a }`, and `a -> [B](dashed)`
 - After an arrow operator → edge styles: `->(bold)`
 - Before an anonymous group → styles on that group: `(horizontal) { B } -> A`
-- At the document root with no group body → layout direction: `(horizontal)`
+- Standalone statement → containing scope: `(horizontal)` sets diagram direction at the root, or group direction inside a body.
 
 Parentheses immediately after an arrow belong to the edge, including `A ->(bold) { B }`. To style that target group, use `A -> { B }(horizontal)` or name it: `A -> D(horizontal) { B }`.
 
@@ -242,7 +242,7 @@ Group endpoints follow the same occurrence rule. `A -> { B } -> D` creates one g
 
 ### Line Types
 
-At the document root, arrows (`->`, `<-`, `<->`, or `--`) distinguish connections from declarations. Group bodies contain connections, bare member identifiers, nested group blocks, and comments. Connections introduce node members directly. Separate node labels and styles belong at the document root.
+At the document root, arrows (`->`, `<-`, `<->`, or `--`) distinguish connections from declarations. Group bodies contain connections, bare member identifiers, nested group blocks, standalone scope styles, and comments. Connections introduce node members directly. Separate node labels and targeted styles belong at the document root.
 
 **Declaration line** — no arrow. The colon sets a display label:
 
@@ -272,7 +272,7 @@ Comments use standard HTML/Markdown comment syntax and are ignored by the render
 
 ### Layout Classes
 
-Set diagram direction at the document root, or set a group’s layout in its header:
+Set diagram direction with a standalone class list at the document root. Set a group's layout in its header or with a standalone class list inside its body:
 
 ```text
 (horizontal)
@@ -282,6 +282,23 @@ services(vertical): Services {
 api: API Server
 worker: Worker
 ```
+
+These anonymous groups have equivalent layout:
+
+```textgraph example
+(horizontal){
+  A -> B
+}
+```
+
+```textgraph example
+{
+  (horizontal)
+  A -> B
+}
+```
+
+A standalone class list applies to its immediate containing scope, wherever it appears in the body. Group body classes merge with header classes, including appearance classes such as `primary` and `dashed`. They do not decorate child nodes or other groups. Nested groups collect their own scope styles. Conflicting layout directions remain a diagnostic rather than silently overriding one another.
 
 | Class | Effect |
 |-------|--------|
@@ -296,7 +313,7 @@ Column layouts apply to groups containing nodes directly. Without an explicit la
 
 ### Membership
 
-Curly braces declare containment. A group body contains connections, bare member identifiers, nested groups, and comments. Connections introduce their node members directly; separate node decorations belong at the document root:
+Curly braces declare containment. A group body contains connections, bare member identifiers, nested groups, standalone scope styles, and comments. Connections introduce their node members directly; separate node decorations belong at the document root:
 
 ```text
 platform {

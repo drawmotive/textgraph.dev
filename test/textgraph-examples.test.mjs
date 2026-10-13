@@ -94,6 +94,23 @@ test('the published grouped shopping example accepts trailing decorations and un
   } finally { await runtime.dispose(); }
 });
 
+test('group body scope styles render identically to header styles in the native runtime', async () => {
+  const runtime = await initializeTextGraph();
+  try {
+    for (const classes of ['horizontal', 'vertical primary dashed']) {
+      const header = `(${classes}){\nA->B\n}`;
+      const body = `{\n(${classes})\nA->B\n}`;
+      const validation = await runtime.validate(body);
+      assert.equal(validation.valid, true, JSON.stringify(validation.diagnostics));
+      const expected = await runtime.renderPng(header);
+      const actual = await runtime.renderPng(body);
+      assert.equal(expected.success, true, JSON.stringify(expected.diagnostics));
+      assert.equal(actual.success, true, JSON.stringify(actual.diagnostics));
+      assert.deepEqual(actual.png, expected.png);
+    }
+  } finally { await runtime.dispose(); }
+});
+
 test('duplicated member names use prefixes while unique root references remain short', async () => {
   const runtime = await initializeTextGraph();
   try {

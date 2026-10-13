@@ -73,7 +73,7 @@ a: Agent
 b: Bias
 ```
 
-Group bodies contain connections, bare member names, nested group blocks, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
+Group bodies contain connections, bare member names, nested group blocks, scope styles, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
 
 `X:Title{A->B}` declares group `X` with title `Title`. `A->{B}->C:{value}` ends at group `C` containing `value`; there is no edge label. To combine a group title with an edge label, write `A -> C: Services {value}: contains`.
 
@@ -81,14 +81,16 @@ Labels cannot contain literal curly braces. `{{value}}` defines two nested anony
 
 ## `()` — Style Classes
 
-Parentheses apply style classes to a node, edge, or group. After a token, `()` binds to that token. With no preceding token, it styles the following anonymous group. A standalone direction class sets the root layout:
+Parentheses apply style classes to a node, edge, or group. After a token, `()` binds to that token. Before an anonymous group, it styles that group. As a standalone statement, it styles its containing scope:
 
 - After a node or group token → styles on that token: `a(fill primary dashed): Agent`, `group1(horizontal) { a }`, `[B](dashed)`, and `{ B }(horizontal)`
 - After an arrow → edge styles: `a ->(bold) b`
 - Before an anonymous group → styles on that group: `(horizontal) { B } -> A`
-- Start of line with no group body → root layout direction: `(horizontal)`
+- Standalone statement → styles on the containing scope: `(horizontal)` sets diagram direction at the root, or group direction inside a body.
 
 Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B }`. Style the target group after its closing brace, as in `A -> { B }(horizontal)`, or after its name, as in `A -> D(horizontal) { B }`.
+
+`(horizontal){A->B}` and `{` followed by `(horizontal)` and `A->B` on separate lines define equivalent groups. Body styles merge with header styles and apply only to the immediate group. They can appear before or after members; they do not style member nodes or nested groups. See [Syntax Cases and Precedence](/reference/syntax-cases#standalone-parentheses-style-the-containing-scope) for examples.
 
 ```text
 a(fill primary dashed): Agent
@@ -105,7 +107,7 @@ a(fill primary): Agent
 
 ## `{}` — Containment and Groups
 
-Group bodies declare members directly with connections or bare identifiers. Nested groups and comments are also allowed. Separate node decorations and cross-group connections stay at the document root:
+Group bodies declare members directly with connections or bare identifiers. Nested groups, standalone scope styles, and comments are also allowed. Separate node decorations and cross-group connections stay at the document root:
 
 ```text
 Shopping(info): Shopping {

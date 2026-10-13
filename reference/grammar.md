@@ -28,7 +28,7 @@ When the prose specification and this grammar disagree on a syntax question, the
 
 ## Group Endpoints
 
-A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, and comments. Short grouped node endpoints introduce local members directly. Qualified references use dot-separated identifiers, such as `Backend.payment` or `platform.Backend.payment`; lookup and ambiguity are semantic rules.
+A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, standalone scope styles, and comments. A standalone class list applies to its immediate containing scope. Short grouped node endpoints introduce local members directly. Qualified references use dot-separated identifiers, such as `Backend.payment` or `platform.Backend.payment`; lookup and ambiguity are semantic rules.
 
 Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
 
@@ -233,13 +233,17 @@ MultiNodeDeclaration
 // Scope-Level Styles
 // ───────────────────────────────────────────────────────────────
 
-// Classes at the document root with no preceding identifier
-// apply to the diagram. Group styles belong in group headers.
+// Standalone classes apply to the containing scope: the diagram at the root,
+// or the immediate group when written in its body.
 //   (fill primary)
 //   (horizontal)
 //   (vertical justify-between)
 ScopeLevelStyle
-  = &"(" classes:Classes label:Label? _ EOL
+  = style:ScopeStyle _ EOL
+  { return style }
+
+ScopeStyle
+  = &"(" classes:Classes label:Label?
   { return { type: "scope-style", classes, label } }
 
 
@@ -291,6 +295,8 @@ ScopeLine
     { return { type: "connection", ...connection, edgeLabel } }
   / scope:ScopeEndpoint _ ScopeEnd
     { return scope }
+  / style:ScopeStyle _ ScopeEnd
+    { return style }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }
 
@@ -351,7 +357,7 @@ PlainLabelText
 // Parenthesized, space-separated class tokens.
 // Binds to the immediately preceding token (identifier,
 // anonymous node literal, or arrow),
-// or to the diagram at the document root. Group styles use group headers.
+// or, as a standalone statement, to the containing scope.
 Classes
   = "(" _ tokens:ClassToken+ _ ")"
   { return tokens }

@@ -194,13 +194,17 @@ MultiNodeDeclaration
 // Scope-Level Styles
 // ───────────────────────────────────────────────────────────────
 
-// Classes at the document root with no preceding identifier
-// apply to the diagram. Group styles belong in group headers.
+// Standalone classes apply to the containing scope: the diagram at the root,
+// or the immediate group when written in its body.
 //   (fill primary)
 //   (horizontal)
 //   (vertical justify-between)
 ScopeLevelStyle
-  = &"(" classes:Classes label:Label? _ EOL
+  = style:ScopeStyle _ EOL
+  { return style }
+
+ScopeStyle
+  = &"(" classes:Classes label:Label?
   { return { type: "scope-style", classes, label } }
 
 
@@ -252,6 +256,8 @@ ScopeLine
     { return { type: "connection", ...connection, edgeLabel } }
   / scope:ScopeEndpoint _ ScopeEnd
     { return scope }
+  / style:ScopeStyle _ ScopeEnd
+    { return style }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }
 
@@ -312,7 +318,7 @@ PlainLabelText
 // Parenthesized, space-separated class tokens.
 // Binds to the immediately preceding token (identifier,
 // anonymous node literal, or arrow),
-// or to the diagram at the document root. Group styles use group headers.
+// or, as a standalone statement, to the containing scope.
 Classes
   = "(" _ tokens:ClassToken+ _ ")"
   { return tokens }

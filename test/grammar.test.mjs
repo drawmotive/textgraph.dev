@@ -110,8 +110,26 @@ test('every arrow operator separates compact identifiers and group endpoints', (
   assert.notEqual(chain.rest[0].target, chain.rest[1].target);
 });
 
+test('standalone styles remain in their immediate scope while styled headers define nested groups', () => {
+  const [root, outer, sibling] = parse(
+    '(vertical)\nOuter(primary) {\n(horizontal)\nA->B\n(fill primary)\nInner {\n(vertical dashed)\nC->D\n}\n(horizontal){E->F}\n}\nSibling {G->H}');
+  assert.equal(root.type, 'scope-style');
+  assert.deepEqual(root.classes, ['vertical']);
+  assert.deepEqual(outer.body[0].classes, ['horizontal']);
+  assert.equal(outer.body[0].type, 'scope-style');
+  assert.deepEqual(outer.body[2].classes, ['fill', 'primary']);
+  assert.deepEqual(outer.body[3].body[0].classes, ['vertical', 'dashed']);
+  assert.equal(outer.body[4].type, 'scope');
+  assert.deepEqual(outer.body[4].classes, ['horizontal']);
+  assert.equal(sibling.body.length, 1);
+
+  const [compact] = parse('A->{B->C\n(horizontal)}->D');
+  assert.equal(compact.rest[0].target.body[1].type, 'scope-style');
+  assert.deepEqual(compact.rest[1].target.ref.path, ['D']);
+});
+
 test('group bodies reject separate node decorations, shared styles and free text', () => {
-  for (const statement of ['B: Bee', 'B(ellipse)', 'B, C(fill primary)', '(horizontal)', '[Bee]', 'plain text']) {
+  for (const statement of ['B: Bee', 'B(ellipse)', 'B, C(fill primary)', '[Bee]', 'plain text']) {
     for (const source of ['G {\n' + statement + '\n}', 'G(info): Group {\n' + statement + '\n}', 'A -> {\n' + statement + '\n}']) {
       assert.throws(() => parse(source), parser.SyntaxError, source);
     }

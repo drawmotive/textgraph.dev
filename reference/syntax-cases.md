@@ -67,7 +67,7 @@ Neither `{value}` nor `{{value}}` is a label template or a literal-brace escape.
 | `A -> {B}(horizontal)` | The target group uses horizontal layout. |
 | `A -> C(horizontal): Services {value}` | Named group `C` uses horizontal layout and the title `Services`. |
 | `(horizontal){B}->A` | The anonymous source group uses horizontal layout. |
-| `(horizontal)` | Sets the diagram direction at the document root. |
+| `(horizontal)` | Styles its containing scope: diagram direction at the root, group direction inside a body. |
 
 To combine edge and group styles, put each class list at its owning position:
 
@@ -75,13 +75,46 @@ To combine edge and group styles, put each class list at its owning position:
 A ->(bold) C(horizontal): Services {value}
 ```
 
+## Standalone parentheses style the containing scope
+
+These two forms define equivalent anonymous groups:
+
+```textgraph example
+(horizontal){
+  A -> B
+}
+```
+
+```textgraph example
+{
+  (horizontal)
+  A -> B
+}
+```
+
+The rule applies to all style classes. A standalone `(horizontal primary dashed)` inside a group sets that group's layout and appearance. Body classes merge with header classes and may appear before or after members. They do not decorate member nodes or other groups. Conflicting directions produce a diagnostic rather than silently overriding each other.
+
+```textgraph example
+(vertical)
+Outer {
+  (horizontal primary)
+  A -> B
+  Inner {
+    (vertical dashed)
+    C -> D
+  }
+}
+```
+
+The document has vertical direction, `Outer` arranges its direct contents horizontally, and `Inner` arranges its contents vertically. Each standalone class list belongs only to its immediate scope. A header such as `(horizontal){C->D}` inside `Outer` instead defines a new nested group with those classes.
+
 ## A repeated label does not create a reusable anonymous identity
 
 Each separate `[B]` occurrence creates a new anonymous node. In `A -> [B] -> C`, one occurrence is shared by the two adjacent edges. The same occurrence rule applies to anonymous groups. Use a named node or group when another statement must refer to it.
 
 ## Group structure and decorations have different roles
 
-Group bodies contain connections, bare member names, nested groups, and comments. Inline endpoint styles and edge labels are allowed. Put standalone member labels and styles at the document root:
+Group bodies contain connections, bare member names, nested groups, standalone scope styles, and comments. Inline endpoint styles and edge labels are allowed. Put standalone member labels and targeted styles at the document root:
 
 ```textgraph example
 Backend {

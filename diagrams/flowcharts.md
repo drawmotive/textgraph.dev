@@ -275,7 +275,7 @@ Render it with the [Markdown & VitePress plugin](/integrations/markdown) or prev
 
 ## Groups and Scopes
 
-Curly braces declare group membership. Group bodies contain connections, bare member names, nested groups, and comments. A connection inside a group creates or reuses local node members directly; put cross-group connections and separate node decorations at the document root.
+Curly braces declare group membership. Group bodies contain connections, bare member names, nested groups, standalone scope styles, and comments. A standalone class list such as `(horizontal)` styles its immediate containing group. A connection inside a group creates or reuses local node members directly; put cross-group connections and separate node decorations at the document root.
 
 ```textgraph example
 frontend {
