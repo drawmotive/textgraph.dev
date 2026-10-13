@@ -11,7 +11,7 @@ test('published DSL examples satisfy native scoped identity and reference rules'
   { skip: !process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME }, async () => {
     const runtime = await initializeTextGraph();
     try {
-      const documents = ['reference/textgraph-spec.md', 'reference/syntax.md', 'reference/classes.md',
+      const documents = ['reference/textgraph-spec.md', 'reference/syntax.md', 'reference/syntax-cases.md', 'reference/classes.md',
         'intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
         'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md'];
       for (const document of documents) {

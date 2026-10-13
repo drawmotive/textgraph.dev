@@ -10,7 +10,7 @@ test('example fences retain escaped, copyable DSL alongside the rendered PNG', a
   const config = withTextGraph({ markdown: { config: textgraphExamples } });
   const md = await createMarkdownRenderer(process.cwd(), config.markdown);
   try {
-    const source = 'api: {{ label }} <script>alert(1)</script>\napi -> db\n';
+    const source = 'api: <script>alert(1)</script> {{label}}\napi -> db\n';
     const html = (await md.renderAsync('~~~~textgraph example\n' + source + '~~~~', {}))
       .replace(/base64,[^"]+/g, 'base64,PNG');
     assert.equal((html.match(/class="textgraph-example"/g) ?? []).length, 1);

@@ -82,6 +82,7 @@ export default defineConfig(withTextGraph({
           { text: 'Language Specification', link: '/reference/textgraph-spec' },
           { text: 'Style Classes', link: '/reference/classes' },
           { text: 'Syntax Reference', link: '/reference/syntax' },
+          { text: 'Syntax Cases and Precedence', link: '/reference/syntax-cases' },
           { text: 'Changelog', link: '/reference/changelog' },
         ]
       }

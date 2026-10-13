@@ -27,6 +27,8 @@ Each fenced block is a separate diagram. Standalone `.textgraph` files contain t
 
 Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a compound node with children. An omitted identifier makes the group anonymous. These rules also apply when a group is a connection endpoint.
 
+Group definitions take precedence over labels. Curly braces are reserved syntax and cannot appear as literal label text. `X:{A->B}` declares group `X`; `A->C: Services {value}` connects to group `C` with title `Services`. `{{value}}` means nested anonymous groups, never a label template. See [Syntax Cases and Precedence](/reference/syntax-cases) for compact forms, binding examples, and invalid inputs.
+
 ### Connections
 
 There are four connection types:
@@ -177,13 +179,13 @@ a -> b : contains
 
 This renders the word **contains** along the arrow. The label is trimmed of surrounding whitespace.
 
-In a chained connection, the trailing label applies to **all** edges in the chain:
+In a chained connection, the trailing label applies to the **last** edge in the chain:
 
 ```text
 a -> b -> c : data
 ```
 
-This labels both the `a → b` and `b → c` edges with **data**. To label edges individually, write them as separate connection lines:
+This labels the `b → c` edge with **data**. To label each edge, write separate connection lines:
 
 ```text
 a -> b : request
@@ -249,14 +251,14 @@ a: Agent
 a(fill primary): Agent
 ```
 
-**Connection line** — has an arrow. The colon sets an edge label:
+**Connection line** — has an arrow. A trailing colon without a following group body sets an edge label:
 
 ```text
 a -> b : contains
-a -> b -> c : all edges labeled
+a -> b -> c : last edge labeled
 ```
 
-On a declaration statement, `:` introduces a display label. After a connection, it introduces an edge label. Declare a named endpoint title separately, for example `D: Services` followed by `A -> D { B }`. Label the child on a root line such as `B: Bee`.
+Before a group body, `:` introduces the group's title, including in a connection endpoint: `A -> D: Services {B}`. Without a following body, a declaration's colon introduces a display label and a connection's trailing colon introduces an edge label. A group title and an edge label can coexist: `A -> D: Services {B}: contains`. A separate root declaration such as `D: Services` also changes a group title. Label the child on a root line such as `B: Bee`.
 
 ### Comments
 
@@ -357,6 +359,8 @@ services: Services
 Both outer edges attach to the boundary of one `services` group. The grouped connection `B -> C` introduces and connects its children. A group endpoint never expands into external arrows to each member.
 
 Whitespace around braces and arrows is optional: `A->{B}->D` is valid. Put multiple members on separate lines. `A -> {} -> {}` contains two distinct empty anonymous groups. Nested groups may also appear inside an inline group body.
+
+A group header may include a title in both standalone and endpoint forms: `D: Services {B}` and `A -> D: Services {B}`. The opening brace ends the title and starts the body; the body may stay on that line or continue on following lines. Labels do not support literal curly braces, quoting them, or escaping them. An unclosed group is a syntax error and never becomes ordinary label text.
 
 ### Short and Qualified References
 

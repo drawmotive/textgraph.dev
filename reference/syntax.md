@@ -4,6 +4,8 @@ A reference for diagram source and Markdown embedding.
 
 Bare identifiers denote nodes, arrows denote relationships, parentheses apply styles, and colons introduce labels. Curly braces add containment: a group is a node with children. Omitting its identifier creates an anonymous group.
 
+Group definitions take precedence over labels, and curly braces are reserved structure. See [Syntax Cases and Precedence](/reference/syntax-cases) for compact forms, binding rules, and syntax limits.
+
 ## Identifiers
 
 Node and group names must start with a letter or underscore, and may contain letters, digits, hyphens, and underscores. Names inside a group identify local members. Different groups may contain different objects with the same name. Outside the groups, a unique short name is enough; duplicated names need a group prefix such as `Backend.api`. Anonymous nodes use `[Label]`; anonymous groups use `{ ... }`. Neither creates a reusable name.
@@ -50,7 +52,7 @@ a: Agent
 group1: Services
 ```
 
-A colon after a connection declares an edge label. In a chained connection, the label applies to **all** edges in the chain:
+A trailing colon without a following group body declares an edge label. In a chained connection, the label applies to the **last** edge in the chain:
 
 ```text
 a -> b : contains
@@ -59,7 +61,7 @@ a -> b -> c : data
 
 To label edges individually, use separate connection lines.
 
-Declare endpoint labels separately from their connections. At the same brace depth, `:` introduces a display label in a declaration and an edge label after a connection:
+Declare ordinary node labels separately from their connections. A colon before a group body belongs to that group's title, including in a connection endpoint. Otherwise, it introduces a display label in a declaration and an edge label after a connection:
 
 ```text
 <!-- invalid -->
@@ -72,6 +74,10 @@ b: Bias
 ```
 
 Group bodies contain connections, bare member names, nested group blocks, and comments. Put child labels at the root: `A -> { B }: outer` followed by `B: Bee` labels the edge and its child separately. Named group endpoints can use a separate title declaration such as `D: Services`.
+
+`X:Title{A->B}` declares group `X` with title `Title`. `A->{B}->C:{value}` ends at group `C` containing `value`; there is no edge label. To combine a group title with an edge label, write `A -> C: Services {value}: contains`.
+
+Labels cannot contain literal curly braces. `{{value}}` defines two nested anonymous groups, not a template or escape. Spaces around braces are optional, and moving body content to a new line does not change the interpretation.
 
 ## `()` — Style Classes
 

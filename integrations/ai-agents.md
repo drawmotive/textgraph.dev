@@ -9,6 +9,7 @@ Replace the last line with your own description:
 ```text
 Create a TextGraph diagram for the description below.
 Read https://textgraph.dev/reference/textgraph-spec.md first.
+Also read https://textgraph.dev/reference/syntax-cases.md for precedence and syntax limits.
 If styling is requested, also read https://textgraph.dev/reference/classes.md.
 If you cannot read a reference, ask me to attach it before generating.
 Use only documented syntax and classes. Keep node labels on separate
@@ -18,7 +19,7 @@ Return only the diagram source, without Markdown fences or explanation.
 Description: A browser sends requests to an API, which queries a database.
 ```
 
-If your tool cannot open links, download and attach the <a href="/reference/textgraph-spec.md" target="_self" download>Language Specification Markdown</a>. For styling, also attach the <a href="/reference/classes.md" target="_self" download>Style Classes Markdown</a>. These are the same sources used by the reference pages.
+If your tool cannot open links, download and attach the <a href="/reference/textgraph-spec.md" target="_self" download>Language Specification Markdown</a> and <a href="/reference/syntax-cases.md" target="_self" download>Syntax Cases Markdown</a>. For styling, also attach the <a href="/reference/classes.md" target="_self" download>Style Classes Markdown</a>. These are the same sources used by the reference pages.
 
 ## What the result looks like
 
@@ -40,7 +41,8 @@ Check that the preview matches your intended relationships. If the Playground re
 | Reference | Include it in the prompt? |
 | --- | --- |
 | [Language Specification](/reference/textgraph-spec) | Yes. It covers connections, labels, groups, scoped names, short and qualified references, and layout syntax. |
+| [Syntax Cases and Precedence](/reference/syntax-cases) | Yes. It explains group-before-label precedence, reserved braces, style binding, and examples that are easy to misread. |
 | [Syntax Reference](/reference/syntax) | Not needed alongside the specification; it is a shorter summary of the same syntax. |
 | [Style Classes](/reference/classes) | Include it when requesting shapes, colors, fills or line styles. The specification explains how classes bind, but delegates the available classes to this reference. |
 
-For a plain diagram, the specification alone is enough. The prompt reads the style catalog only when needed. The same prompt and references can later be packaged into a reusable skill.
+For a plain diagram, use the specification and syntax cases. The prompt reads the style catalog only when needed. The same prompt and references can later be packaged into a reusable skill.

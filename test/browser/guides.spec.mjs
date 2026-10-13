@@ -28,12 +28,18 @@ test('sidebar leads from the language to tools and application development', asy
   await sidebar.getByRole('link', { name: 'DrawMotive editor', exact: true }).click();
   await expect(page.getByRole('heading', { name: /^DrawMotive editor/, level: 1 })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Run the visual editor SDK demo' })).toHaveAttribute('href', '/examples/editor/');
+  await sidebar.getByRole('link', { name: 'Syntax Cases and Precedence', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Syntax Cases and Precedence', level: 1 })).toBeVisible();
+  await expect(page.locator('.vp-doc')).toContainText('A->{B}->C:{value}');
+  await expect(page.getByRole('link', { name: 'Syntax Cases Markdown', exact: true }))
+    .toHaveAttribute('href', '/reference/syntax-cases.md');
 });
 
 test('AI guide downloads canonical Markdown instead of documentation HTML', async ({ page, request }) => {
   await page.goto('/integrations/ai-agents.html');
   for (const [file, name] of [
     ['textgraph-spec.md', 'Language Specification Markdown'],
+    ['syntax-cases.md', 'Syntax Cases Markdown'],
     ['classes.md', 'Style Classes Markdown'],
   ]) {
     const link = page.getByRole('link', { name, exact: true });

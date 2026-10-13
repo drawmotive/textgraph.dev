@@ -33,7 +33,7 @@ test('direct VitePress configuration prepares assets in a clean checkout without
     assert.equal(path.normalize(configPath), path.join(root, '.vitepress/config.mts'));
     await resolveConfig({ ...config.vite, root, configFile: false }, 'build');
 
-    for (const file of ['textgraph-spec.md', 'classes.md']) {
+    for (const file of ['textgraph-spec.md', 'classes.md', 'syntax-cases.md']) {
       assert.deepEqual(
         await readFile(path.join(root, 'public/reference', file)),
         await readFile(path.join(siteRoot, 'reference', file)),

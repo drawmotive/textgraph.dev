@@ -53,10 +53,49 @@ test('class binding distinguishes arrows, named groups and anonymous groups', ()
   assert.equal(anonymous.rest[0].target.classes, null);
 });
 
-test('root decorations preserve literal braces and edge labels stay outside groups', () => {
-  const [connection, label] = parse('A->{B}->C: outer\nB: {{value}}');
+test('root decorations and edge labels without braces retain their meaning', () => {
+  const [connection, label] = parse('A->{B}->C: outer\nB: Bee');
   assert.equal(connection.edgeLabel, 'outer');
-  assert.equal(label.label, '{{value}}');
+  assert.equal(label.label, 'Bee');
+});
+
+test('group headers outrank labels in standalone statements and connection endpoints', () => {
+  for (const source of ['X:{A->B}', 'X: { A -> B }', 'X:{\nA->B\n}']) {
+    const [group] = parse(source);
+    assert.equal(group.type, 'scope');
+    assert.equal(group.id, 'X');
+    assert.equal(group.label, '');
+    assert.equal(group.body[0].type, 'connection');
+  }
+  for (const source of ['A->{B}->C:{value}', 'A->{\nB\n}->C:{\nvalue\n}']) {
+    const [chain] = parse(source);
+    assert.equal(chain.rest[0].target.type, 'scope');
+    assert.equal(chain.rest[1].target.id, 'C');
+    assert.equal(chain.rest[1].target.body[0].id, 'value');
+    assert.equal(chain.edgeLabel, null);
+  }
+  const [titled] = parse('A->C(horizontal): Services {value}(primary): contains');
+  assert.equal(titled.rest[0].target.label, 'Services');
+  assert.deepEqual(titled.rest[0].target.classes, ['horizontal', 'primary']);
+  assert.equal(titled.edgeLabel, 'contains');
+});
+
+test('double braces always define nested groups instead of literal label templates', () => {
+  const [group] = parse('X:{{value}}');
+  assert.equal(group.id, 'X');
+  assert.equal(group.body[0].type, 'scope');
+  assert.equal(group.body[0].body[0].id, 'value');
+  const [connection] = parse('A->C:{{value}}');
+  assert.equal(connection.rest[0].target.id, 'C');
+  assert.equal(connection.rest[0].target.body[0].body[0].id, 'value');
+  assert.equal(connection.edgeLabel, null);
+});
+
+test('reserved label braces and unclosed group headers cannot fall back to text', () => {
+  for (const source of ['A->{B}: {value}', 'A->{B}: {{value}}', 'A->[{value}]',
+    'X: label }', 'A->C: label }', 'X:{A->B', 'A->C: Title {value']) {
+    assert.throws(() => parse(source), parser.SyntaxError, source);
+  }
 });
 
 test('every arrow operator separates compact identifiers and group endpoints', () => {
@@ -95,8 +134,9 @@ test('named groups, root references and anonymous node literals remain valid', (
   const [header] = parse('D(horizontal): Services {\nB\n}');
   assert.equal(header.label, 'Services');
   assert.equal(header.body[0].id, 'B');
-  const [literal] = parse('D: Services { literal text }');
-  assert.equal(literal.label, 'Services { literal text }');
+  const [compact] = parse('D:Services{member}');
+  assert.equal(compact.label, 'Services');
+  assert.equal(compact.body[0].id, 'member');
 });
 
 test('standalone and nested groups share endpoint postfix style syntax and comments', () => {
@@ -155,7 +195,7 @@ test('complete and trailing group paths preserve distinct qualified references',
 
 test('published diagrams and homepage inputs conform to the scoped-name grammar', async () => {
   const documents = ['intro/getting-started.md', 'intro/what-is-textgraph.md', 'diagrams/flowcharts.md',
-    'reference/textgraph-spec.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',
+    'reference/textgraph-spec.md', 'reference/syntax-cases.md', 'integrations/markdown.md', 'integrations/vscode.md', 'integrations/javascript.md',
     'integrations/ai-agents.md'];
   for (const document of documents) {
     const content = await readFile(new URL('../' + document, import.meta.url), 'utf8');
@@ -192,10 +232,13 @@ test('grouped connections support inline styles, anonymous nodes and nested endp
   assert.equal(connection.rest[1].target.body[0].type, 'connection');
 });
 
-test('compact grouped edge labels terminate at the owning brace', () => {
+test('compact nested group titles and edge labels terminate at their owning brace', () => {
   const [outer, decoration] = parse('A -> { B -> C : inner {{value}} } -> D : outer\nB: Bee');
   assert.equal(outer.edgeLabel, 'outer');
-  assert.equal(outer.rest[0].target.body[0].edgeLabel, 'inner {{value}}');
+  const child = outer.rest[0].target.body[0];
+  assert.equal(child.edgeLabel, null);
+  assert.equal(child.rest[0].target.label, 'inner');
+  assert.equal(child.rest[0].target.body[0].body[0].id, 'value');
   assert.equal(decoration.label, 'Bee');
   for (const source of ['G { B -> }', 'G { B -> C', 'G { B -> team..C }']) {
     assert.throws(() => parse(source), parser.SyntaxError, source);

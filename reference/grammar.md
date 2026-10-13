@@ -32,7 +32,7 @@ A connection endpoint may be a named reference, an anonymous `[Label]` node, or 
 
 Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
 
-The grammar below is the executable canonical file, including its AST actions. `npm run test:grammar` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and qualified references while rejecting qualified group definitions and separate node decorations inside groups. Labels at the document root may contain literal braces.
+The grammar below is the executable canonical file, including its AST actions. `npm run test:grammar` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and qualified references while rejecting qualified group definitions and separate node decorations inside groups. Group headers take precedence over labels in every endpoint; curly braces always denote structure and cannot be literal label content. See [Syntax Cases and Precedence](/reference/syntax-cases).
 
 ## Grammar
 
@@ -153,8 +153,8 @@ Comment
 // ───────────────────────────────────────────────────────────────
 
 // A connection line contains at least one arrow operator.
-// The line type is "connection" — any trailing `: label` is an
-// edge label applied to ALL edges in the chain, not just the last.
+// Parse complete group endpoints first. Only a trailing colon without a
+// group body becomes an edge label, applied to the last edge in the chain.
 Connection
   = connection:ConnectionExpression edgeLabel:EdgeLabel? _ EOL
   { return { type: "connection", ...connection, edgeLabel } }
@@ -176,7 +176,7 @@ Arrow
   / "--"  { return "undirected" }
 
 EdgeLabel
-  = _ ":" _ text:RestOfLine
+  = _ ":" _ text:PlainLabelText
   { return text }
 
 
@@ -191,7 +191,7 @@ Endpoint
   / Node
 
 Node
-  = ref:( NamedReference / AnonymousNode ) _ classes:Classes?
+  = !LabeledScopeStart ref:( NamedReference / AnonymousNode ) _ classes:Classes?
   { return { ref, classes } }
 
 NamedReference
@@ -203,7 +203,7 @@ AnonymousNode
   { return { type: "anonymous-node", label: text } }
 
 AnonymousNodeText
-  = text:$( [^\]\r\n]+ )
+  = text:$( [^{}\]\r\n]+ )
   { return text }
 
 
@@ -256,33 +256,26 @@ SpeakerNotes
 // Scope Blocks
 // ───────────────────────────────────────────────────────────────
 
-// A standalone group may declare its title in the header. Connection
-// endpoints use the same containment syntax but leave ":" to edge labels.
+// Standalone groups and connection endpoints share one header syntax.
+// A colon before the body belongs to its title, even without whitespace.
 ScopeBlock
-  = scope:(LabeledScope / ScopeEndpoint) _ EOL
+  = scope:ScopeEndpoint _ EOL
   { return scope }
-
-// A labeled declaration header ends at its opening brace. Requiring a
-// newline preserves ordinary labels containing literal brace expressions.
-LabeledScope
-  = id:Identifier? _ classes:Classes? label:ScopeHeaderLabel _ "{" _ Newline
-    body:ScopeBody _ "}"
-  { return { type: "scope", id, classes, label, body } }
 
 // A failed labeled group must not become a node label through backtracking.
 LabeledScopeStart
-  = NamedReference? _ Classes? ScopeHeaderLabel _ "{" _ Newline
+  = NamedReference? _ Classes? ScopeHeaderLabel _ "{"
 
 ScopeEndpoint
-  = id:Identifier? _ before:Classes? _ body:ScopeContents _ after:Classes?
-  { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label: null, body } }
+  = id:Identifier? _ before:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ after:Classes?
+  { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label, body } }
 
 ScopeContents
   = "{" body:ScopeBody _ "}"
   { return body }
 
 ScopeHeaderLabel
-  = _ ":" _ text:$( [^{\r\n]+ )
+  = _ ":" _ text:$( [^{}\r\n]* )
   { return text.trim() }
 
 // Bare members and short node endpoints create local members of this group.
@@ -296,19 +289,15 @@ ScopeLine
   / Comment
   / connection:ConnectionExpression edgeLabel:ScopeEdgeLabel? _ ScopeEnd
     { return { type: "connection", ...connection, edgeLabel } }
-  / scope:(LabeledScope / ScopeEndpoint) _ ScopeEnd
+  / scope:ScopeEndpoint _ ScopeEnd
     { return scope }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }
 
-// Balanced braces are literal edge-label content; an owning closing brace
-// terminates a compact group statement without becoming part of its label.
+// Curly braces are reserved syntax. A closing brace terminates the owning
+// scope; an opening brace cannot be consumed as literal edge-label content.
 ScopeEdgeLabel
-  = _ ":" _ text:$( (LabelBraces / [^{}\r\n])+ )
-  { return text.trim() }
-
-LabelBraces
-  = "{" (LabelBraces / [^{}\r\n])* "}"
+  = EdgeLabel
 
 ScopeEnd
   = Newline / &"}"
@@ -341,14 +330,18 @@ LabelText
 
 // Resource labels: @slug, @(path), @(url), @(data:...)
 ResourceLabel
-  = "@(" uri:$( [^)]+ ) ")"
+  = "@(" uri:$( [^{}\r\n)]+ ) ")"
     { return { type: "resource-uri", uri } }
   / "@" slug:$( [a-zA-Z][a-zA-Z0-9_-]* )
     { return { type: "resource-slug", slug } }
 
 InlineText
-  = text:RestOfLine
+  = text:PlainLabelText
   { return text }
+
+PlainLabelText
+  = text:$( [^{}\r\n]+ )
+  { return text.trim() }
 
 
 // ───────────────────────────────────────────────────────────────
