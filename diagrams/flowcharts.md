@@ -376,7 +376,10 @@ The first chain uses one named group, titled `Services`, for both outer arrows. 
 Use parentheses for styles as usual:
 
 ```textgraph example
-(horizontal) { B } -> A
+{
+  (horizontal)
+  B
+} -> A
 ```
 
 ```textgraph example

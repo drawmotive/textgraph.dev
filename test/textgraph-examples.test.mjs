@@ -94,16 +94,16 @@ test('the published grouped shopping example accepts trailing decorations and un
   } finally { await runtime.dispose(); }
 });
 
-test('group body scope styles render identically to header styles in the native runtime', async () => {
+test('adjacent scope styles render like separate statements and preserve anonymous group ownership', async () => {
   const runtime = await initializeTextGraph();
   try {
     for (const classes of ['horizontal', 'vertical primary dashed']) {
-      const header = `(${classes}){\nA->B\n}`;
-      const body = `{\n(${classes})\nA->B\n}`;
-      const validation = await runtime.validate(body);
+      const adjacent = `(${classes}){\nA->B\n}->C`;
+      const separate = `(${classes})\n{\nA->B\n}->C`;
+      const validation = await runtime.validate(adjacent);
       assert.equal(validation.valid, true, JSON.stringify(validation.diagnostics));
-      const expected = await runtime.renderPng(header);
-      const actual = await runtime.renderPng(body);
+      const expected = await runtime.renderPng(separate);
+      const actual = await runtime.renderPng(adjacent);
       assert.equal(expected.success, true, JSON.stringify(expected.diagnostics));
       assert.equal(actual.success, true, JSON.stringify(actual.diagnostics));
       assert.deepEqual(actual.png, expected.png);

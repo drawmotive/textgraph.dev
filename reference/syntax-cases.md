@@ -66,7 +66,7 @@ Neither `{value}` nor `{{value}}` is a label template or a literal-brace escape.
 | `A ->(bold) {B}` | The edge is bold. |
 | `A -> {B}(horizontal)` | The target group uses horizontal layout. |
 | `A -> C(horizontal): Services {value}` | Named group `C` uses horizontal layout and the title `Services`. |
-| `(horizontal){B}->A` | The anonymous source group uses horizontal layout. |
+| `(horizontal){B}->A` | Sets the containing scope's direction, then connects an anonymous group containing `B` to `A`. |
 | `(horizontal)` | Styles its containing scope: diagram direction at the root, group direction inside a body. |
 
 To combine edge and group styles, put each class list at its owning position:
@@ -77,13 +77,7 @@ A ->(bold) C(horizontal): Services {value}
 
 ## Standalone parentheses style the containing scope
 
-These two forms define equivalent anonymous groups:
-
-```textgraph example
-(horizontal){
-  A -> B
-}
-```
+An anonymous group's own styles belong inside its braces:
 
 ```textgraph example
 {
@@ -93,6 +87,21 @@ These two forms define equivalent anonymous groups:
 ```
 
 The rule applies to all style classes. A standalone `(horizontal primary dashed)` inside a group sets that group's layout and appearance. Body classes merge with header classes and may appear before or after members. They do not decorate member nodes or other groups. Conflicting directions produce a diagnostic rather than silently overriding each other.
+
+The following compact and multiline forms have the same meaning:
+
+```textgraph example
+(horizontal){A->B}
+```
+
+```textgraph example
+(horizontal)
+{A->B}
+```
+
+Both contain two statements: set the document's direction, then define an anonymous group. The preceding class list does not attach to that group, and inserting whitespace or a newline does not change ownership. To set the group's direction, use the body form above. A named group can still attach styles to its name: `G(horizontal){A->B}`.
+
+A label on a targetless style statement also stays with that statement. `(horizontal): Services {A->B}` does not title the anonymous group; use `G(horizontal): Services {A->B}` when the group needs a title.
 
 ```textgraph example
 (vertical)
@@ -106,7 +115,7 @@ Outer {
 }
 ```
 
-The document has vertical direction, `Outer` arranges its direct contents horizontally, and `Inner` arranges its contents vertically. Each standalone class list belongs only to its immediate scope. A header such as `(horizontal){C->D}` inside `Outer` instead defines a new nested group with those classes.
+The document has vertical direction, `Outer` arranges its direct contents horizontally, and `Inner` arranges its contents vertically. Each standalone class list belongs only to its immediate scope. Writing `(horizontal){C->D}` inside `Outer` sets `Outer`'s direction and defines an unstyled nested group; it does not set the nested group's direction.
 
 ## A repeated label does not create a reusable anonymous identity
 

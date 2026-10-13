@@ -30,7 +30,7 @@ When the prose specification and this grammar disagree on a syntax question, the
 
 A connection endpoint may be a named reference, an anonymous `[Label]` node, or a named or anonymous group. `A->{B}`, `A->{}`, `{B}->D`, and `A->D{B}->E` are valid. Each group occurrence represents one compound node shared by adjacent edges. Connections attach to its boundary. Group bodies contain connections, bare member names, nested groups, standalone scope styles, and comments. A standalone class list applies to its immediate containing scope. Short grouped node endpoints introduce local members directly. Qualified references use dot-separated identifiers, such as `Backend.payment` or `platform.Backend.payment`; lookup and ambiguity are semantic rules.
 
-Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or `{...}(horizontal)` to style a target group.
+Named groups use their identifier as the default title; a separate `D: Services` declaration overrides it. Anonymous groups omit the identifier and have no default title. Parentheses immediately after an arrow style the edge; use `D(horizontal){...}` or styles inside an anonymous group's body to style a target group. Styles attached after a closing brace also belong to that group. A targetless class list before `{` is a separate statement on the containing scope: `(horizontal){A->B}` and `(horizontal)` followed by a newline and `{A->B}` have the same meaning.
 
 The grammar below is the executable canonical file, including its AST actions. `npm run test:grammar` compiles it with Peggy and checks compact, empty, nested, chained, and styled group endpoints. It accepts grouped connections and qualified references while rejecting qualified group definitions and separate node decorations inside groups. Group headers take precedence over labels in every endpoint; curly braces always denote structure and cannot be literal label content. See [Syntax Cases and Precedence](/reference/syntax-cases).
 
@@ -239,7 +239,7 @@ MultiNodeDeclaration
 //   (horizontal)
 //   (vertical justify-between)
 ScopeLevelStyle
-  = style:ScopeStyle _ EOL
+  = style:ScopeStyle _ (EOL / &"{")
   { return style }
 
 ScopeStyle
@@ -271,8 +271,10 @@ LabeledScopeStart
   = NamedReference? _ Classes? ScopeHeaderLabel _ "{"
 
 ScopeEndpoint
-  = id:Identifier? _ before:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ after:Classes?
+  = id:Identifier _ before:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ after:Classes?
   { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label, body } }
+  / body:ScopeContents _ after:Classes?
+  { return { type: "scope", id: null, classes: after, label: null, body } }
 
 ScopeContents
   = "{" body:ScopeBody _ "}"
@@ -295,7 +297,7 @@ ScopeLine
     { return { type: "connection", ...connection, edgeLabel } }
   / scope:ScopeEndpoint _ ScopeEnd
     { return scope }
-  / style:ScopeStyle _ ScopeEnd
+  / style:ScopeStyle _ (ScopeEnd / &"{")
     { return style }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }

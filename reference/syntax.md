@@ -81,16 +81,15 @@ Labels cannot contain literal curly braces. `{{value}}` defines two nested anony
 
 ## `()` — Style Classes
 
-Parentheses apply style classes to a node, edge, or group. After a token, `()` binds to that token. Before an anonymous group, it styles that group. As a standalone statement, it styles its containing scope:
+Parentheses apply style classes to a node, edge, or group. Attached to a subject or arrow, `()` styles that subject or edge. With no target, it styles its containing scope:
 
 - After a node or group token → styles on that token: `a(fill primary dashed): Agent`, `group1(horizontal) { a }`, `[B](dashed)`, and `{ B }(horizontal)`
 - After an arrow → edge styles: `a ->(bold) b`
-- Before an anonymous group → styles on that group: `(horizontal) { B } -> A`
 - Standalone statement → styles on the containing scope: `(horizontal)` sets diagram direction at the root, or group direction inside a body.
 
 Immediately after an arrow, parentheses always style the edge: `A ->(bold) { B }`. Style the target group after its closing brace, as in `A -> { B }(horizontal)`, or after its name, as in `A -> D(horizontal) { B }`.
 
-`(horizontal){A->B}` and `{` followed by `(horizontal)` and `A->B` on separate lines define equivalent groups. Body styles merge with header styles and apply only to the immediate group. They can appear before or after members; they do not style member nodes or nested groups. See [Syntax Cases and Precedence](/reference/syntax-cases#standalone-parentheses-style-the-containing-scope) for examples.
+`(horizontal){A->B}` is valid and means two statements: set the current scope's direction, then define an anonymous group. Adding whitespace or a newline between `)` and `{` does not change ownership. To style the anonymous group itself, put `(horizontal)` inside its braces. Body styles merge with attached group styles and apply only to the immediate group. They can appear before or after members; they do not style member nodes or nested groups. See [Syntax Cases and Precedence](/reference/syntax-cases#standalone-parentheses-style-the-containing-scope) for examples.
 
 ```text
 a(fill primary dashed): Agent

@@ -200,7 +200,7 @@ MultiNodeDeclaration
 //   (horizontal)
 //   (vertical justify-between)
 ScopeLevelStyle
-  = style:ScopeStyle _ EOL
+  = style:ScopeStyle _ (EOL / &"{")
   { return style }
 
 ScopeStyle
@@ -232,8 +232,10 @@ LabeledScopeStart
   = NamedReference? _ Classes? ScopeHeaderLabel _ "{"
 
 ScopeEndpoint
-  = id:Identifier? _ before:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ after:Classes?
+  = id:Identifier _ before:Classes? label:ScopeHeaderLabel? _ body:ScopeContents _ after:Classes?
   { return { type: "scope", id, classes: before || after ? [...(before ?? []), ...(after ?? [])] : null, label, body } }
+  / body:ScopeContents _ after:Classes?
+  { return { type: "scope", id: null, classes: after, label: null, body } }
 
 ScopeContents
   = "{" body:ScopeBody _ "}"
@@ -256,7 +258,7 @@ ScopeLine
     { return { type: "connection", ...connection, edgeLabel } }
   / scope:ScopeEndpoint _ ScopeEnd
     { return scope }
-  / style:ScopeStyle _ ScopeEnd
+  / style:ScopeStyle _ (ScopeEnd / &"{")
     { return style }
   / id:Identifier _ ScopeEnd
     { return { type: "declaration", id, classes: null, label: null } }

@@ -42,8 +42,8 @@ test('groups support source, named target, nesting and multiline membership', ()
 });
 
 test('class binding distinguishes arrows, named groups and anonymous groups', () => {
-  const [connection] = parse('(horizontal){B}->(bold)D(vertical){C}->{}(dashed)');
-  assert.deepEqual(connection.head.classes, ['horizontal']);
+  const [connection] = parse('{\n(horizontal)\nB\n}->(bold)D(vertical){C}->{}(dashed)');
+  assert.deepEqual(connection.head.body[0].classes, ['horizontal']);
   assert.deepEqual(connection.rest[0].classes, ['bold']);
   assert.deepEqual(connection.rest[0].target.classes, ['vertical']);
   assert.deepEqual(connection.rest[1].target.classes, ['dashed']);
@@ -110,22 +110,46 @@ test('every arrow operator separates compact identifiers and group endpoints', (
   assert.notEqual(chain.rest[0].target, chain.rest[1].target);
 });
 
-test('standalone styles remain in their immediate scope while styled headers define nested groups', () => {
+test('standalone styles remain in their immediate scope including before anonymous groups', () => {
   const [root, outer, sibling] = parse(
-    '(vertical)\nOuter(primary) {\n(horizontal)\nA->B\n(fill primary)\nInner {\n(vertical dashed)\nC->D\n}\n(horizontal){E->F}\n}\nSibling {G->H}');
+    '(vertical)\nOuter(primary) {\n(horizontal)\nA->B\n(fill primary)\nInner {\n(vertical dashed)\nC->D\n}\n(horizontal)\n{E->F}\n}\nSibling {G->H}');
   assert.equal(root.type, 'scope-style');
   assert.deepEqual(root.classes, ['vertical']);
   assert.deepEqual(outer.body[0].classes, ['horizontal']);
   assert.equal(outer.body[0].type, 'scope-style');
   assert.deepEqual(outer.body[2].classes, ['fill', 'primary']);
   assert.deepEqual(outer.body[3].body[0].classes, ['vertical', 'dashed']);
-  assert.equal(outer.body[4].type, 'scope');
+  assert.equal(outer.body[4].type, 'scope-style');
   assert.deepEqual(outer.body[4].classes, ['horizontal']);
+  assert.equal(outer.body[5].type, 'scope');
+  assert.equal(outer.body[5].classes, null);
   assert.equal(sibling.body.length, 1);
 
   const [compact] = parse('A->{B->C\n(horizontal)}->D');
   assert.equal(compact.rest[0].target.body[1].type, 'scope-style');
   assert.deepEqual(compact.rest[1].target.ref.path, ['D']);
+});
+
+test('scope styles before anonymous groups keep their owner regardless of whitespace', () => {
+  for (const separator of ['', ' ', '\t', '\n', '\r\n', '\n\n<!-- Child group -->\n']) {
+    const lines = parse('(horizontal)' + separator + '{A->B}');
+    assert.equal(lines[0].type, 'scope-style');
+    assert.equal(lines.at(-1).type, 'scope');
+    assert.equal(lines.at(-1).classes, null);
+    const [outer] = parse('Outer {\n(horizontal)' + separator + '{A->B}\n}');
+    assert.equal(outer.body[0].type, 'scope-style');
+    assert.equal(outer.body.at(-1).type, 'scope');
+    assert.equal(outer.body.at(-1).classes, null);
+  }
+  const [style, connection, label] = parse('(horizontal){A->B}->C\nC: Final');
+  assert.equal(style.type, 'scope-style');
+  assert.equal(connection.type, 'connection');
+  assert.equal(connection.head.classes, null);
+  assert.deepEqual(connection.rest[0].target.ref.path, ['C']);
+  assert.equal(label.label, 'Final');
+  const [labeledStyle, group] = parse('(horizontal): Services {A->B}');
+  assert.equal(labeledStyle.label, 'Services');
+  assert.equal(group.label, null);
 });
 
 test('group bodies reject separate node decorations, shared styles and free text', () => {

@@ -158,11 +158,10 @@ The space-separated tokens select the node’s fill, color, and line style. See 
 
 ### Token Binding Rule
 
-After a token, parentheses bind to that token. Before an anonymous group, they style that group. As a standalone statement, they style the containing scope:
+Parentheses attached to a subject or arrow style that subject or edge. With no target, they style the containing scope:
 
 - After a node or group token → styles on that token, as in `a -> b(dashed)`, `group1(horizontal) { a }`, and `a -> [B](dashed)`
 - After an arrow operator → edge styles: `->(bold)`
-- Before an anonymous group → styles on that group: `(horizontal) { B } -> A`
 - Standalone statement → containing scope: `(horizontal)` sets diagram direction at the root, or group direction inside a body.
 
 Parentheses immediately after an arrow belong to the edge, including `A ->(bold) { B }`. To style that target group, use `A -> { B }(horizontal)` or name it: `A -> D(horizontal) { B }`.
@@ -283,13 +282,7 @@ api: API Server
 worker: Worker
 ```
 
-These anonymous groups have equivalent layout:
-
-```textgraph example
-(horizontal){
-  A -> B
-}
-```
+For an anonymous group, write its styles inside the body:
 
 ```textgraph example
 {
@@ -299,6 +292,8 @@ These anonymous groups have equivalent layout:
 ```
 
 A standalone class list applies to its immediate containing scope, wherever it appears in the body. Group body classes merge with header classes, including appearance classes such as `primary` and `dashed`. They do not decorate child nodes or other groups. Nested groups collect their own scope styles. Conflicting layout directions remain a diagnostic rather than silently overriding one another.
+
+`(horizontal){A->B}` remains valid, but it is two statements: `(horizontal)` sets the containing scope's direction and `{A->B}` defines an anonymous group. It has the same meaning as `(horizontal)` followed by a newline and `{A->B}`. The anonymous group receives no explicit direction from the preceding statement. A targetless style label, as in `(horizontal): Services {A->B}`, stays on the scope-style statement; it does not title the following group. Use a named header such as `G(horizontal): Services {A->B}` for a titled group.
 
 | Class | Effect |
 |-------|--------|
