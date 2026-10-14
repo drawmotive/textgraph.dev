@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createMarkdownRenderer, disposeMdItInstance } from 'vitepress';
 import { withTextGraph } from '@drawmotive/markdown-it-textgraph/vitepress';
 import { initializeTextGraph } from '@drawmotive/textgraph/node';
+import MarkdownIt from 'markdown-it';
 
 test('example fences retain escaped, copyable DSL alongside the rendered PNG', async () => {
   const { textgraphExamples } = await import('../.vitepress/textgraph-examples.mjs');
@@ -71,7 +72,11 @@ test('the published Connection Types example renders all mixed edge operators', 
 
 test('the published grouped shopping example accepts trailing decorations and unique short names', async () => {
   const document = await readFile(new URL('../reference/textgraph-spec.md', import.meta.url), 'utf8');
-  const source = document.split('```textgraph example\n')[1]?.split('\n```')[0];
+  // Markdown owns fence and line-ending normalization on every checkout.
+  const parser = new MarkdownIt();
+  const example = input => parser.parse(input, {}).find(token => token.type === 'fence' && token.info.trim() === 'textgraph example')?.content;
+  const source = example(document);
+  assert.equal(example(document.replace(/\r?\n/g, '\n')), example(document.replace(/\r?\n/g, '\r\n')), 'LF and CRLF checkouts must select the same DSL input');
   assert.ok(source?.includes('checkout -> payment'));
   assert.ok(source.includes('saved -> pack'));
   assert.ok(source.indexOf('checkout: Place an order') > source.indexOf('saved -> pack'));
