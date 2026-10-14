@@ -1,17 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-// Serve the built site under its production hostname, but keep all Google
-// traffic intercepted so verification never pollutes the real property.
-async function productionSite(page) {
-  await page.route('https://textgraph.dev/**', async route => {
-    const url = new URL(route.request().url());
-    const response = await route.fetch({ url: 'http://127.0.0.1:4175' + url.pathname + url.search });
-    await route.fulfill({ response });
-  });
-  await page.route(/https:\/\/[^/]*(google|doubleclick)[^/]*\//, route => route.fulfill({
-    contentType: 'text/javascript', body: '',
-  }));
-}
+import { productionSite } from './support/production-site.mjs';
 async function events(page, name) {
   return page.evaluate(name => (window.dataLayer ?? []).map(args => Array.from(args))
     .filter(args => args[0] === 'event' && (!name || args[1] === name)), name);
