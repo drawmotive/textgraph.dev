@@ -25,7 +25,8 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script>');
   await file('examples/browser/main.js', "const runtime = new URL('../../generated/editor/', import.meta.url);");
   await file('generated/editor/embed.html', runtime);
-  await file('generated/editor-manifest.json', JSON.stringify({ packageVersion: '0.2.1', protocolVersion: 1, assets: [{ path: 'editor/embed.html', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] }));
+  const manifest = { packageVersion: '0.2.1', protocolVersion: 2, assets: [{ path: 'editor/embed.html', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] };
+  await file('generated/editor-manifest.json', JSON.stringify(manifest));
   const tarball = path.join(root, 'editor.tgz');
   await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
   const bytes = await readFile(tarball);
@@ -40,4 +41,11 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   assert.ok((await readFile(path.join(publicRoot, 'main.js'), 'utf8')).includes('./runtime/'));
   await writeFile(tarball, Buffer.concat([bytes, Buffer.from('changed')]));
   await assert.rejects(prepareEditor(root), /integrity mismatch/);
+  for (const protocolVersion of [1, 3]) {
+    await file('generated/editor-manifest.json', JSON.stringify({ ...manifest, protocolVersion }));
+    await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
+    const unsupported = await readFile(tarball);
+    await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.2.1', integrity: 'sha512-' + createHash('sha512').update(unsupported).digest('base64') }));
+    await assert.rejects(prepareEditor(root), /Editor release identity mismatch/, 'Unsupported protocol ' + protocolVersion);
+  }
 });

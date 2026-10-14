@@ -41,7 +41,9 @@ export async function prepareEditor(root = siteRoot) {
     const pkg = path.join(temporary, 'package');
     const identity = JSON.parse(await readFile(path.join(pkg, 'package.json'), 'utf8'));
     const manifest = JSON.parse(await readFile(path.join(pkg, 'generated/editor-manifest.json'), 'utf8'));
-    if (identity.name !== '@drawmotive/editor' || identity.version !== release.version || manifest.packageVersion !== release.version || manifest.protocolVersion !== 1) throw new Error('Editor release identity mismatch');
+    // The copied SDK and runtime negotiate protocol 2; reject incompatible
+    // archives here before publishing the same-origin editor assets.
+    if (identity.name !== '@drawmotive/editor' || identity.version !== release.version || manifest.packageVersion !== release.version || manifest.protocolVersion !== 2) throw new Error('Editor release identity mismatch');
     const destination = path.join(root, 'public/examples/editor');
     await rm(destination, { recursive: true, force: true });
     await mkdir(destination, { recursive: true });
