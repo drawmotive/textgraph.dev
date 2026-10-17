@@ -7,6 +7,48 @@ Specifications, tutorials, API documentation, a playground, examples, and migrat
 
 All site documentation, including this README and internal design notes, is maintained in English.
 
+## Example output
+
+<!-- public-preview:start -->
+
+```textgraph
+shopping(info): Shopping {
+  browse -> checkout
+}
+
+processing(primary): Behind the scenes {
+  payment -> saved : Yes
+  payment ->(dashed warning) retry : No
+  retry ->(dashed warning) payment
+  saved -> email
+}
+
+delivery(success): Delivery {
+  pack -> ship -> arrived
+}
+
+checkout -> payment
+saved -> pack
+
+browse: Browse the shop
+checkout: Place an order
+payment(diamond fill primary): Payment\naccepted?
+retry(warning): Try another\npayment
+saved: Save the order
+email: Send confirmation\nemail
+pack: Prepare the package
+ship: Ship the package
+arrived(ellipse fill success): Package arrives
+```
+
+![Online order: shopping, a payment decision and retry, confirmation, and delivery.](public/guide-images/online-order.png)
+
+[Open the full diagram](public/guide-images/online-order.png) · [Copy the source](examples/online-order.textgraph) · [Try this diagram](https://textgraph.dev/playground?d=1.eJxtkcFqwzAQRO_6ij3ah_yADimEnksgvRRy2UqbaIm9EivHwZT-e5GlJAR6MlppZmeec4gpsZw7llPsLRzaGX4MwLfGWybYbMEFcpd4ncyvMUmjo5yLKCmPqEtvYUeBxcMUCLIjobwaJFxGkqk4ZJzJg4Uvyi8XncccyMMNVVjOPShNuoCFj2igHf551QwMNOPNFmhEHkpATwPPpEuXr64k7S28t1FL5S5rpMCpfFGVZ_JFeu9ZxvcVjwVFZ0yFYmFX4ayNQ0wPqYX9gI4ABaJ6UtN8Os84RvFw4mGAJ7l9vT4KOkdpIv9m1tbdvauFT10AJU6B9CgvsSwccK4h6rIVgoUDiQcX5cQ64sRRjlLxlA4W9koJterKBM9kCo3y_zm9jBucjoaBU6aa_gl2X581htn8AYyRzTM)
+
+<!-- public-preview:end -->
+
+For Chinese, Japanese, and color emoji, see the [packaged font examples](https://github.com/drawmotive/textgraph/tree/main/language-packs#language-coverage).
+
 ## Local development
 
 ```console
@@ -84,7 +126,7 @@ Markdown integrations use fenced `textgraph` code blocks. The public syntax and 
 
 The sidebar follows **Learn TextGraph → Use TextGraph → Build applications → Reference**. The editor extends the language into visual editing after the renderer SDK. Runnable demos belong to their integration guides and the **SDK demos** menu, rather than independent sidebar chapters; the Playground is the everyday text authoring tool. This keeps learning topics, authoring tools and implementation samples from competing at the same level. Existing routes remain stable.
 
-Every published guide outside Reference includes real rendered examples or a relevant static illustration. Home, Playground and the SDK demos already show rendered diagrams. `public/guide-images/textgraph-workflows.svg` is the editable workflow illustration. `drawmotive-editor.png` is a screenshot of the editor 0.2.2-alpha.1 demo, captured at 1440 × 1100 after “Ready to edit”, cropped to `.workspace`. Refresh it against the pinned release when the editor changes. Images link to their full-size assets where detail benefits from enlargement. Browser checks verify guide images without JavaScript and at mobile widths.
+Every published guide outside Reference includes real rendered examples or a relevant static illustration. Home, Playground and the SDK demos already show rendered diagrams. `public/guide-images/textgraph-workflows.svg` is the editable workflow illustration. `drawmotive-editor.png` is maintained through the parent workspace operations: npm run docs:capture -- editor, then npm run docs:previews -- sync and npm run docs:previews -- check. Capture runs the actual package browser example on an isolated display at 1600 × 1200, retaining Chromium tabs, address bar, page controls and canvas. Its adjacent record contains Chromium and Editor versions. Do not crop to the workspace or substitute a page-only screenshot. The website demo continues to use its separately integrity-checked pinned archive. Images link to their full-size assets where detail benefits from enlargement. Browser checks verify guide images without JavaScript and at mobile widths.
 
 **AI tools** under **Use TextGraph** provides a copyable prompt; the Playground remains in the top navigation. Asset preparation copies the canonical specification and style catalog unchanged to `/reference/textgraph-spec.md` and `/reference/classes.md`. These downloadable Markdown files retain their license notices and are generated, not separately maintained. Use HTML anchors with `download` for them so VitePress does not rewrite the links into documentation routes. The specification covers syntax; the separate class catalog is needed for styling, while the syntax summary is redundant.
 
