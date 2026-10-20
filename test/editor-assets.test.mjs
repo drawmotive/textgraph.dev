@@ -22,7 +22,7 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   await file('LICENSE', 'MIT');
   await file('licenses/Runtime-LICENSE.txt', 'Runtime license notice');
   await file('src/index.js', 'export const initializeEditor = () => {};');
-  await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script>');
+  await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script><pre>npm install @drawmotive/editor@alpha</pre>');
   await file('examples/browser/main.js', "const runtime = new URL('../../generated/editor/', import.meta.url);");
   await file('generated/editor/embed.html', runtime);
   const manifest = { packageVersion: '0.2.1', protocolVersion: 2, assets: [{ path: 'editor/embed.html', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] };
@@ -38,6 +38,7 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   assert.equal(await readFile(path.join(publicRoot, 'runtime/embed.html'), 'utf8'), runtime);
   assert.equal(await readFile(path.join(publicRoot, 'licenses/Runtime-LICENSE.txt'), 'utf8'), 'Runtime license notice');
   assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('./sdk/index.js'));
+  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('npm install @drawmotive/editor@0.2.1'), 'The hosted install command must identify the pinned Editor release, even when its immutable archive advertises a channel');
   assert.ok((await readFile(path.join(publicRoot, 'main.js'), 'utf8')).includes('./runtime/'));
   await writeFile(tarball, Buffer.concat([bytes, Buffer.from('changed')]));
   await assert.rejects(prepareEditor(root), /integrity mismatch/);

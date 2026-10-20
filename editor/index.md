@@ -27,7 +27,7 @@ If your application only needs to produce images, use the [JavaScript renderer](
 ## Install and mount
 
 ```bash
-npm install @drawmotive/editor@0.2.2-alpha.2
+npm install @drawmotive/editor@0.3.0
 npx drawmotive-copy-assets public/editor
 ```
 

@@ -62,7 +62,10 @@ export async function prepareEditor(root = siteRoot) {
     const index = path.join(destination, 'index.html');
     const html = await readFile(index, 'utf8');
     if (!html.includes('../../src/index.js')) throw new Error('Unknown editor sample import map');
-    await writeFile(index, html.replace('../../src/index.js', './sdk/index.js'));
+    // Immutable archives may advertise a moving npm channel. The hosted demo's
+    // installation guidance must identify the exact SDK selected by this site.
+    await writeFile(index, html.replace('../../src/index.js', './sdk/index.js')
+      .replace(/(npm install @drawmotive\/editor@)[^\s<]+/g, (_, command) => command + release.version));
     const main = path.join(destination, 'main.js');
     const script = await readFile(main, 'utf8');
     if (!script.includes('../../generated/editor/')) throw new Error('Unknown editor sample runtime URL');

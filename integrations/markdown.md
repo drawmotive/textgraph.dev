@@ -15,10 +15,10 @@ Readers receive a static PNG; they do not need the renderer in their browser. To
 
 ## Install
 
-Install the Markdown plugin, which uses TextGraph SDK 0.2.2-alpha.2:
+Install the Markdown plugin, which uses TextGraph SDK 0.3.0:
 
 ```bash
-npm install @drawmotive/markdown-it-textgraph@0.2.2-alpha.2 markdown-it@14
+npm install @drawmotive/markdown-it-textgraph@0.3.0 markdown-it@14
 ```
 
 ## VitePress

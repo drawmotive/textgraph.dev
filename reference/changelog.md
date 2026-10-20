@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- Publish the stable SDK, Markdown plugin, optional fonts and embedded Editor at coordinated version `0.3.0`.
+- Both Marketplace extensions now use `0.3.0` and bundle their corresponding `0.3.0` SDK.
+
 ## 0.2.2-alpha.2
 
 - Fix the Connection Types example by including the SDK correction for backward connections mixed with relation edges.
