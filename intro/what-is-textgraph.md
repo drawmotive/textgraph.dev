@@ -30,6 +30,6 @@ Groups organize related nodes, while layout classes control direction and column
 
 Start in the [Playground](/playground) to edit source and see the result without installing anything. Use the same text in [Markdown documentation](/integrations/markdown) or a [VS Code preview](/integrations/vscode).
 
-When building an application, the [JavaScript SDK](/integrations/javascript) turns source into PNG images. To let people move shapes and edit labels on a canvas, use the [DrawMotive editor](/editor/). It starts from TextGraph and saves a separate editable document; visual edits do not rewrite the source.
+When building an application, the [JavaScript SDK](/integrations/javascript) turns source into PNG or SVG images. To let people move shapes and edit labels on a canvas, use the [DrawMotive editor](/editor/). Its one-way workflow starts from TextGraph and saves a separate editable document. Canvas edits belong to that document; generating from TextGraph again replaces it.
 
 Follow the sidebar from **Learn TextGraph**, through **Use TextGraph**, to **Build applications**. [Choose your workflow](/integrations/overview) compares the tools, and **Reference** holds the detailed language rules.

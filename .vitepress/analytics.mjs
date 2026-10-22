@@ -3,7 +3,7 @@ import { homeExamples } from './home/examples.mjs';
 export const measurementId = 'G-F3QNCLEDBC';
 const storageKey = 'textgraph.analytics.session';
 const sessionTimeout = 30 * 60 * 1000;
-const homepageVersion = 'diagram-story-v1';
+const homepageVersion = 'product-story-v2';
 const placements = ['hero', 'navigation', 'content', 'footer'];
 const examples = ['default', ...homeExamples.map(example => example.id)];
 
@@ -105,7 +105,7 @@ export function createAnalytics({ send = () => {}, storage, now = Date.now } = {
       emit('diagram_action', { action_type: action, current_preview: currentPreview === true });
     },
     integration(path) {
-      const integration = path.replace(/\.html$/, '').match(/^\/integrations\/(markdown|vscode|javascript|cli|rest-api|ai-agents|overview)$/)?.[1];
+      const integration = path.replace(/\.html$/, '').match(/^\/integrations\/(markdown|vscode|javascript|docker|cli|rest-api|ai-agents|overview)$/)?.[1];
       if (integration) emit('integration_opened', { integration });
     },
     failure(category) {

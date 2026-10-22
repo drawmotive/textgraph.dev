@@ -36,6 +36,8 @@ database: Database
 
 Check that the preview matches your intended relationships. If the Playground reports an error, give the AI tool the source and diagnostic and ask it to correct the diagram. For [Markdown](/integrations/markdown), wrap the final source in a fenced block with the language `textgraph`.
 
+For syntax or reference errors, the Playground also offers **Fix It**. Choosing it sends the current source to the disclosed Azure AI repair service. Review the proposed source changes and preview, then choose **Replace original DSL** or **Discard**. Normal rendering stays in the browser; the repair flow does not generate a diagram from unrestricted prose.
+
 ## Which references are needed?
 
 | Reference | Include it in the prompt? |

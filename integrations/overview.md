@@ -3,7 +3,7 @@
 Learn TextGraph once, then use its source wherever you work. Start with the Playground, bring diagrams into your documentation, or build rendering and visual editing into an application.
 
 <figure class="guide-figure">
-  <a href="/guide-images/textgraph-workflows.svg"><img src="/guide-images/textgraph-workflows.svg" alt="TextGraph source branches into three workflows: try it in the Playground, publish with Markdown or preview in VS Code, and build applications with the PNG renderer or DrawMotive visual editor." width="720" height="640"></a>
+  <a href="/guide-images/textgraph-workflows.svg"><img src="/guide-images/textgraph-workflows.svg" alt="TextGraph source branches into three workflows: try it in the Playground, publish with Markdown or preview in VS Code, and build applications with the renderer or DrawMotive visual editor." width="720" height="640"></a>
   <figcaption>One language, different destinations. Choose by what you want to do with the diagram.</figcaption>
 </figure>
 
@@ -21,10 +21,11 @@ Put a fenced `textgraph` block in a Markdown file. The [VS Code extension](/inte
 
 | What people need to do | Use | What you keep |
 | --- | --- | --- |
-| Render diagrams from text in a browser, worker, React app or Node.js | [JavaScript SDK](/integrations/javascript), `@drawmotive/textgraph` | TextGraph source and PNG output |
-| Move shapes, edit labels and draw on a canvas | [DrawMotive editor](/editor/), `@drawmotive/editor` | An editable document and optional PNG export |
+| Render diagrams from text in a browser, Worker or Node.js; render PNG in React | [JavaScript SDK](/integrations/javascript), `@drawmotive/textgraph` | TextGraph source and PNG/SVG output |
+| Move shapes, edit labels and draw on a canvas | [DrawMotive editor](/editor/), `@drawmotive/editor` | An editable document, optional PNG/SVG images, or a PNG with its document embedded |
+| Render images over HTTP on your own infrastructure | [Docker renderer](/integrations/docker) | TextGraph source and PNG/SVG output |
 
-The editor extends the workflow from text to visual editing. Save its document to keep canvas changes; those changes do not turn back into TextGraph source.
+The editor intentionally uses a one-way workflow from text to visual editing. Save its document to keep canvas changes. Generating from TextGraph again replaces the document; it does not merge canvas edits or rewrite the source.
 
 ## Where the SDK demos fit
 

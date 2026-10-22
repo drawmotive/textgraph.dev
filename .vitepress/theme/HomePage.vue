@@ -2,121 +2,160 @@
 import { withBase } from 'vitepress'
 import { examplesById as examples } from '../home/examples.mjs'
 import links from '../home/generated/links.json'
+import images from '../home/generated/images.mjs'
 import HomeExample from './HomeExample.vue'
 import './home.css'
 
-const steps = [
-  { id: 'relationships', number: '01', title: 'Start with the relationships.', description: 'Connect the browser to a load balancer, then each application replica to the shared database. TextGraph handles the layout.' },
-  { id: 'labels', number: '02', title: 'Add detail where it helps.', description: 'Expand lb to Load balancer and label the two app servers. Names such as browser and database already explain themselves.' },
-  { id: 'service-boundary', number: '03', title: 'Keep related things together.', description: 'Group the two replicas into an application tier, with the load balancer and shared database outside it.' },
+const syntax = [
+  { id: 'relationships', title: 'Connect.', detail: 'Names and arrows. That is a diagram.' },
+  { id: 'release-process', title: 'Express.', detail: 'Decisions, labels and styles in a few lines.' },
+  { id: 'service-boundary', title: 'Organize.', detail: 'Group related nodes. Let the layout follow.' },
 ]
-const gallery = [
-  { id: 'release-process', category: 'Explain a process', description: 'Arrows show prerequisites: tests must pass and code review must be approved before publishing.' },
-  { id: 'service-boundary', category: 'Describe a system', description: 'Show request paths through two application replicas, grouped between routing and storage.' },
-  { id: 'dependencies', category: 'Map dependencies', description: 'A web app and an admin CLI share an API client. Arrows point from each consumer to its dependency.' },
-]
+const sdkSource = "const graph = await initializeTextGraph();\nconst image = await graph.renderSvg('web -> api -> db');"
+const dockerSource = 'docker run --rm -p 8080:8080 \\\n  ghcr.io/drawmotive/textgraph-renderer:0.3.0'
+const markdownSource = String.fromCharCode(96).repeat(3) + 'textgraph\n' + examples.dependencies.source + '\n' + String.fromCharCode(96).repeat(3)
 </script>
 
 <template>
   <main class="textgraph-home">
     <section class="home-hero home-wrap" aria-labelledby="home-title" data-analytics-placement="hero">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="status-dot" /> Diagrams, written down.</p>
+        <div class="hero-meta">
+          <p class="eyebrow"><span class="status-dot" /> TextGraph + DrawMotive</p>
+          <a class="license-badge" href="#license">Free · MIT License</a>
+        </div>
         <h1 id="home-title">Turn relationships<br class="desktop-break"> into <span>diagrams.</span></h1>
-        <p class="hero-description">A few lines of readable text. A diagram that explains your idea. TextGraph handles the layout so you can focus on what connects.</p>
+        <p class="hero-description">A little text. Automatic layout. A canvas for your finishing touches.</p>
         <div class="home-actions">
           <a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Try this example <span aria-hidden="true">↗</span></a>
-          <a class="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
+          <a class="text-link" :href="withBase('/examples/editor/')" target="_self">Try the visual editor <span aria-hidden="true">↗</span></a>
         </div>
-        <p class="hero-note">No account. No installation. Runs in your browser.</p>
+        <p class="hero-note">No account. Runs in your browser.</p>
       </div>
       <HomeExample :example="examples['request-flow']" eager action="Open in playground" />
     </section>
 
-    <div class="home-facts home-wrap" aria-label="Available today">
-      <p><span>Make</span> Flowcharts &amp; directed graphs</p>
-      <p><span>Keep</span> Editable text alongside your docs</p>
-      <p><span>Use</span> PNG exports, Markdown &amp; VS Code</p>
-    </div>
+    <nav class="story-nav home-wrap" aria-label="Explore the product">
+      <a href="#syntax"><span>01</span> Write a little</a>
+      <a href="#visual-editing"><span>02</span> Make it yours</a>
+      <a href="#workflow"><span>03</span> Put it to work</a>
+      <a href="#build"><span>04</span> Build with it</a>
+      <a href="#license"><span>MIT</span> Use it freely</a>
+    </nav>
 
-    <section id="how-it-works" class="home-section home-wrap" aria-labelledby="approach-title">
+    <section id="syntax" class="home-section home-wrap" aria-labelledby="syntax-title">
       <div class="section-intro">
-        <p class="eyebrow">A small language. Room to grow.</p>
-        <h2 id="approach-title">From a connection<br>to a shared understanding.</h2>
-        <p>A load balancer routes each request to one of two app servers sharing a database. Arrows show request direction; responses are omitted.</p>
+        <div><p class="eyebrow">Small syntax. Serious diagrams.</p><h2 id="syntax-title">Less to write.<br>More to show.</h2></div>
+        <a class="text-link" :href="withBase('/diagrams/flowcharts')">Learn the syntax <span aria-hidden="true">→</span></a>
       </div>
-      <article v-for="step in steps" :key="step.id" class="story-step">
-        <div class="step-copy">
-          <span class="step-number">{{ step.number }}</span>
-          <h3>{{ step.title }}</h3>
-          <p>{{ step.description }}</p>
-          <a class="text-link" :href="withBase(links[step.id])" :data-analytics-example="step.id">Try this step <span aria-hidden="true">↗</span></a>
-        </div>
-        <HomeExample :example="examples[step.id]" />
-      </article>
-    </section>
-
-    <section class="payoff-section" aria-labelledby="payoff-title">
-      <div class="home-wrap payoff-grid">
-        <div class="payoff-copy">
-          <p class="eyebrow">The idea changed. Change the text.</p>
-          <h2 id="payoff-title">A shared cache.<br>Two new connections.</h2>
-          <p>Both application replicas now use the same cache. Connect each one to cache, and TextGraph adds a single shared node.</p>
-          <div class="source-addition"><span class="panel-label">Add to the first example</span><pre><code>app1 -&gt; cache
-app2 -&gt; cache</code></pre></div>
-          <p class="payoff-note">The source is still text you can keep in a repository, review in a diff, or change again tomorrow.</p>
-          <a class="home-button primary" :href="withBase(links['cache-flow'])" data-analytics-example="cache-flow">Make it your own <span aria-hidden="true">↗</span></a>
-        </div>
-        <HomeExample :example="examples['cache-flow']" action="Edit the updated diagram" />
-      </div>
-    </section>
-
-    <section id="examples" class="home-section home-wrap" aria-labelledby="examples-title">
-      <div class="section-intro gallery-intro">
-        <div><p class="eyebrow">A starting point for your next explanation</p><h2 id="examples-title">What will you make clear?</h2></div>
-        <p>Real diagrams, with the text that makes them. Open one and adapt it to your own work.</p>
-      </div>
-      <div class="example-gallery">
-        <article v-for="item in gallery" :key="item.id" class="gallery-item">
-          <p class="eyebrow">{{ item.category }}</p>
-          <h3>{{ examples[item.id].title }}</h3>
-          <p>{{ item.description }}</p>
+      <div class="syntax-gallery">
+        <article v-for="item in syntax" :key="item.id">
+          <h3>{{ item.title }}</h3><p>{{ item.detail }}</p>
           <HomeExample :example="examples[item.id]" compact />
+        </article>
+      </div>
+      <div class="capability-line">
+        <span>Automatic layout &amp; routing</span><span>Nested groups</span><span>Shapes &amp; styles</span><span>PNG &amp; SVG</span>
+        <a href="https://github.com/drawmotive/textgraph/tree/main/language-packs#language-coverage">Chinese, Japanese &amp; emoji <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section id="visual-editing" class="visual-section" aria-labelledby="visual-title">
+      <div class="home-wrap">
+        <div class="section-intro">
+          <div><p class="eyebrow">From generated to yours</p><h2 id="visual-title">Start with text.<br>Finish with your own touch.</h2></div>
+          <div class="section-copy">
+            <p>Write it yourself or draft it with AI. Generate a diagram, then move shapes, edit labels and draw connections in DrawMotive.</p>
+            <div class="home-actions">
+              <a class="home-button primary" :href="withBase('/examples/editor/')" target="_self">Open the editor demo <span aria-hidden="true">↗</span></a>
+              <a class="text-link" :href="withBase('/integrations/ai-agents')">Draft with AI <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </div>
+        <figure class="product-capture editor-capture">
+          <a :href="withBase('/examples/editor/')" target="_self" aria-label="Try the DrawMotive canvas shown in this screenshot">
+            <img :src="withBase('/guide-images/drawmotive-editor.png')" alt="Real DrawMotive browser editor: TextGraph source on the left, an editable grouped order flow on the canvas, drawing tools, and document save and open controls." width="1600" height="1200" loading="lazy">
+          </a>
+          <figcaption><span>TextGraph → editable document → PNG / SVG</span><a :href="withBase('/editor/')">Embed this editor <span aria-hidden="true">→</span></a></figcaption>
+        </figure>
+        <p class="document-note">Save the document or an editable PNG to keep canvas changes. Generating again replaces the drawing; canvas edits do not rewrite TextGraph.</p>
+      </div>
+    </section>
+
+    <section id="workflow" class="home-section home-wrap" aria-labelledby="workflow-title">
+      <div class="section-intro">
+        <div><p class="eyebrow">Where you already work</p><h2 id="workflow-title">From your editor<br>to your documentation.</h2></div>
+        <a class="text-link" :href="withBase('/integrations/overview')">Choose your workflow <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="workflow-grid">
+        <article>
+          <figure class="product-capture vscode-capture">
+            <a :href="withBase('/integrations/vscode')" aria-label="Explore the TextGraph preview in VS Code">
+              <img :src="withBase('/home-images/vscode-preview.png')" alt="Real VS Code window showing TextGraph in a Markdown file beside its rendered order-flow diagram in the built-in preview." width="1599" height="1399" loading="lazy">
+            </a>
+          </figure>
+          <h3>Write. Preview. Stay in VS Code.</h3>
+          <p>Preview TextGraph in Markdown, or edit a drawing in the visual editor.</p>
+          <div class="home-actions">
+            <a class="text-link" href="https://marketplace.visualstudio.com/items?itemName=drawmotive.textgraph-markdown">Install Markdown Preview <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="https://marketplace.visualstudio.com/items?itemName=drawmotive.vscode-drawmotive">Install DrawMotive <span aria-hidden="true">↗</span></a>
+          </div>
+        </article>
+        <article>
+          <div class="markdown-preview">
+            <header class="panel-label">README.md · Markdown &amp; VitePress</header>
+            <div class="markdown-source"><span class="panel-label">A fenced block</span><pre><code>{{ markdownSource }}</code></pre></div>
+            <a :href="withBase(links.dependencies)" data-analytics-example="dependencies" aria-label="Try the shared client library diagram">
+              <img :src="images.dependencies.src" :alt="examples.dependencies.alt" :width="images.dependencies.width" :height="images.dependencies.height" loading="lazy">
+            </a>
+          </div>
+          <h3>Ship the diagram with the docs.</h3>
+          <p>Keep readable source in Git. Build real images into your documentation site.</p>
+          <a class="text-link" :href="withBase('/integrations/markdown')">Add to Markdown &amp; VitePress <span aria-hidden="true">→</span></a>
         </article>
       </div>
     </section>
 
-    <section id="workflow" class="workflow-section home-wrap" aria-labelledby="workflow-title">
-      <div class="section-intro">
-        <p class="eyebrow">Where your ideas already live</p>
-        <h2 id="workflow-title">Keep the diagram<br>close to the explanation.</h2>
-        <p>Write the source with your documentation. Preview it in your editor, publish it in your site, or export a PNG from the playground.</p>
-      </div>
-      <div class="workflow-options">
-        <a class="workflow-link" :href="withBase('/integrations/markdown')"><span class="workflow-mark" aria-hidden="true">M↓</span><span><strong>Markdown &amp; VitePress</strong><span>Turn a TextGraph code block into a diagram when your documentation builds.</span></span><span aria-hidden="true">↗</span></a>
-        <a class="workflow-link" :href="withBase('/integrations/vscode')"><span class="workflow-mark" aria-hidden="true">&lt;/&gt;</span><span><strong>VS Code</strong><span>See the diagram update in Markdown preview as you edit its source.</span></span><span aria-hidden="true">↗</span></a>
-        <a class="text-link sdk-link" href="https://github.com/drawmotive/textgraph#readme">Building an app? Explore the JavaScript SDK <span aria-hidden="true">↗</span></a>
+    <section id="build" class="build-section" aria-labelledby="build-title">
+      <div class="home-wrap">
+        <div class="section-intro">
+          <div><p class="eyebrow">One engine. Your choice of delivery.</p><h2 id="build-title">In your app.<br>On your infrastructure.</h2></div>
+          <p>Render locally with the SDK, embed the visual editor, or serve PNG and SVG from your own Docker container.</p>
+        </div>
+        <div class="build-grid">
+          <article class="build-option">
+            <img class="integration-visual" :src="withBase('/home-images/sdk.svg')" alt="SDK integration: a browser, Worker, Node.js or React application calls TextGraph; the renderer returns PNG or SVG, and the Editor provides a visual canvas. React renders PNG." width="640" height="280" loading="lazy">
+            <div class="build-copy"><p class="eyebrow">npm · JavaScript / TypeScript</p><h3>A renderer. An editor. Your product.</h3><pre><code>{{ sdkSource }}</code></pre>
+              <div class="home-actions"><a class="text-link" :href="withBase('/integrations/javascript')">Explore the SDK <span aria-hidden="true">→</span></a><a class="text-link" :href="withBase('/editor/')">Embed the editor <span aria-hidden="true">→</span></a></div>
+            </div>
+          </article>
+          <article class="build-option">
+            <img class="integration-visual" :src="withBase('/home-images/docker.svg')" alt="Self-hosted Docker integration: your application sends TextGraph in an HTTP POST to the renderer container and receives a PNG or SVG image." width="640" height="280" loading="lazy">
+            <div class="build-copy"><p class="eyebrow">Docker · HTTP API</p><h3>Text in. PNG or SVG out.</h3><pre><code>{{ dockerSource }}</code></pre>
+              <div class="home-actions"><a class="text-link" :href="withBase('/integrations/docker')">Run with Docker <span aria-hidden="true">→</span></a><a class="text-link" href="https://github.com/drawmotive/textgraph-renderer">View the service <span aria-hidden="true">↗</span></a></div>
+            </div>
+          </article>
+        </div>
+        <a class="render-example" :href="withBase(links['cache-flow'])" data-analytics-example="cache-flow">
+          <span>Same TextGraph. Same rendering engine.<strong>Try a complete architecture example <span aria-hidden="true">↗</span></strong></span>
+          <img :src="images['cache-flow'].src" :alt="examples['cache-flow'].alt" :width="images['cache-flow'].width" :height="images['cache-flow'].height" loading="lazy">
+        </a>
       </div>
     </section>
 
-    <section class="home-section home-wrap questions-section" aria-labelledby="questions-title">
-      <div><p class="eyebrow">Before you begin</p><h2 id="questions-title">A few useful details.</h2></div>
-      <div class="home-questions">
-        <details><summary>What can I make today?</summary><p>Flowcharts and directed graphs, including process, service, and dependency diagrams. <a :href="withBase('/reference/changelog')">See the changelog.</a></p></details>
-        <details><summary>Can I use plain English or AI?</summary><p>TextGraph uses a small, structured syntax. You can write it yourself or ask an AI assistant to draft it, then review and render the source. The playground is a diagram editor; it does not include an AI chat.</p></details>
-        <details><summary>Where is my diagram rendered?</summary><p>The playground renders in your browser. Diagram source stays there while you edit. A share link contains the source, so anyone you send that link to can open it.</p></details>
-        <details><summary>How do I take the result with me?</summary><p>Download a PNG, copy the image, or copy a link to the editable source from the playground. For documentation, use the Markdown plugin or VS Code extension.</p></details>
+    <section id="license" class="license-section home-wrap" aria-labelledby="license-title">
+      <a class="license-mark" href="https://github.com/drawmotive/textgraph/blob/main/LICENSE" aria-label="MIT license">MIT<span>LICENSE</span></a>
+      <div><p class="eyebrow">Yours to use. Yours to build on.</p><h2 id="license-title">Free under the MIT License.</h2>
+        <p>Personal projects, company work, commercial products and resale. MIT allows all of them, with no license fee. Keep the copyright and license notice.</p>
+        <a class="text-link" href="https://github.com/drawmotive/textgraph/blob/main/LICENSE">Read the MIT license <span aria-hidden="true">↗</span></a>
+        <p class="license-detail">Site documentation is CC BY 4.0. Bundled fonts and dependencies retain their own licenses.</p>
       </div>
     </section>
 
     <section class="closing-section home-wrap" aria-labelledby="closing-title" data-analytics-placement="footer">
-      <p class="eyebrow">Your next diagram starts with a connection.</p>
-      <h2 id="closing-title">Give your idea a shape.</h2>
-      <p>Start with a working example. Change one thing. See where it leads.</p>
-      <div class="home-actions">
-        <a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Create your diagram <span aria-hidden="true">↗</span></a>
-        <a class="text-link" :href="withBase('/diagrams/flowcharts')">Read the syntax guide <span aria-hidden="true">→</span></a>
-      </div>
+      <h2 id="closing-title">One connection is all it takes.</h2><p>Open an example. Change a line. Make it yours.</p>
+      <div class="home-actions"><a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Create your diagram <span aria-hidden="true">↗</span></a><a class="text-link" :href="withBase('/examples/textgraph/')" target="_self">Try the renderer SDK <span aria-hidden="true">↗</span></a></div>
+      <details class="ai-detail"><summary>Can I use plain English or AI?</summary><p>TextGraph uses a small, structured syntax. Ask an AI assistant to draft it, then review the source and render it. <a :href="withBase('/integrations/ai-agents')">Get the prompt and language references.</a></p></details>
     </section>
   </main>
 </template>

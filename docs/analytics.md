@@ -69,8 +69,8 @@ containing homepage_activated with sessions containing a homepage page_view
 (page path /) in a session-based report or exploration. GA's property-wide session
 key-event rate includes all sessions and has a different denominator.
 
-Break down by device, homepage_version, entry_point, and example_id. The initial
-homepage version is **diagram-story-v1**; change it when a new design ships. Future
+Break down by device, homepage_version, entry_point, and example_id. The current
+homepage version is **product-story-v2**; the earlier design used **diagram-story-v1**. Future
 example links can use the data-analytics-example HTML attribute with an entry
 from the catalog in .vitepress/home/examples.mjs. Unknown IDs fall back to
 default; source is never used to infer an ID.

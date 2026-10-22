@@ -1,6 +1,6 @@
 # JavaScript / Node.js
 
-Use **`@drawmotive/textgraph`** to turn TextGraph source into PNG images or validate diagrams. It runs locally in modern browsers, module workers, and Node.js 22+. TypeScript declarations are included.
+Use **`@drawmotive/textgraph`** to validate TextGraph source and render PNG or SVG images. It runs locally in modern browsers, module workers, and Node.js 22. TypeScript declarations are included.
 
 <a href="/examples/textgraph/" target="_self"><strong>Run the renderer SDK demo →</strong></a>
 
@@ -126,5 +126,16 @@ try {
 ```
 
 PNG output defaults to bytes, scale `1`, padding `10`, and a white background. Validate source without rendering with `await graph.validate('A -> B')`; the result contains `valid` and `diagnostics`.
+
+For vector output, call `renderSvg()` on the same initialized instance, before disposing it:
+
+```javascript
+const vector = await graph.renderSvg('A -> B', { padding: 10 });
+if (vector.success) {
+  await writeFile('diagram.svg', vector.svg, 'utf8');
+}
+```
+
+Browser and Worker instances also expose `renderSvg()`. It returns SVG text and logical `displayWidth`/`displayHeight`; raster options such as `scale` apply only to PNG. The React component, Markdown plugin and Playground continue to display PNG.
 
 See the [SDK API reference](https://github.com/drawmotive/textgraph/blob/main/docs/api-v1.md) for options, cancellation, and diagnostic fields, or the [runnable package samples](https://github.com/drawmotive/textgraph/tree/main/samples) for browser, worker, React, and Node applications.

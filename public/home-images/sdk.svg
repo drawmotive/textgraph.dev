@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="280" viewBox="0 0 640 280" role="img" aria-labelledby="title desc">
+  <title id="title">SDKs inside your application</title>
+  <desc id="desc">A TextGraph renderer returns PNG or SVG. A separate DrawMotive Editor provides a canvas and editable documents. Browser, Worker and Node.js support rendering; React uses PNG.</desc>
+  <rect width="640" height="280" fill="#f6f7fc"/>
+  <g font-family="system-ui, sans-serif" fill="#242937">
+    <text x="32" y="37" font-size="12" letter-spacing="1.5" fill="#606776">YOUR APPLICATION</text>
+    <rect x="32" y="65" width="268" height="148" rx="12" fill="#fff" stroke="#d7ddec"/>
+    <text x="52" y="96" font-size="13" fill="#4055b5">@drawmotive/textgraph</text>
+    <g fill="#edf0fb" stroke="#a9b5df"><rect x="54" y="130" width="47" height="32" rx="4"/><rect x="140" y="130" width="47" height="32" rx="4"/><rect x="226" y="130" width="47" height="32" rx="4"/></g>
+    <g font-size="12" text-anchor="middle"><text x="77" y="151">web</text><text x="164" y="151">api</text><text x="250" y="151">db</text></g>
+    <path d="M101 146h35m-6-4 6 4-6 4m57-4h35m-6-4 6 4-6 4" fill="none" stroke="#4055b5" stroke-width="1.5"/>
+    <text x="52" y="192" font-size="12" fill="#606776">TextGraph → PNG / SVG</text>
+    <rect x="320" y="65" width="288" height="148" rx="12" fill="#fff" stroke="#d7ddec"/>
+    <text x="340" y="96" font-size="13" fill="#4055b5">@drawmotive/editor</text>
+    <rect x="343" y="123" width="30" height="43" rx="4" fill="#f4f6fa" stroke="#d7ddec"/>
+    <path d="M352 132h12v10h-12zM352 153h12" stroke="#606776" fill="none"/>
+    <rect x="403" y="126" width="57" height="31" rx="4" fill="#edf0fb" stroke="#a9b5df"/>
+    <path d="M460 142h40m-5-4 5 4-5 4" fill="none" stroke="#4055b5" stroke-width="1.5"/>
+    <rect x="504" y="126" width="57" height="31" rx="4" fill="#edf0fb" stroke="#a9b5df"/>
+    <g fill="#fff" stroke="#4055b5"><rect x="400" y="123" width="5" height="5"/><rect x="457" y="154" width="5" height="5"/></g>
+    <text x="340" y="192" font-size="12" fill="#606776">Canvas → editable document</text>
+    <text x="32" y="250" font-size="12" fill="#606776">Browser · Worker · Node.js · React (PNG)</text>
+  </g>
+</svg>

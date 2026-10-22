@@ -11,6 +11,7 @@ const guides = [
   '/integrations/vscode.html',
   '/integrations/javascript.html',
   '/editor/',
+  '/integrations/docker.html',
 ];
 
 test('sidebar leads from the language to tools and application development', async ({ page }) => {
