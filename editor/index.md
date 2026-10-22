@@ -4,7 +4,7 @@ aside: false
 
 # DrawMotive editor
 
-`@drawmotive/editor` embeds a visual diagram editor in your web application. Start with TextGraph, move shapes and edit labels on the canvas, then save an editable document or download a PNG. The editor runs in the browser without an account or rendering service.
+`@drawmotive/editor` embeds a visual diagram editor in your web application. Start with TextGraph or an empty canvas, edit shapes, labels and connections, then save an editable document or export PNG/SVG. The public editor runs in the browser without an account or rendering service.
 
 <figure class="guide-figure">
   <a href="/guide-images/drawmotive-editor.png"><img src="/guide-images/drawmotive-editor.png" alt="DrawMotive browser example with real Chromium tabs and address bar, TextGraph controls and the editable online-order diagram." width="1600" height="1200"></a>
@@ -15,109 +15,137 @@ aside: false
 
 ## From TextGraph to visual editing
 
-The [Playground](/playground) updates an image as you edit text. DrawMotive takes the next step: generate a starting diagram, then work directly with its shapes, labels and connections. Save the editable document to reopen your canvas changes; export a PNG to share the result. Visual edits do not update the original TextGraph.
-
-If your application only needs to produce images, use the [JavaScript renderer](/integrations/javascript). Choose the editor when people need a canvas:
+The [Playground](/playground) previews an image as you edit TextGraph. DrawMotive creates a separate editable document from that source, then lets people work directly with its shapes, labels and connections. This is intentionally a one-way workflow: canvas changes belong to the saved document and do not rewrite TextGraph. Generating from source again replaces the document; it does not merge with earlier canvas edits.
 
 | What you need | Package |
 | --- | --- |
-| Render TextGraph to a PNG in a browser, Node.js, React or a Worker | `@drawmotive/textgraph` |
-| Let people edit diagrams visually in a web page | `@drawmotive/editor` |
+| Validate TextGraph and render PNG/SVG in a browser, Node.js or a Worker; render PNG in React | [`@drawmotive/textgraph`](/integrations/javascript) |
+| Edit diagrams visually and save editable documents in a web page | `@drawmotive/editor` |
 
-## Install and mount
+## Install and create
 
 ```bash
 npm install @drawmotive/editor@0.3.0
 npx drawmotive-copy-assets public/editor
 ```
 
-Deploy the copied directory with your application. Copy the assets again after upgrading the package; in Vite, add the copy command to `predev` and `prebuild`.
+Copy the complete runtime again after each upgrade. For Vite, run the copy command in `predev` and `prebuild`. Serve the application over HTTPS or localhost.
 
 ```html
 <div id="editor" style="height: 600px"></div>
 ```
 
 ```javascript
-import { initializeEditor } from '@drawmotive/editor';
+import { createEditor } from '@drawmotive/editor';
 
-const editor = await initializeEditor({
+const editor = await createEditor({
   container: document.querySelector('#editor'),
   assetBaseUrl: '/editor/',
-  source: 'User -> Application -> Database',
 });
+await editor.replaceTextGraph('User -> Application -> Database');
+await editor.fitViewport();
 ```
 
-The promise resolves after the initial diagram is ready. Omit `source` for a blank canvas. Each editor lives in an iframe that isolates the canvas, styles and runtime from your page. The frame fills its container, so an explicit height is required.
+Creation resolves when the empty scene and temporary storage are ready. Replacement and viewport fitting are separate operations. To start with a blank canvas, omit the two calls after creation. Each instance owns an iframe and browser runtime; give its container an explicit height. Mount only the instances your application needs.
 
 ## Save, reopen and export
 
 ```javascript
-const { raw, png, width, height } = await editor.exportDocument();
+const snapshot = await editor.exportSnapshot({ formats: ['raw', 'png', 'svg'] });
 
-// Save raw in your application's storage, then reopen it later.
-await editor.importDocument(raw);
+// Persist snapshot.raw in your application's storage.
+await editor.replaceDocument(snapshot.raw);
+await editor.fitViewport();
 
-// Or start a new editor with an existing document.
-const reopened = await initializeEditor({
-  container: document.querySelector('#another-editor'),
-  assetBaseUrl: '/editor/',
-  document: raw,
-});
+// PNG is an object; its base64 property contains the image bytes.
+const imageUrl = `data:image/png;base64,${snapshot.png.base64}`;
+const svgText = snapshot.svg;
 ```
 
-`raw` is the opaque base64 editable document. `png` is the base64 image; use `data:image/png;base64,` followed by `png` in an image's `src`, or turn it into a Blob for download. A PNG is for viewing and sharing. Preserve `raw` to keep editing.
+All requested formats come from one document revision. `raw` is an opaque base64 editable document, not TextGraph source. PNG contains `base64`, pixel `width`/`height`, `scale`, and logical `displayWidth`/`displayHeight`; SVG is a string. Raw-only export does not render an image. Rendering defaults to `scale: 1` and `padding: 10`; set `render: { scale, maxWidth, padding }` when exporting to change those options.
 
-Your application owns saving. The editor uses temporary browser storage during a session; it is not durable document storage. The browser example demonstrates both document save/open and PNG download.
+Your application owns durable saving. Runtime IndexedDB is temporary and deleted during disposal. Exporting a snapshot does not mark it saved.
+
+### An editable PNG
+
+To keep the drawing and its preview in one file, embed the document explicitly:
+
+```javascript
+const snapshot = await editor.exportSnapshot({
+  formats: ['png'],
+  render: { scale: 2, maxWidth: 1920, padding: 10 },
+  png: { embedDocument: true },
+});
+
+// Persist the complete PNG bytes, then reopen their base64 representation.
+await editor.replacePngDocument(snapshot.png.base64);
+await editor.fitViewport();
+```
+
+`embedDocument` defaults to false. Ordinary PNG and SVG exports are images; preserve `raw` or use an embedded PNG to reopen canvas edits. Ordinary PNGs without an embedded document and damaged imports are rejected without clearing the current drawing.
 
 ## Replace a diagram
 
 ```javascript
-try {
-  await editor.importTextGraph('Draft -> Review -> Approved');
-} catch (error) {
-  document.querySelector('#status').textContent = error.message;
+await editor.replaceTextGraph('Draft -> Review -> Approved');
+await editor.fitViewport();
+
+// Explicitly start a new empty document when needed.
+await editor.clearDocument();
+```
+
+Successful replacements reset selection and undo history. Save canvas edits before replacing a document. Invalid imports preserve it. An unfinished gesture or text edit reports `EditorBusy`; finish or cancel that interaction before trying again.
+
+## State and host controls
+
+Subscribe to state when your host needs save indicators, history controls or close confirmation:
+
+```javascript
+let savedRevision = null;
+function showSaveState(state) {
+  const dirty = state.revision !== null && state.revision !== savedRevision;
+  // Update your host UI from dirty, busy, health, canUndo and canRedo.
+}
+const unsubscribe = editor.onStateChanged(showSaveState);
+
+async function saveDocument() {
+  const snapshot = await editor.exportSnapshot({ formats: ['raw'] });
+  await persistDocument(snapshot.raw); // Your application's storage operation.
+  savedRevision = snapshot.revision;
+  showSaveState(await editor.getState());
 }
 ```
 
-Imports replace the current diagram. Save any edits first. Invalid input rejects the promise and preserves the previous diagram. `importTextGraph('')` starts a blank canvas. The editor does not turn visual edits back into TextGraph source.
+State subscriptions immediately receive the current state. Revisions are opaque and local to an instance. Compare the current revision with the revision whose save completed: an older save acknowledgment must not clear later edits. Selection, zoom and pan do not change the document revision. The host decides whether its initial empty document needs saving.
 
-## Lifecycle and frameworks
+Use `ui.buttons` at creation to change built-in button visibility, and `ui.actions` for host-owned actions such as Save or Publish. Action handlers remain in the parent and can call the editor's export methods. `setActionState()` updates their label, visibility and enabled state. `undo()`, `redo()` and `setEditingEnabled()` are also public operations. See the [package API guide](https://github.com/drawmotive/drawmotive#buttons-and-host-actions) for a complete host-action example.
 
-Create the editor after your framework mounts the container. Dispose it when the component unmounts:
+## Lifecycle and failures
+
+Create the editor after your framework mounts its container. `signal` cancels startup; after creation, explicitly release subscriptions and dispose the instance when the component unmounts:
 
 ```javascript
 const controller = new AbortController();
-const pending = initializeEditor({
+const editor = await createEditor({
   container,
   assetBaseUrl: '/editor/',
   signal: controller.signal,
 });
 
-// Abort cancels startup. After startup, use dispose().
-const editor = await pending;
+// On component teardown, release any state subscription as well.
 await editor.dispose();
 ```
 
-The module is safe to import during server rendering, but mounting requires a browser. Each instance owns a separate runtime, so avoid mounting unused instances. `dispose()` is idempotent and rejects pending operations.
+Call the function returned by `onStateChanged()` to unsubscribe. The module can be imported during server rendering; creation requires browser DOM, Web Crypto and MessageChannel. Startup and request deadlines are separate: `startupTimeoutMs` and `requestTimeoutMs` each default to 120000. `disposeTimeoutMs` defaults to 5000.
 
-## API
+A request deadline reports `RequestTimeoutUnknown` with a `completion` promise for its eventual result. Do not automatically repeat a mutation whose outcome is unknown. A failed local transaction can report `health: 'faulted'` and `revision: null`; a successful explicit document replacement restores the instance. External storage failures remain the host's responsibility. Disposal removes the iframe even when storage cleanup cannot be confirmed; in that case it rejects with `DisposeCleanupUnconfirmed`.
 
-| Option | Meaning |
-| --- | --- |
-| `container` | Required HTML element with an explicit height |
-| `assetBaseUrl` | Directory containing the copied `embed.html` and runtime files |
-| `source` | Initial TextGraph source; omit for a blank diagram |
-| `document` | Initial exported `raw` document; mutually exclusive with `source` |
-| `signal` | AbortSignal for initialization, including initial import |
-| `title` | Accessible iframe title; defaults to “DrawMotive diagram editor” |
-| `timeoutMs` | Initialization and request deadline; defaults to 120000 |
+## Hosting and supported scope
 
-The returned instance exposes `importTextGraph(source)`, `importDocument(raw)`, `exportDocument()`, `dispose()` and `state`. Methods are asynchronous.
+Set `assetBaseUrl` to the copied runtime directory, including any deployment prefix, such as `/my-app/editor/`. Serve `.wasm` as `application/wasm` and deploy all copied files, including licenses and notices. Do not remove or rewrite runtime files: startup verifies their hashes.
 
-## Hosting
+For a restrictive Content Security Policy, allow the runtime frame from its asset origin, WebAssembly execution (`wasm-unsafe-eval`), its own static resources and inline styles. Advanced hosts with authenticated asset transport can use `frameDocument`; see the [package guide](https://github.com/drawmotive/drawmotive#install).
 
-Use HTTPS or localhost, serve `.wasm` files as `application/wasm`, and deploy all copied files. When hosting below a path prefix, include it in `assetBaseUrl`, such as `/my-app/editor/`. Bundled applications should always set this option. Without it, a plain JavaScript module import resolves the runtime relative to the package.
+The public build provides local editing. Optional analytics, authentication and remote-sync modules default to false; enabling a module absent from that build fails explicitly. Files, accounts, persistence and product actions belong to the host. Current Chromium is the verified visual-runtime target; Firefox/WebKit, mobile devices and embedded hosts require their own verification.
 
-For restrictive Content Security Policy configurations, allow the runtime frame from its asset origin. Its scripts require WebAssembly execution (`wasm-unsafe-eval`), its own static resources and inline styles. Do not remove or rewrite runtime files: their hashes are verified during startup.
-
-This browser API covers local visual editing and document export/import. Account login, server synchronization and toolbar customization are outside its initial public API.
+The [package README and TypeScript declarations](https://github.com/drawmotive/drawmotive) define the full `0.3.0` API. Upgrade SDK code and copied runtime assets together.

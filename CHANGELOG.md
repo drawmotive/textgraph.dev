@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Document supported build environments, contribution checks and redistribution terms.
+- Update the Editor guide to the published `0.3.0` API, including snapshots, editable PNGs, state subscriptions and host actions.
+- Clarify the intentional one-way TextGraph-to-canvas workflow, SVG rendering support and the existing Fix It review flow.
 
 ## 0.3.0
 
