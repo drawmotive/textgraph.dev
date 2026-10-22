@@ -23,6 +23,7 @@ Put a fenced `textgraph` block in a Markdown file. The [VS Code extension](/inte
 | --- | --- | --- |
 | Render diagrams from text in a browser, Worker or Node.js; render PNG in React | [JavaScript SDK](/integrations/javascript), `@drawmotive/textgraph` | TextGraph source and PNG/SVG output |
 | Move shapes, edit labels and draw on a canvas | [DrawMotive editor](/editor/), `@drawmotive/editor` | An editable document, optional PNG/SVG images, or a PNG with its document embedded |
+| Render images over HTTP on your own infrastructure | [Docker renderer](/integrations/docker) | TextGraph source and PNG/SVG output |
 
 The editor intentionally uses a one-way workflow from text to visual editing. Save its document to keep canvas changes. Generating from TextGraph again replaces the document; it does not merge canvas edits or rewrite the source.
 

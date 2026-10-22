@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Present the full product story on the homepage with rendered examples, real editor and VS Code captures, SDK/Docker paths and MIT commercial-use clarity.
+- Add a Docker renderer guide with a local container quick start and PNG/SVG HTTP examples.
 - Document supported build environments, contribution checks and redistribution terms.
 - Update the Editor guide to the published `0.3.0` API, including snapshots, editable PNGs, state subscriptions and host actions.
 - Clarify the intentional one-way TextGraph-to-canvas workflow, SVG rendering support and the existing Fix It review flow.

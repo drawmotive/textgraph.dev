@@ -132,15 +132,24 @@ Every published guide outside Reference includes real rendered examples or a rel
 
 ## Homepage
 
-The homepage demonstrates source and real rendered output, then links each example
-into the playground with its exact DSL. The catalog in .vitepress/home/examples.mjs
-owns the code panels, PNGs, links, and analytics IDs.
+The homepage follows one product story: minimal TextGraph syntax, generated
+diagrams, visual editing, Markdown/VS Code, SDK integration and self-hosted
+Docker rendering. Each section has a direct trial, installation or documentation
+link. Public components remain MIT licensed, including commercial embedding and
+resale; the homepage does not introduce a paid-use restriction.
+
+The catalog in .vitepress/home/examples.mjs owns the source panels, real PNGs,
+playground links and analytics IDs. The canvas screenshot retains its original
+capture record in public/guide-images. The unmodified VS Code capture and its
+record are copied from the Markdown extension into public/home-images. SDK and
+Docker SVGs in that directory are explanatory integration illustrations, not
+application screenshots. Keep captures complete and retain their provenance.
 
 Development and build commands generate previews with the installed public SDK.
 After changing example source during development, run npm run home:render again.
 Generated images are ignored by Git and bundled as static assets; visiting the
 homepage does not load the WASM renderer. Examples remain visible without JavaScript.
-Homepage events carry version diagram-story-v1.
+Homepage events carry version product-story-v2.
 
 Source and diagram panes share a header style, spacing, and divider. The source
 body has a contrasting background so its title stays distinct from the DSL.

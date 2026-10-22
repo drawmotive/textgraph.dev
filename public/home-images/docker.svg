@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="280" viewBox="0 0 640 280" role="img" aria-labelledby="title desc">
+  <title id="title">Render on your infrastructure</title>
+  <desc id="desc">Your application sends TextGraph source to a Docker container over HTTP. The container responds with a PNG or SVG image.</desc>
+  <rect width="640" height="280" fill="#f6f7fc"/>
+  <g font-family="system-ui, sans-serif" fill="#242937">
+    <text x="32" y="37" font-size="12" letter-spacing="1.5" fill="#606776">YOUR INFRASTRUCTURE</text>
+    <rect x="32" y="98" width="130" height="77" rx="10" fill="#fff" stroke="#d7ddec"/>
+    <text x="97" y="131" font-size="14" text-anchor="middle">Your app</text>
+    <text x="97" y="153" font-size="12" text-anchor="middle" fill="#606776">TextGraph source</text>
+    <path d="M162 136h70m-7-5 7 5-7 5" fill="none" stroke="#4055b5" stroke-width="1.5"/>
+    <text x="197" y="121" font-size="11" text-anchor="middle" fill="#606776">POST</text>
+    <rect x="238" y="65" width="178" height="148" rx="12" fill="#fff" stroke="#a9b5df"/>
+    <g fill="#edf0fb" stroke="#a9b5df"><rect x="290" y="86" width="20" height="19" rx="2"/><rect x="316" y="86" width="20" height="19" rx="2"/><rect x="342" y="86" width="20" height="19" rx="2"/></g>
+    <text x="327" y="137" font-size="15" text-anchor="middle">TextGraph renderer</text>
+    <text x="327" y="159" font-size="12" text-anchor="middle" fill="#606776">Docker · HTTP API</text>
+    <text x="327" y="190" font-size="11" text-anchor="middle" fill="#4055b5">/api/v1/render/png or /svg</text>
+    <path d="M416 136h54m-7-5 7 5-7 5" fill="none" stroke="#4055b5" stroke-width="1.5"/>
+    <rect x="476" y="98" width="132" height="77" rx="10" fill="#fff" stroke="#d7ddec"/>
+    <text x="542" y="131" font-size="16" text-anchor="middle">PNG / SVG</text>
+    <text x="542" y="153" font-size="12" text-anchor="middle" fill="#606776">Image response</text>
+    <text x="32" y="250" font-size="12" fill="#606776">Self-hosted · Packaged fonts · No browser required</text>
+  </g>
+</svg>

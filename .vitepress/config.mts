@@ -15,7 +15,7 @@ export default defineConfig(withTextGraph({
   // Preview and browser verification must serve the same selected local build.
   outDir: process.env.DRAWMOTIVE_SITE_OUT_DIR,
   title: "TextGraph",
-  description: "Turn relationships into diagrams with readable text. Explore flowcharts, automatic layout, and a browser playground, with Markdown and VS Code integrations.",
+  description: "Readable text to diagrams and visual editing. Explore Markdown, VS Code, JavaScript SDKs and Docker rendering. MIT licensed, including commercial use.",
   // Drafts stay in source until their features work. Exclude them from both
   // generated routes and local search, including internal project documents.
   srcExclude: [
@@ -74,6 +74,7 @@ export default defineConfig(withTextGraph({
         items: [
           { text: 'JavaScript / Node.js', link: '/integrations/javascript' },
           { text: 'DrawMotive editor', link: '/editor/' },
+          { text: 'Docker renderer', link: '/integrations/docker' },
         ]
       },
       {

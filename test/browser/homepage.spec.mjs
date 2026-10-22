@@ -1,6 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { homeExamples } from '../../.vitepress/home/examples.mjs';
 
+test('homepage leads directly from visual editing to SDK and Docker instructions without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto(baseURL);
+    const main = page.locator('.textgraph-home');
+    const editor = main.getByRole('link', { name: 'Try the visual editor', exact: true });
+    await expect(editor).toHaveAttribute('href', '/examples/editor/');
+    const sdk = main.getByRole('link', { name: 'Explore the SDK', exact: true });
+    await sdk.click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('JavaScript / Node.js');
+    await page.goBack();
+    await main.getByRole('link', { name: 'Run with Docker', exact: true }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Docker renderer');
+    await expect(page.locator('pre').filter({ hasText: 'docker run' })).toContainText('ghcr.io/drawmotive/textgraph-renderer:0.3.0');
+    await page.goBack();
+    for (const section of ['#syntax', '#visual-editing', '#workflow', '#build']) {
+      const images = main.locator(section + ' img');
+      expect(await images.count()).toBeGreaterThan(0);
+      for (const image of await images.all()) {
+        await image.scrollIntoViewIfNeeded();
+        await expect.poll(() => image.evaluate(element => element.naturalWidth)).toBeGreaterThan(0);
+      }
+    }
+    await expect(main.getByRole('link', { name: 'Read the MIT license', exact: true }))
+      .toHaveAttribute('href', 'https://github.com/drawmotive/textgraph/blob/main/LICENSE');
+  } finally { await context.close(); }
+});
+
 test('example titles share an aligned header and stay distinct from the source', async ({ page }) => {
   for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
