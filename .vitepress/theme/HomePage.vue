@@ -20,14 +20,17 @@ const markdownSource = String.fromCharCode(96).repeat(3) + 'textgraph\n' + examp
   <main class="textgraph-home">
     <section class="home-hero home-wrap" aria-labelledby="home-title" data-analytics-placement="hero">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="status-dot" /> TextGraph + DrawMotive</p>
+        <div class="hero-meta">
+          <p class="eyebrow"><span class="status-dot" /> TextGraph + DrawMotive</p>
+          <a class="license-badge" href="#license">Free · MIT License</a>
+        </div>
         <h1 id="home-title">Turn relationships<br class="desktop-break"> into <span>diagrams.</span></h1>
         <p class="hero-description">A little text. Automatic layout. A canvas for your finishing touches.</p>
         <div class="home-actions">
           <a class="home-button primary" :href="withBase(links['request-flow'])" data-analytics-example="request-flow">Try this example <span aria-hidden="true">↗</span></a>
           <a class="text-link" :href="withBase('/examples/editor/')" target="_self">Try the visual editor <span aria-hidden="true">↗</span></a>
         </div>
-        <p class="hero-note">No account. Runs in your browser. Free under MIT.</p>
+        <p class="hero-note">No account. Runs in your browser.</p>
       </div>
       <HomeExample :example="examples['request-flow']" eager action="Open in playground" />
     </section>
@@ -142,7 +145,7 @@ const markdownSource = String.fromCharCode(96).repeat(3) + 'textgraph\n' + examp
 
     <section id="license" class="license-section home-wrap" aria-labelledby="license-title">
       <a class="license-mark" href="https://github.com/drawmotive/textgraph/blob/main/LICENSE" aria-label="MIT license">MIT<span>LICENSE</span></a>
-      <div><p class="eyebrow">Yours to use. Yours to build on.</p><h2 id="license-title">Free. Including commercial use.</h2>
+      <div><p class="eyebrow">Yours to use. Yours to build on.</p><h2 id="license-title">Free under the MIT License.</h2>
         <p>Personal projects, company work, commercial products and resale. MIT allows all of them, with no license fee. Keep the copyright and license notice.</p>
         <a class="text-link" href="https://github.com/drawmotive/textgraph/blob/main/LICENSE">Read the MIT license <span aria-hidden="true">↗</span></a>
         <p class="license-detail">Site documentation is CC BY 4.0. Bundled fonts and dependencies retain their own licenses.</p>

@@ -8,6 +8,10 @@
 .textgraph-home .eyebrow { font-size: 11px; line-height: 1.6; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: var(--home-accent); margin-bottom: 16px; }
 .home-hero { display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 48px; padding-block: 76px 56px; }
 .hero-copy { min-width: 0; }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 22px; }
+.hero-meta .eyebrow { margin: 0; }
+.license-badge { display: inline-flex; padding: 6px 12px; border: 1px solid var(--home-line); border-radius: 999px; background: var(--home-soft); color: var(--home-accent); font-size: 13px; font-weight: 650; }
+.license-badge:hover { border-color: var(--home-accent); }
 .status-dot { display: inline-block; width: 7px; height: 7px; background: #438675; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
 .textgraph-home h1 { font-size: clamp(42px, 4.2vw, 61px); line-height: 1.08; margin: 0 0 24px; }
 .textgraph-home h1 span { color: var(--home-accent); }
