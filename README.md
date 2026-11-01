@@ -190,7 +190,7 @@ The Worker keeps one SDK instance for the open Playground. That instance retains
 
 Deploy the copied catalog, manifests, and font bytes together. Keep metadata revalidated when replacing the unversioned directory; do not mark mutable URLs immutable or add random cache-busting query strings. The catalog's hashes identify the font bytes and the SDK verifies them, preventing a stale or mixed deployment from silently installing a different file. An offline distribution must include the complete copied font directory and serve it locally. A browser that loses its connection before using a language cannot fetch that language's uncached file from the server.
 
-Other SDK hosts may omit `fontAssets` to use the SDK's lazy `https://staging.drawmotive.com/` fallback, or explicitly disable fallback for offline operation. Playground always supplies its deployed package. Publish the font package and SDK before refreshing this standalone site's registry lockfile and releasing the site; local workspace links and tarballs are development inputs only.
+Other SDK hosts may omit `fontAssets` to use the SDK's lazy `https://diagrams-staging.drawmotive.com/editor/static/font-catalog.json` fallback, or explicitly disable fallback for offline operation. Font paths resolve relative to that catalog. Playground always supplies its deployed package. Publish the font package and SDK before refreshing this standalone site's registry lockfile and releasing the site; local workspace links and tarballs are development inputs only.
 
 Standalone release installs resolve the exact published 0.3.0 SDK, Markdown and font archives through package-lock.json. Local workspace links remain development inputs only.
 
