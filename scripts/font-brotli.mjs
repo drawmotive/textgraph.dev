@@ -24,7 +24,11 @@ export async function readFontBrotliManifest(directory) {
   let manifest;
   try { manifest = JSON.parse(await readFile(path.join(directory, 'files.brotli.json'), 'utf8')); }
   catch (error) { if (error.code === 'ENOENT') return; throw error; }
-  if (manifest.schemaVersion !== 1 || !Object.entries(fontCompression).every(([key, value]) => manifest.compression?.[key] === value) || !manifest.fonts || typeof manifest.fonts !== 'object')
+  // Monorepo assets use the native CLI; standalone site caches keep their
+  // existing encoder. Both policies describe verified stored representations.
+  const compatible = Object.entries(fontCompression).every(([key, value]) => manifest.compression?.[key] === value)
+    || (manifest.compression?.encoder === 'brotli-cli' && manifest.compression.quality === 11 && manifest.compression.window === 24);
+  if (manifest.schemaVersion !== 1 || !compatible || !manifest.fonts || typeof manifest.fonts !== 'object')
     throw new Error('Font Brotli metadata is outdated; run npm run static:manifest.');
   for (const [name, entry] of Object.entries(manifest.fonts)) {
     if (path.basename(name) !== name || !name.toLowerCase().endsWith('.ttf') || !entry || !/^[a-f0-9]{64}$/.test(entry.sha256) || !/^[a-f0-9]{64}$/.test(entry.compressedSha256))
