@@ -54,7 +54,7 @@ npm run build
 
 | Layer | Supported environment | Verification boundary |
 | --- | --- | --- |
-| Site development and build | Node.js 22.12+ in the 22 line; npm 10 or 11 | VitePress/Vite requires the 22.12 minimum; Node 22 is the current verification target |
+| Site development and build | Node.js 22.22.2+ in the 22 line or 24.15.0+ in the 24 line; npm 12.2.1 | npm 12.2.1 requires these Node minimums; Node 22 is the CI verification target |
 | Desktop build systems | Linux, Windows, macOS | CI targets all three systems with Node 22 |
 | Site, playground and editor example | Current Chromium is covered by the site browser suite | The SDK has separate Chromium/Firefox/WebKit tests; the embedded editor is currently verified only in Chromium |
 | Deployment | Static `.vitepress/dist` output | HTTPS or localhost is required for interactive WASM/Web Crypto; this private package is not published to npm |
@@ -76,7 +76,7 @@ Vulnerability reports follow [Security reporting](SECURITY.md).
 
 ## Markdown rendering and deployment
 
-The site installs `@drawmotive/markdown-it-textgraph@0.3.0` from npm, which renders diagrams with the public TextGraph SDK 0.3.0. A standalone checkout needs no sibling repositories.
+The site installs `@drawmotive/markdown-it-textgraph@0.3.2` from npm, which renders diagrams with the public TextGraph SDK 0.3.2. A standalone checkout needs no sibling repositories.
 
 Use a fenced block with language `textgraph` and metadata `example` to pair copyable source with its static diagram. The site expands the single source block into both panels; ordinary `textgraph` fences still show only the diagram. Examples stack on narrow screens. Published examples must render successfully; rendering failures stop the site build.
 
@@ -164,13 +164,13 @@ Opening a link restores its source before the first render. Edits update the add
 
 `/playground` runs inside this site. The left pane edits TextGraph; the right pane shows a PNG preview. Drag the divider to adjust the pane ratio, or focus it and use the arrow keys (Home/End select the limits). The image fits the available width and height. Errors cover the image viewport with a translucent overlay, including when no PNG exists yet. Errors and warnings are also written to the browser console with their code, stage, message, and source location. Only accepted results for the current source are logged, once per result. Edits render after a 350 ms pause. Render now (or Ctrl/⌘+Enter) renders immediately. Invalid edits show a short failure status and keep the last successful preview visible.
 
-The public `@drawmotive/textgraph@0.3.0` SDK renders in a module Worker, so normal rendering stays in the browser and layout work does not block typing. Only one render runs at a time, intermediate edits are coalesced, and stale results are ignored. No rendering API or sibling repository is required.
+The public `@drawmotive/textgraph@0.3.2` SDK renders in a module Worker, so normal rendering stays in the browser and layout work does not block typing. Only one render runs at a time, intermediate edits are coalesced, and stale results are ignored. No rendering API or sibling repository is required.
 
 The preview toolbar provides zoom in/out, reset to fit, PNG download, and image copy to clipboard. Drag the image to pan; when the canvas is focused, use +/− to zoom, arrow keys to pan, and 0 to reset. Zoom and pan survive render updates. Download and copy always use the full PNG, independent of the current view. Clipboard permission or browser limitations are reported beside the image, with download available as a fallback.
 
 While refreshing, the existing image stays in place until new results arrive. Diagnostics remain available in the renderer state and SDK result without being repeated in the console during pending states. Render status remains accessible to screen readers and on the preview title tooltip; the image tooltip identifies a previous successful render. Syntax help lives beside the source title, leaving the main page space for editing and previewing.
 
-`npm run dev` and `npm run build` copy the SDK runtime, base fonts, themes, and licenses into `public/textgraph/wasm` automatically. The same asset step uses `textgraph-copy-fonts` from the exact `@drawmotive/textgraph-fonts@0.3.0` build dependency to copy the optional fonts, font catalog, hash manifest, and licenses into `public/textgraph/fonts`. These generated files are ignored by Git and included in the static build. Missing font packages fail the asset step. Serve over HTTPS or localhost for Web Crypto. The renderer loads only when the playground opens.
+`npm run dev` and `npm run build` copy the SDK runtime, base fonts, themes, and licenses into `public/textgraph/wasm` automatically. The same asset step uses `textgraph-copy-fonts` from the exact `@drawmotive/textgraph-fonts@0.3.2` build dependency to copy the optional fonts, font catalog, hash manifest, and licenses into `public/textgraph/fonts`. These generated files are ignored by Git and included in the static build. Missing font packages fail the asset step. Serve over HTTPS or localhost for Web Crypto. The renderer loads only when the playground opens.
 
 ### Fix It and source history
 
@@ -192,16 +192,17 @@ Deploy the copied catalog, manifests, and font bytes together. Keep metadata rev
 
 Other SDK hosts may omit `fontAssets` to use the SDK's lazy `https://assets.drawmotive.com/static/font-catalog.json` fallback, or explicitly disable fallback for offline operation. Font paths resolve relative to that catalog. Playground always supplies its deployed package. Publish the font package and SDK before refreshing this standalone site's registry lockfile and releasing the site; local workspace links and tarballs are development inputs only.
 
-Standalone release installs resolve the exact published 0.3.0 SDK, Markdown and font archives through package-lock.json. Local workspace links remain development inputs only.
+Standalone release installs resolve the exact published 0.3.2 SDK, Markdown and font archives through package-lock.json. Local workspace links remain development inputs only.
 
 Run `npm test` for unit tests. For a browser check with the real renderer, run `npx playwright install chromium`, `npm run build`, then `npm run test:browser`. This covers preview updates, diagnostics, error recovery, navigation, and mobile layout. Within the parent DrawMotive workspace, install with `npm ci --workspaces=false` to use the site's locked public dependencies.
 
 Parent-workspace local builds use `DRAWMOTIVE_TEXTGRAPH_RUNTIME` and
 `DRAWMOTIVE_TEXTGRAPH_SDK` to pair the selected native assets with the same
-manifest in both main and Worker bundles. The Chinese diamond repair deadline
-regression is enabled when testing that selected local runtime. Standalone
-browser checks skip it until the pinned public SDK includes the native fix;
-the explicit 30-second timeout and source-preservation checks always run.
+manifest in both main and Worker bundles. Chinese and English repair-deadline
+regressions run against the served runtime in every browser suite, including
+registry builds. They hash its assets and verify the candidate Worker's producer
+commit and asset hashes. The explicit 30-second timeout and source-preservation
+checks also run.
 
 ## Standalone browser example
 
@@ -220,13 +221,13 @@ mobile layout, and navigation from the documentation.
 
 ## Editor documentation and runnable example
 
-`/editor/` documents the `0.3.0` `createEditor()` API, document replacement, snapshots, state subscriptions, host actions and disposal. TextGraph to canvas is intentionally one-way: canvas edits are saved in an editable document or embedded PNG, and regenerating from TextGraph replaces that document. `/examples/editor/` is a standalone page with a real visual editor, TextGraph generation, PNG export and document save/open. The page and its runtime are copied from the exact npm release recorded in `.vitepress/editor-release.json`. All browser requests remain on this site’s origin.
+`/editor/` documents the `0.3.2` canvas-only `createEditor()` API, document replacement, snapshots, state subscriptions, host controls and disposal. A page supports one active editor mounted directly into its DOM. TextGraph to canvas is intentionally one-way: canvas edits are saved in an editable document or embedded PNG, and regenerating from TextGraph replaces that document. `/examples/editor/` is a standalone page with a real visual editor, TextGraph generation, PNG export and document save/open. The page, SDK modules, both Workers and runtime are copied from the exact npm release recorded in `.vitepress/editor-release.json`. All browser requests remain on this site's origin.
 
 `npm run build` prepares the editor automatically. The first build downloads the pinned tarball from npm and verifies its SHA-512; subsequent builds use the verified cache. Deploy only after that package version exists on npm. Before first publication, review the same archive locally:
 
 ```bash
-DRAWMOTIVE_EDITOR_TARBALL=/absolute/path/drawmotive-editor-0.3.0.tgz npm run build
+DRAWMOTIVE_EDITOR_TARBALL=/absolute/path/drawmotive-editor-0.3.2.tgz npm run build
 npm run preview -- --host 127.0.0.1
 ```
 
-The local override must match the committed archive integrity. When upgrading, publish the tested archive unchanged, update version/URL/integrity together, and run the site unit tests, build and browser tests. Never replace only runtime files or point the frame at an npm CDN: the host is an HTML page and needs correct HTML/WASM serving.
+The local override must match the committed archive integrity. When upgrading, publish the tested archive unchanged, update version/URL/integrity together, and run the site unit tests, build and browser tests. Preserve `sdk/src` and `sdk/dist/workers` so package-relative Worker URLs resolve, and serve runtime WASM with the correct MIME type.

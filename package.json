@@ -1,6 +1,6 @@
 {
   "name": "@drawmotive/textgraph.dev",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Documentation and playground for the TextGraph DSL",
   "private": true,
   "homepage": "https://textgraph.dev",
@@ -16,6 +16,7 @@
     "preview": "node scripts/preview-site.mjs",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "test:grammar": "node --test --test-concurrency=1 test/grammar.test.mjs",
+    "test:editor-assets": "node --test --test-concurrency=1 test/editor-assets.test.mjs",
     "test:dsl": "node --test --test-concurrency=1 test/grammar.test.mjs test/analytics.test.mjs test/playground-source-link.test.mjs test/home-examples.test.mjs test/textgraph-examples.test.mjs test/dsl-runtime.test.mjs",
     "test:browser": "playwright test",
     "release:check": "node .release/check.cjs --ready",
@@ -31,9 +32,9 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@drawmotive/markdown-it-textgraph": "0.3.1",
-    "@drawmotive/textgraph": "0.3.1",
-    "@drawmotive/textgraph-fonts": "0.3.1",
+    "@drawmotive/markdown-it-textgraph": "0.3.2",
+    "@drawmotive/textgraph": "0.3.2",
+    "@drawmotive/textgraph-fonts": "0.3.2",
     "@playwright/test": "1.63.0",
     "peggy": "^5.1.0",
     "tar": "7.5.22",

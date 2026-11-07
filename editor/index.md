@@ -25,7 +25,7 @@ The [Playground](/playground) previews an image as you edit TextGraph. DrawMotiv
 ## Install and create
 
 ```bash
-npm install @drawmotive/editor@0.3.0
+npm install @drawmotive/editor@0.3.2
 npx drawmotive-copy-assets public/editor
 ```
 
@@ -46,7 +46,7 @@ await editor.replaceTextGraph('User -> Application -> Database');
 await editor.fitViewport();
 ```
 
-Creation resolves when the empty scene and temporary storage are ready. Replacement and viewport fitting are separate operations. To start with a blank canvas, omit the two calls after creation. Each instance owns an iframe and browser runtime; give its container an explicit height. Mount only the instances your application needs.
+Creation resolves when the empty scene and storage are ready. Replacement and viewport fitting are separate operations. To start with a blank canvas, omit the two calls after creation. The canvas mounts directly into the host document; give its container an explicit height. A page supports one active editor. Await disposal before creating its successor; concurrent creation rejects with `EditorAlreadyMounted`.
 
 ## Save, reopen and export
 
@@ -64,7 +64,7 @@ const svgText = snapshot.svg;
 
 All requested formats come from one document revision. `raw` is an opaque base64 editable document, not TextGraph source. PNG contains `base64`, pixel `width`/`height`, `scale`, and logical `displayWidth`/`displayHeight`; SVG is a string. Raw-only export does not render an image. Rendering defaults to `scale: 1` and `padding: 10`; set `render: { scale, maxWidth, padding }` when exporting to change those options.
 
-Your application owns durable saving. Runtime IndexedDB is temporary and deleted during disposal. Exporting a snapshot does not mark it saved.
+Storage defaults to temporary memory. To retain a local document across sessions, create the editor with `persistence: { mode: 'persistent', namespace: 'my-app', documentId: 'drawing-id' }`. Persistent storage runs in a Dedicated Worker and survives disposal. Your application owns external saving and document identity. Exporting a snapshot does not mark it saved.
 
 ### An editable PNG
 
@@ -118,7 +118,7 @@ async function saveDocument() {
 
 State subscriptions immediately receive the current state. Revisions are opaque and local to an instance. Compare the current revision with the revision whose save completed: an older save acknowledgment must not clear later edits. Selection, zoom and pan do not change the document revision. The host decides whether its initial empty document needs saving.
 
-Use `ui.buttons` at creation to change built-in button visibility, and `ui.actions` for host-owned actions such as Save or Publish. Action handlers remain in the parent and can call the editor's export methods. `setActionState()` updates their label, visibility and enabled state. `undo()`, `redo()` and `setEditingEnabled()` are also public operations. See the [package API guide](https://github.com/drawmotive/drawmotive#buttons-and-host-actions) for a complete host-action example.
+The host provides its own toolbar, menus and save controls. Call `setTool('rectangle')`, `undo()`, `redo()` and `setPreferences({ showGrid: true })` from those controls, and use state subscriptions to update their enabled state. `setEditingEnabled(false)` provides a read-only interaction policy. See the [package API guide](https://github.com/drawmotive/drawmotive#host-controls-and-text-policy) for the available controls and text input policies.
 
 ## Lifecycle and failures
 
@@ -136,16 +136,16 @@ const editor = await createEditor({
 await editor.dispose();
 ```
 
-Call the function returned by `onStateChanged()` to unsubscribe. The module can be imported during server rendering; creation requires browser DOM, Web Crypto and MessageChannel. Startup and request deadlines are separate: `startupTimeoutMs` and `requestTimeoutMs` each default to 120000. `disposeTimeoutMs` defaults to 5000.
+Call the function returned by `onStateChanged()` to unsubscribe. The module can be imported during server rendering; creation requires browser DOM, Web Crypto and Dedicated Workers. `startupTimeoutMs` defaults to 120000 and `disposeTimeoutMs` defaults to 5000. Document operations return ordered promises without transport deadlines or automatic retries.
 
-A request deadline reports `RequestTimeoutUnknown` with a `completion` promise for its eventual result. Do not automatically repeat a mutation whose outcome is unknown. A failed local transaction can report `health: 'faulted'` and `revision: null`; a successful explicit document replacement restores the instance. External storage failures remain the host's responsibility. Disposal removes the iframe even when storage cleanup cannot be confirmed; in that case it rejects with `DisposeCleanupUnconfirmed`.
+A failed local transaction can report `health: 'faulted'` and `revision: null`; a successful explicit document replacement restores the instance. External storage failures remain the host's responsibility. Disposal waits for pending operations, removes the native canvas and releases Workers and storage resources. Unconfirmed cleanup rejects with `DisposeCleanupUnconfirmed` and blocks another editor until page reload.
 
 ## Hosting and supported scope
 
 Set `assetBaseUrl` to the copied runtime directory, including any deployment prefix, such as `/my-app/editor/`. Serve `.wasm` as `application/wasm` and deploy all copied files, including licenses and notices. Do not remove or rewrite runtime files: startup verifies their hashes.
 
-For a restrictive Content Security Policy, allow the runtime frame from its asset origin, WebAssembly execution (`wasm-unsafe-eval`), its own static resources and inline styles. Advanced hosts with authenticated asset transport can use `frameDocument`; see the [package guide](https://github.com/drawmotive/drawmotive#install).
+For a restrictive Content Security Policy, permit the actual Worker and resource origins through `worker-src` and `connect-src`, WebAssembly execution (`wasm-unsafe-eval`), and the native canvas styles. The SDK's default Worker URLs resolve relative to its modules at `../dist/workers/`; preserve the package's `src` and `dist/workers` layout when serving unbundled modules. Copying runtime assets does not relocate those Workers. Bundled applications must emit both Worker files or provide explicit `workerUrls`; see the [package guide](https://github.com/drawmotive/drawmotive#install).
 
-The public build provides local editing. Optional analytics, authentication and remote-sync modules default to false; enabling a module absent from that build fails explicitly. Files, accounts, persistence and product actions belong to the host. Current Chromium is the verified visual-runtime target; Firefox/WebKit, mobile devices and embedded hosts require their own verification.
+The public build provides local editing without authentication or a collaboration connection. Files, accounts, external persistence and product actions belong to the host. Current Chromium is the verified visual-runtime target; Firefox/WebKit, mobile devices and embedded hosts require their own verification.
 
-The [package README and TypeScript declarations](https://github.com/drawmotive/drawmotive) define the full `0.3.0` API. Upgrade SDK code and copied runtime assets together.
+The [package README and TypeScript declarations](https://github.com/drawmotive/drawmotive) define the full `0.3.2` API. Upgrade SDK code, Workers and copied runtime assets together.

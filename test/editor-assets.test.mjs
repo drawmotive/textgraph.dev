@@ -17,36 +17,56 @@ test('site extracts a pinned editor artifact for same-origin execution and rejec
   });
   const pkg = path.join(root, 'fixture/package');
   const file = async (name, value) => { await mkdir(path.dirname(path.join(pkg, name)), { recursive: true }); await writeFile(path.join(pkg, name), value); };
-  const runtime = '<title>Editor runtime</title>';
-  await file('package.json', JSON.stringify({ name: '@drawmotive/editor', version: '0.2.1' }));
+  const runtime = 'export const canvasReady = true;';
+  await file('package.json', JSON.stringify({ name: '@drawmotive/editor', version: '0.3.2' }));
   await file('LICENSE', 'MIT');
   await file('licenses/Runtime-LICENSE.txt', 'Runtime license notice');
-  await file('src/index.js', 'export const initializeEditor = () => {};');
+  await file('src/index.js', "export { createEditor } from './core.js';");
+  const core = "const resource = new URL('../dist/workers/resource.worker.js', import.meta.url); const document = new URL('../dist/workers/document.worker.js', import.meta.url);";
+  await file('src/core.js', core);
+  for (const worker of ['resource', 'document']) await file('dist/workers/' + worker + '.worker.js', worker + ' worker');
   await file('examples/browser/index.html', '<script type="importmap">{"imports":{"@drawmotive/editor":"../../src/index.js"}}</script><pre>npm install @drawmotive/editor@alpha</pre>');
   await file('examples/browser/main.js', "const runtime = new URL('../../generated/editor/', import.meta.url);");
-  await file('generated/editor/embed.html', runtime);
-  const manifest = { packageVersion: '0.2.1', protocolVersion: 2, assets: [{ path: 'editor/embed.html', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] };
+  await file('generated/editor/js/editor-canvas.js', runtime);
+  const manifest = { schemaVersion: 1, packageName: '@drawmotive/editor', packageVersion: '0.3.2', runtimeVersion: 1, assets: [{ path: 'editor/js/editor-canvas.js', bytes: runtime.length, sha256: createHash('sha256').update(runtime).digest('hex') }] };
   await file('generated/editor-manifest.json', JSON.stringify(manifest));
   const tarball = path.join(root, 'editor.tgz');
   await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
   const bytes = await readFile(tarball);
   await mkdir(path.join(root, '.vitepress'));
-  await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.2.1', integrity: 'sha512-' + createHash('sha512').update(bytes).digest('base64') }));
+  await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.3.2', integrity: 'sha512-' + createHash('sha512').update(bytes).digest('base64') }));
   process.env.DRAWMOTIVE_EDITOR_TARBALL = tarball;
   await prepareEditor(root);
   const publicRoot = path.join(root, 'public/examples/editor');
-  assert.equal(await readFile(path.join(publicRoot, 'runtime/embed.html'), 'utf8'), runtime);
+  assert.equal(await readFile(path.join(publicRoot, 'runtime/js/editor-canvas.js'), 'utf8'), runtime);
   assert.equal(await readFile(path.join(publicRoot, 'licenses/Runtime-LICENSE.txt'), 'utf8'), 'Runtime license notice');
-  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('./sdk/index.js'));
-  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('npm install @drawmotive/editor@0.2.1'), 'The hosted install command must identify the pinned Editor release, even when its immutable archive advertises a channel');
+  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('./sdk/src/index.js'));
+  assert.equal(await readFile(path.join(publicRoot, 'sdk/src/core.js'), 'utf8'), core);
+  for (const worker of ['resource', 'document']) assert.equal(await readFile(path.join(publicRoot, 'sdk/dist/workers', worker + '.worker.js'), 'utf8'), worker + ' worker');
+  assert.ok((await readFile(path.join(publicRoot, 'index.html'), 'utf8')).includes('npm install @drawmotive/editor@0.3.2'), 'The hosted install command must identify the pinned Editor release, even when its immutable archive advertises a channel');
   assert.ok((await readFile(path.join(publicRoot, 'main.js'), 'utf8')).includes('./runtime/'));
   await writeFile(tarball, Buffer.concat([bytes, Buffer.from('changed')]));
   await assert.rejects(prepareEditor(root), /integrity mismatch/);
-  for (const protocolVersion of [1, 3]) {
-    await file('generated/editor-manifest.json', JSON.stringify({ ...manifest, protocolVersion }));
+  for (const invalid of [{ runtimeVersion: 2 }, { schemaVersion: 2 }, { protocolVersion: 2 }, { packageName: '@drawmotive/other' }]) {
+    await file('generated/editor-manifest.json', JSON.stringify({ ...manifest, ...invalid }));
     await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
     const unsupported = await readFile(tarball);
-    await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.2.1', integrity: 'sha512-' + createHash('sha512').update(unsupported).digest('base64') }));
-    await assert.rejects(prepareEditor(root), /Editor release identity mismatch/, 'Unsupported protocol ' + protocolVersion);
+    await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.3.2', integrity: 'sha512-' + createHash('sha512').update(unsupported).digest('base64') }));
+    await assert.rejects(prepareEditor(root), /Editor release identity mismatch/, JSON.stringify(invalid));
   }
+  await file('generated/editor-manifest.json', JSON.stringify(manifest));
+  const repack = async () => {
+    await archive({ gzip: true, file: tarball, cwd: path.join(root, 'fixture') }, ['package']);
+    const content = await readFile(tarball);
+    await writeFile(path.join(root, '.vitepress/editor-release.json'), JSON.stringify({ version: '0.3.2', integrity: 'sha512-' + createHash('sha512').update(content).digest('base64') }));
+  };
+  for (const worker of ['resource', 'document']) {
+    await rm(path.join(pkg, 'dist/workers/' + worker + '.worker.js'));
+    await repack();
+    await assert.rejects(prepareEditor(root), { code: 'ENOENT' }, 'Both self-contained workers are required');
+    await file('dist/workers/' + worker + '.worker.js', worker + ' worker');
+  }
+  await file('generated/editor/js/editor-canvas.js', 'changed runtime');
+  await repack();
+  await assert.rejects(prepareEditor(root), /Editor runtime integrity mismatch/);
 });

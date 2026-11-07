@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Update the SDK, Markdown plugin, optional fonts, Docker renderer and Markdown extension to coordinated version `0.3.2`.
+- Host the Editor's canvas-only API with both package-relative Workers. The host owns web controls; one canvas is active per page.
+- Defer the VS Code visual editor extension until its Editor UI integration is ready.
+
 ## 0.3.0
 
 - Publish the stable SDK, Markdown plugin, optional fonts and embedded Editor at coordinated version `0.3.0`.

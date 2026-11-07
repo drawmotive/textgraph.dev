@@ -5,6 +5,7 @@ import links from '../home/generated/links.json'
 import images from '../home/generated/images.mjs'
 import HomeExample from './HomeExample.vue'
 import './home.css'
+import { version } from '../../package.json'
 
 const syntax = [
   { id: 'relationships', title: 'Connect.', detail: 'Names and arrows. That is a diagram.' },
@@ -12,7 +13,7 @@ const syntax = [
   { id: 'service-boundary', title: 'Organize.', detail: 'Group related nodes. Let the layout follow.' },
 ]
 const sdkSource = "const graph = await initializeTextGraph();\nconst image = await graph.renderSvg('web -> api -> db');"
-const dockerSource = 'docker run --rm -p 8080:8080 \\\n  ghcr.io/drawmotive/textgraph-renderer:0.3.0'
+const dockerSource = 'docker run --rm -p 8080:8080 \\\n  ghcr.io/drawmotive/textgraph-renderer:' + version
 const markdownSource = String.fromCharCode(96).repeat(3) + 'textgraph\n' + examples.dependencies.source + '\n' + String.fromCharCode(96).repeat(3)
 </script>
 

@@ -11,7 +11,7 @@ Run TextGraph on your own infrastructure. The published container accepts TextGr
 
 ```bash
 docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges \
-  -p 127.0.0.1:8080:8080 ghcr.io/drawmotive/textgraph-renderer:0.3.0
+  -p 127.0.0.1:8080:8080 ghcr.io/drawmotive/textgraph-renderer:0.3.2
 ```
 
 This binds the service to localhost. The image includes the exact public SDK, packaged fonts and their notices. The default container has one rendering Worker; scale Workers or containers according to available memory.

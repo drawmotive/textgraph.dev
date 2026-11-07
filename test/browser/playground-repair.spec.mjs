@@ -192,7 +192,6 @@ test('cancel aborts a pending repair and ignores late completion', async ({ page
 });
 
 for (const language of ['Chinese', 'English']) test(`repaired ${language} branch and merge reaches review within the candidate deadline`, async ({ page, browser, request }, testInfo) => {
-  test.skip(!process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME, 'The native performance regression requires the selected local runtime; the pinned registry SDK predates this fix.');
   let source = String.raw`(vertical)
 
 start(stadium fill primary): 切换IM-NP功能
@@ -226,9 +225,11 @@ decision -> end_node`;
     for (const [before, after] of translations) source = source.replace(before, after);
   }
   const candidate = source.replace('note -.->', 'note ->');
-  const manifest = JSON.parse(await readFile(process.env.DRAWMOTIVE_TEXTGRAPH_RUNTIME + '/wasm-manifest.json', 'utf8'));
-  expect(manifest.privateSource.development).toBe(true);
-  // Verify real served bytes, not just the environment flag enabling this case.
+  await page.goto('/');
+  const manifest = await page.evaluate(async () => (await import('/textgraph/sdk/generated/wasm-manifest.js')).default);
+  expect(manifest.packageVersion).toBe(sitePackage.devDependencies['@drawmotive/textgraph']);
+  expect(manifest.privateSource.commit).toMatch(/^[a-f0-9]{40}$/);
+  // Audit the runtime actually served to this browser, including registry builds.
   for (const asset of manifest.assets) {
     const response = await request.get('/textgraph/' + asset.path);
     expect(response.ok()).toBe(true);
@@ -295,14 +296,15 @@ decision -> end_node`;
   let reviewError;
   try { await expect(review(page)).toBeVisible({ timeout: 35_000 }); } catch (error) { reviewError = error; }
   const timing = await page.evaluate(() => window.repairTiming);
-  const durations = { language, fingerprint: manifest.privateSource.fingerprint,
+  const durations = { language, sourceCommit: manifest.privateSource.commit,
     mockRequestMs: timing.worker - timing.click, workerStartupMs: timing.ready - timing.worker,
     renderMs: timing.result - timing.render, pngDecodeMs: timing.decodeEnd - timing.decodeStart,
     candidateMs: timing.review - timing.worker, totalMs: timing.review - timing.click, timing };
   console.log('Repair timing: ' + JSON.stringify(durations));
   await testInfo.attach('repair-timing', { body: JSON.stringify(durations, null, 2), contentType: 'application/json' });
   const workerBundle = await (await request.get(timing.workerUrl)).text();
-  expect(workerBundle).toContain(manifest.privateSource.fingerprint);
+  expect(workerBundle).toContain(manifest.privateSource.commit);
+  for (const asset of manifest.assets) expect(workerBundle).toContain(asset.sha256);
   if (tracing) {
     const completed = new Promise(resolve => tracing.once('Tracing.tracingComplete', resolve));
     await tracing.send('Tracing.end');

@@ -281,7 +281,7 @@ test('deployed language fonts load only as needed and remain available across ed
   for (const [source, filename] of [
     ['A: 简体中文 繁體中文', 'NotoSansSC-Regular.ttf'],
     ['A: 日本語 かな カナ', 'NotoSansJP-Regular.ttf'],
-    ['A: 👩🏽‍💻 🇯🇵 1️⃣', 'NotoColorEmoji.ttf'],
+    ['A: 👩🏽‍💻 🇯🇵 1️⃣', 'Noto-COLRv1.ttf'],
   ]) {
     await render(source);
     expect(fontRequests.filter(url => url.endsWith('/' + filename))).toHaveLength(1);

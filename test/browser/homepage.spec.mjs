@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { homeExamples } from '../../.vitepress/home/examples.mjs';
+import site from '../../package.json' with { type: 'json' };
 
 test('homepage leads directly from visual editing to SDK and Docker instructions without JavaScript', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -7,6 +8,8 @@ test('homepage leads directly from visual editing to SDK and Docker instructions
     const page = await context.newPage();
     await page.goto(baseURL);
     const main = page.locator('.textgraph-home');
+    const rendererImage = 'ghcr.io/drawmotive/textgraph-renderer:' + site.version;
+    await expect(main.locator('pre').filter({ hasText: 'docker run' })).toContainText(rendererImage);
     const editor = main.getByRole('link', { name: 'Try the visual editor', exact: true });
     await expect(editor).toHaveAttribute('href', '/examples/editor/');
     const sdk = main.getByRole('link', { name: 'Explore the SDK', exact: true });
@@ -15,7 +18,7 @@ test('homepage leads directly from visual editing to SDK and Docker instructions
     await page.goBack();
     await main.getByRole('link', { name: 'Run with Docker', exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Docker renderer');
-    await expect(page.locator('pre').filter({ hasText: 'docker run' })).toContainText('ghcr.io/drawmotive/textgraph-renderer:0.3.0');
+    await expect(page.locator('pre').filter({ hasText: 'docker run' })).toContainText(rendererImage);
     await page.goBack();
     for (const section of ['#syntax', '#visual-editing', '#workflow', '#build']) {
       const images = main.locator(section + ' img');

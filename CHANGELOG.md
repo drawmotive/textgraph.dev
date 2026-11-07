@@ -5,8 +5,13 @@
 - Present the full product story on the homepage with rendered examples, real editor and VS Code captures, SDK/Docker paths and MIT commercial-use clarity.
 - Add a Docker renderer guide with a local container quick start and PNG/SVG HTTP examples.
 - Document supported build environments, contribution checks and redistribution terms.
-- Update the Editor guide to the published `0.3.0` API, including snapshots, editable PNGs, state subscriptions and host actions.
 - Clarify the intentional one-way TextGraph-to-canvas workflow, SVG rendering support and the existing Fix It review flow.
+
+## 0.3.2
+
+- Use exact published `0.3.2` SDK, Markdown, optional font and Editor packages with npm 12.2.1.
+- Host the current canvas-only Editor with its package-relative modules and both Workers; reject historical iframe protocols.
+- Update Editor storage, lifecycle and host-control guidance and browser coverage to the current API.
 
 ## 0.3.0
 

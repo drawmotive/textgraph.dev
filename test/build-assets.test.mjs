@@ -77,7 +77,7 @@ test('direct VitePress configuration prepares assets in a clean checkout without
     const catalog = JSON.parse(await readFile(path.join(fontRoot, 'font-catalog.json'), 'utf8'));
     assert.ok(catalog.fonts.some(font => font.languages.includes('zh')));
     assert.ok(catalog.fonts.some(font => font.languages.includes('ja')));
-    assert.ok(catalog.fonts.some(font => font.family === 'NotoColorEmoji'));
+    assert.ok(catalog.fonts.some(font => font.languages.includes('emoji')));
     for (const file of ['font-catalog.json', 'files.json', ...Object.keys(files)]) {
       const copied = await readFile(path.join(fontDestination, file));
       assert.deepEqual(copied, await readFile(path.join(fontRoot, file)), file);

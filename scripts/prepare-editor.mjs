@@ -6,8 +6,8 @@ import { x as extract } from 'tar';
 
 const siteRoot = fileURLToPath(new URL('../', import.meta.url));
 
-/** Host the exact reviewed package on this site's origin. HTML iframe runtimes
- * cannot rely on npm CDNs serving executable HTML. The optional local tarball
+/** Host the exact reviewed SDK, workers and runtime on this site's origin.
+ * Preserve package-relative worker URLs. The optional local tarball
  * uses the same integrity check as the registry download before first release. */
 export async function prepareEditor(root = siteRoot) {
   const release = JSON.parse(await readFile(path.join(root, '.vitepress/editor-release.json'), 'utf8'));
@@ -35,15 +35,17 @@ export async function prepareEditor(root = siteRoot) {
       filter(name, entry) {
         if (name.split('/').some(part => part === '..' || part === '.') || !name.startsWith('package/')) throw new Error('Unsafe editor archive path');
         if (!['File', 'Directory'].includes(entry.type)) throw new Error('Editor archive must not contain links');
-        return name === 'package/package.json' || name === 'package/LICENSE' || name.startsWith('package/licenses/') || name.startsWith('package/src/') || name.startsWith('package/generated/') || name.startsWith('package/examples/browser/');
+        return name === 'package/package.json' || name === 'package/LICENSE' || name.startsWith('package/licenses/') || name.startsWith('package/src/') || name.startsWith('package/dist/workers/') || name.startsWith('package/generated/') || name.startsWith('package/examples/browser/');
       },
     });
     const pkg = path.join(temporary, 'package');
     const identity = JSON.parse(await readFile(path.join(pkg, 'package.json'), 'utf8'));
     const manifest = JSON.parse(await readFile(path.join(pkg, 'generated/editor-manifest.json'), 'utf8'));
-    // The copied SDK and runtime negotiate protocol 2; reject incompatible
-    // archives here before publishing the same-origin editor assets.
-    if (identity.name !== '@drawmotive/editor' || identity.version !== release.version || manifest.packageVersion !== release.version || manifest.protocolVersion !== 2) throw new Error('Editor release identity mismatch');
+    // Accept only the current canvas contract before publishing hosted assets.
+    if (identity.name !== '@drawmotive/editor' || identity.version !== release.version
+        || manifest.packageName !== identity.name || manifest.packageVersion !== release.version
+        || manifest.schemaVersion !== 1 || manifest.runtimeVersion !== 1
+        || manifest.protocolVersion !== undefined) throw new Error('Editor release identity mismatch');
     const destination = path.join(root, 'public/examples/editor');
     await rm(destination, { recursive: true, force: true });
     await mkdir(destination, { recursive: true });
@@ -55,7 +57,11 @@ export async function prepareEditor(root = siteRoot) {
       await mkdir(path.dirname(target), { recursive: true });
       await writeFile(target, content);
     }
-    await cp(path.join(pkg, 'src'), path.join(destination, 'sdk'), { recursive: true });
+    await cp(path.join(pkg, 'src'), path.join(destination, 'sdk/src'), { recursive: true });
+    await mkdir(path.join(destination, 'sdk/dist/workers'), { recursive: true });
+    for (const worker of ['resource', 'document']) {
+      await cp(path.join(pkg, 'dist/workers', worker + '.worker.js'), path.join(destination, 'sdk/dist/workers', worker + '.worker.js'));
+    }
     await cp(path.join(pkg, 'examples/browser'), destination, { recursive: true });
     await cp(path.join(pkg, 'LICENSE'), path.join(destination, 'LICENSE'));
     await cp(path.join(pkg, 'licenses'), path.join(destination, 'licenses'), { recursive: true });
@@ -64,7 +70,7 @@ export async function prepareEditor(root = siteRoot) {
     if (!html.includes('../../src/index.js')) throw new Error('Unknown editor sample import map');
     // Immutable archives may advertise a moving npm channel. The hosted demo's
     // installation guidance must identify the exact SDK selected by this site.
-    await writeFile(index, html.replace('../../src/index.js', './sdk/index.js')
+    await writeFile(index, html.replace('../../src/index.js', './sdk/src/index.js')
       .replace(/(npm install @drawmotive\/editor@)[^\s<]+/g, (_, command) => command + release.version));
     const main = path.join(destination, 'main.js');
     const script = await readFile(main, 'utf8');
